@@ -23,6 +23,7 @@ short answers, no jargon).
 - Tests: `node --no-warnings tests/gateway.mjs`, `node --no-warnings tests/layer2.mjs`,
   then `node tests/l2server.mjs 8788 &` and `python3 tests/l2ui.py`.
 - After changing the grader in `web/app.js`: `node tools/sync-grader.mjs`.
+- Brand files: `python3 tools/make_brand.py` (compass mark + Space Grotesk wordmark → `brand/`). Theme test: `python3 tests/themes.py`.
 
 ## Rules
 
@@ -32,6 +33,8 @@ short answers, no jargon).
 - Groq's free models change: check console.groq.com/docs/deprecations before adding a model.
 - Privacy: questions sent to `/api/miss` are anonymous (PII masked, no IP stored, deleted after 180 days) and learners can opt
   out. Anything new that sends learner data off the device needs the privacy notice updated first.
+- Colours come from the theme tokens in `web/index.html` (light, dark, black). Never hard-code a colour in a component;
+  check new UI in all three themes and at phone width (the phone header must fit logo, chips and settings).
 - Concept cards stay short: a takeaway, a diagram where it helps, an example; detail behind disclosures.
 
 ## Working agreement

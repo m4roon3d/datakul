@@ -246,8 +246,10 @@ function lvlCard() {
 }
 function refreshChrome() {
   const n = QS.streak.last === today() || QS.streak.last === addDays(today(), -1) ? QS.streak.n : 0;
-  $("#streakChip").innerHTML = `<span class="chip fire" title="Daily streak">${FLAME}${n ? n + "-day streak" : "Start a streak"}</span>`;
-  $("#lvlChip").innerHTML = `<span class="chip lvl">Lv ${levelOf(QS.xp)} · ${QS.xp.toLocaleString("en-IN")} XP</span>`;
+  const sl = n ? n + "-day streak" : "Start a streak", xp = QS.xp.toLocaleString("en-IN");
+  // phones show the short form (flame + days, level only) so the logo, chips and settings fit on one line
+  $("#streakChip").innerHTML = `<span class="chip fire" title="Daily streak" aria-label="${sl}">${FLAME}<span class="short" aria-hidden="true">${n}</span><span class="long" aria-hidden="true">${sl}</span></span>`;
+  $("#lvlChip").innerHTML = `<span class="chip lvl" aria-label="Level ${levelOf(QS.xp)}, ${xp} XP">Lv ${levelOf(QS.xp)}<span class="long" aria-hidden="true"> · ${xp} XP</span></span>`;
   $("#sideFoot").innerHTML = lvlCard();
 }
 
