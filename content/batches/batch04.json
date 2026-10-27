@@ -1,0 +1,1699 @@
+{
+ "batch": 4,
+ "name": "Spark and streaming",
+ "concepts": [
+  {
+   "id": "distributed-basics",
+   "t": "de",
+   "title": "Distributed computing fundamentals",
+   "mod": "Distributed processing",
+   "lv": "F",
+   "kw": "distributed computing parallelism cluster nodes partitions mapreduce scale out horizontal scaling data locality fault tolerance",
+   "s": "Distributed computing splits data and work across many machines, so jobs too big for one computer finish in a reasonable time.",
+   "d": "Data is divided into partitions, and each node processes its partitions in parallel: scaling out rather than buying a bigger machine. MapReduce made the pattern famous: map tasks transform partitions independently, a shuffle groups data by key across the network, and reduce tasks aggregate each group. Network transfer and coordination are the expensive parts, so moving computation to the data and minimising shuffles matter. Machines fail, so frameworks retry failed tasks and recompute lost data. Amdahl's law limits the speed-up: the part that can't run in parallel caps the gain.",
+   "e": "To count 3 billion clickstream events by product, 200 executors each count their own partitions (map), then the counts for each product are brought together (shuffle) and summed (reduce).",
+   "c": "Why does adding more machines stop speeding a job up beyond a point?",
+   "i": "Interviewers check that you understand partitions, parallelism, shuffles and fault tolerance before they ask about Spark specifics.",
+   "r": [
+    "spark-architecture",
+    "spark-shuffle",
+    "partitioning"
+   ]
+  },
+  {
+   "id": "spark-architecture",
+   "t": "de",
+   "title": "Spark architecture: driver, executors and lazy evaluation",
+   "mod": "Distributed processing",
+   "lv": "I",
+   "kw": "spark architecture driver executor cluster manager yarn kubernetes lazy evaluation transformation action dag stage task job narrow wide",
+   "s": "A Spark application has one driver that plans the work and many executors that run it, and nothing executes until an action asks for a result.",
+   "d": "The driver turns your code into a logical plan, optimises it with the Catalyst optimiser, and splits it into jobs, stages and tasks. Executors on worker nodes run the tasks, one per partition, and hold cached data. A cluster manager such as YARN, Kubernetes or Databricks provides the resources. Transformations such as filter, select and join are lazy: they only build the plan. Actions such as count, collect and write trigger execution. Narrow transformations work within a partition, while wide ones such as groupBy and join need a shuffle, which marks a stage boundary.",
+   "e": "df.filter(...).groupBy(\"city\").count() does nothing until .show() runs. Then Spark builds two stages, split at the shuffle groupBy needs, and runs one task per partition in each.",
+   "c": "Why is calling collect() on a 50 GB DataFrame dangerous?",
+   "i": "Expect driver versus executor, lazy evaluation, jobs, stages and tasks, and narrow versus wide transformations.",
+   "r": [
+    "distributed-basics",
+    "pyspark-api",
+    "spark-shuffle"
+   ]
+  },
+  {
+   "id": "pyspark-api",
+   "t": "de",
+   "title": "PySpark DataFrame API",
+   "mod": "Distributed processing",
+   "lv": "I",
+   "kw": "pyspark dataframe api select withcolumn filter groupby agg join window functions udf pandas udf spark sql column expressions",
+   "s": "The PySpark DataFrame API lets you write Spark transformations in Python as column expressions that Spark optimises and runs on the JVM.",
+   "d": "The core operations are select, withColumn, filter, groupBy with agg, join, orderBy, and window functions through Window.partitionBy().orderBy(). Use the built-in functions in pyspark.sql.functions wherever possible, because they run inside Spark's engine. Python UDFs move every row between the JVM and a Python process and are much slower; if one is unavoidable, prefer a pandas UDF, which works on vectorised batches through Arrow. The same logic can be written in Spark SQL, and both compile to the same plan. Call explain() to see what Spark will actually do.",
+   "e": "orders.filter(F.col(\"status\") == \"DELIVERED\").groupBy(\"city\").agg(F.sum(\"amount\").alias(\"gmv\")) computes GMV per city without any Python code running per row.",
+   "c": "Why is a Python UDF that uppercases a column much slower than F.upper()?",
+   "i": "Live PySpark exercises are common: top N per group, deduplication, joins and window functions. Avoiding UDFs and collect() shows experience.",
+   "r": [
+    "spark-architecture",
+    "window-functions",
+    "spark-joins"
+   ]
+  },
+  {
+   "id": "spark-joins",
+   "t": "de",
+   "title": "Spark join strategies: broadcast and sort-merge",
+   "mod": "Distributed processing",
+   "lv": "I",
+   "kw": "spark join strategy broadcast hash sort merge shuffle skew hint autobroadcastjointhreshold salting",
+   "s": "Spark picks a physical join strategy from table sizes: broadcasting a small table avoids shuffling the large one, while two large tables use a sort-merge join.",
+   "d": "In a broadcast hash join, the small table is copied to every executor and the large table is joined where it sits, with no shuffle. Spark does this automatically below spark.sql.autoBroadcastJoinThreshold (10 MB by default) or when you add a broadcast hint. A sort-merge join shuffles both sides by the join key, sorts them and merges; it scales to any size but costs a shuffle. Skewed keys make one task far slower than the rest; adaptive query execution can split skewed partitions, or you can salt the key. Filter rows and select columns before joining to shrink the shuffle.",
+   "e": "Joining 2 billion shipment events to a 5,000-row carrier table with F.broadcast(carriers) turns a 20-minute sort-merge join into a 2-minute broadcast join.",
+   "c": "Why can broadcasting a 3 GB table make a job fail instead of speeding it up?",
+   "i": "Expect \"how would you speed up this join?\" Cover broadcasting, skew handling, filtering early and reading the plan.",
+   "r": [
+    "spark-shuffle",
+    "spark-tuning",
+    "sql-joins"
+   ]
+  },
+  {
+   "id": "spark-tuning",
+   "t": "de",
+   "title": "Spark memory, AQE and performance tuning",
+   "mod": "Distributed processing",
+   "lv": "A",
+   "kw": "spark tuning performance memory executor cores spill out of memory oom aqe adaptive query execution shuffle partitions partition size garbage collection",
+   "s": "Tuning Spark means sizing partitions, memory and parallelism so tasks neither run out of memory nor sit idle, and letting adaptive query execution fix what it can at runtime.",
+   "d": "Aim for partitions of roughly 100 to 200 MB. Too few means huge tasks that spill to disk or fail with out-of-memory errors; too many means scheduling overhead and tiny files. spark.sql.shuffle.partitions (200 by default) sets the number of partitions after a shuffle, and adaptive query execution (AQE) can coalesce or split them at runtime and switch to broadcast joins. Executor memory, cores per executor and memory overhead decide how much each task gets. Use the Spark UI to find slow stages, skewed tasks, spills and garbage collection time before changing settings, and fix data layout or logic before adding hardware.",
+   "e": "A job with 200 shuffle partitions on 2 TB of data spilled heavily. Raising them to 4,000 and enabling AQE skew handling cut the run time from 3 hours to 40 minutes.",
+   "c": "Your job spills to disk in one stage. What would you check, and what could you change?",
+   "i": "Senior Spark interviews ask you to diagnose a slow or failing job from Spark UI symptoms and explain each fix.",
+   "r": [
+    "spark-shuffle",
+    "spark-joins",
+    "caching"
+   ]
+  },
+  {
+   "id": "caching",
+   "t": "de",
+   "title": "Caching and persistence",
+   "mod": "Distributed processing",
+   "lv": "I",
+   "kw": "cache persist storage level memory and disk unpersist reuse checkpoint recomputation lineage spark caching",
+   "s": "Caching keeps a DataFrame in executor memory or on disk after it's first computed, so later actions reuse it instead of recomputing it.",
+   "d": "Spark recomputes a DataFrame's whole lineage every time an action uses it. When the same expensive intermediate result feeds several actions, cache() or persist() with a storage level (memory only, memory and disk, or serialised) saves that work. Caching is lazy, so it fills on the first action. It uses memory that could otherwise run tasks, so cache only what is reused, and call unpersist() when you're done. Checkpointing writes data to reliable storage and cuts the lineage, which helps very long iterative jobs. Caching a DataFrame that's used once only adds cost.",
+   "e": "A cleaned 40 GB orders DataFrame feeds five different aggregations. Persisting it with MEMORY_AND_DISK cuts the job from 50 minutes to 18, because the cleaning runs once instead of five times.",
+   "c": "Why does caching a DataFrame that's used only once make the job slower?",
+   "i": "Expect when to cache, storage levels, the lazy nature of cache, and the difference between cache and checkpoint.",
+   "r": [
+    "spark-architecture",
+    "spark-tuning",
+    "pyspark-api"
+   ]
+  },
+  {
+   "id": "query-engines",
+   "t": "de",
+   "title": "Query engines and reading query plans",
+   "mod": "Distributed processing",
+   "lv": "I",
+   "kw": "query engine trino presto athena bigquery snowflake spark sql distributed sql query plan explain optimizer cost based predicate pushdown join order",
+   "s": "Distributed SQL engines such as Trino, BigQuery, Snowflake and Spark SQL turn SQL into a plan of scans, joins and aggregations spread across many workers, and reading that plan explains performance.",
+   "d": "The optimiser parses SQL into a logical plan, applies rules such as predicate pushdown and column pruning, chooses join order and strategy from table statistics, and produces a physical plan of stages. EXPLAIN shows the plan, and query profiles show actual rows, bytes and time per step. Look for full scans where you expected pruning, joins that explode row counts, huge shuffles (exchanges) and spills. Engines differ: Snowflake and BigQuery are managed warehouses with their own storage, while Trino and Athena query files in a lake through a catalog.",
+   "e": "EXPLAIN on a slow Trino query reveals a cross join caused by a missing join condition. Fixing it drops the plan's estimated rows from 4 trillion to 2 million.",
+   "c": "In a query plan, what tells you that a filter isn't being pushed down to the scan?",
+   "i": "Expect to read a plan and explain why a query is slow, and to compare engines such as Trino, BigQuery, Snowflake and Spark SQL.",
+   "r": [
+    "sql-performance",
+    "spark-architecture",
+    "partitioning"
+   ]
+  },
+  {
+   "id": "kafka-basics",
+   "t": "de",
+   "title": "Kafka fundamentals: topics, partitions and consumer groups",
+   "mod": "Streaming",
+   "lv": "I",
+   "kw": "kafka topic partition offset broker producer consumer consumer group retention replication key ordering event streaming log",
+   "s": "Kafka is a distributed, durable log: producers append events to topics, and consumers read them at their own pace by tracking offsets.",
+   "d": "A topic is split into partitions spread across brokers and replicated for durability. Events with the same key go to the same partition, so order is guaranteed per key, not across the whole topic. Each consumer group receives every event once: the topic's partitions are divided among the group's consumers, so the partition count caps the group's parallelism. Consumers commit offsets to record progress, and events stay for a retention period, so you can replay history. Kafka Connect moves data in and out of other systems, for example Debezium for CDC.",
+   "e": "An orders topic with 12 partitions, keyed by order_id, lets 12 consumers in the fraud group process in parallel while each order's events stay in order.",
+   "c": "Why can't a 13th consumer in a group reading a 12-partition topic increase throughput?",
+   "i": "Expect topics, partitions, keys and ordering, consumer groups, offsets, retention and replication.",
+   "r": [
+    "batch-stream",
+    "delivery-semantics",
+    "cdc"
+   ]
+  },
+  {
+   "id": "delivery-semantics",
+   "t": "de",
+   "title": "Delivery semantics: at-least-once and exactly-once",
+   "mod": "Streaming",
+   "lv": "I",
+   "kw": "delivery semantics at least once at most once exactly once idempotent producer transactions offsets commit duplicates deduplication",
+   "s": "Delivery semantics describe what happens to messages when failures occur: they may be lost, duplicated, or processed exactly once.",
+   "d": "At-most-once commits the offset before processing, so a crash loses messages. At-least-once commits after processing, so a crash replays messages and creates duplicates. Exactly-once means each message affects the result once: Kafka offers it within Kafka through idempotent producers and transactions, and frameworks such as Flink and Spark achieve it end to end with checkpoints plus transactional or idempotent sinks. In practice, most pipelines use at-least-once delivery plus idempotent writes, such as upserts on a key, which gives the same effect more simply.",
+   "e": "A payments consumer writes to the warehouse with MERGE on txn_id. When a crash replays 500 messages, the MERGE absorbs them and no payment is counted twice.",
+   "c": "Why does committing offsets before processing risk losing data?",
+   "i": "A classic streaming question: explain the three semantics, where duplicates come from, and how idempotent sinks give effectively-once results.",
+   "r": [
+    "kafka-basics",
+    "idempotency",
+    "stream-processing"
+   ]
+  },
+  {
+   "id": "event-time",
+   "t": "de",
+   "title": "Event time, watermarks and late data",
+   "mod": "Streaming",
+   "lv": "I",
+   "kw": "event time processing time watermark late data out of order allowed lateness window streaming late arriving events",
+   "s": "Event time is when something happened; processing time is when the system sees it. Correct streaming results depend on using event time and deciding how long to wait for late events.",
+   "d": "Mobile apps go offline, networks delay messages and partitions are read at different speeds, so events arrive out of order. Windowed aggregations by event time put each event in the window it belongs to. A watermark is the engine's estimate that no events older than a certain time will still arrive; once it passes the end of a window, the window can be finalised and its state dropped. Events later than the allowed lateness are dropped or sent to a side output. Allowing more lateness gives more complete results, but needs more state and delays output.",
+   "e": "With a 10-minute watermark, a delivery event that happened at 09:58 but arrives at 10:05 still counts in the 09:00–10:00 window. One that arrives at 10:20 is routed to a late-events table.",
+   "c": "What's the trade-off when you increase a watermark's allowed lateness?",
+   "i": "Expect event time versus processing time, how watermarks work, and what you do with very late events.",
+   "r": [
+    "stream-processing",
+    "batch-stream",
+    "shipment-visibility"
+   ]
+  },
+  {
+   "id": "stream-processing",
+   "t": "de",
+   "title": "Stream processing with Flink and Spark Structured Streaming",
+   "mod": "Streaming",
+   "lv": "A",
+   "kw": "stream processing flink spark structured streaming kafka streams micro batch continuous checkpoint state exactly once streaming sink",
+   "s": "Stream processors such as Apache Flink and Spark Structured Streaming run continuous queries over unbounded data, keeping state and producing results within seconds.",
+   "d": "Spark Structured Streaming treats a stream as an ever-growing table processed in micro-batches, which is simple and fits the rest of Spark. Flink processes events one at a time, with low latency and rich handling of state and time. Kafka Streams is a library for stream processing inside your own services. All of them checkpoint state and source offsets so they can recover after failures, and they support event-time windows and watermarks. Typical jobs filter and enrich events, aggregate them in windows, join streams, and write to sinks such as Kafka, lakehouse tables or databases.",
+   "e": "A Spark Structured Streaming job reads payment events from Kafka, enriches them with merchant data, computes 1-minute success rates per bank with a 2-minute watermark, and writes them to a Delta table that feeds an alerting dashboard.",
+   "c": "Why does a streaming job need checkpoints?",
+   "i": "Expect Flink versus Spark Structured Streaming, micro-batch versus continuous processing, checkpoints, and how you'd design a real-time pipeline.",
+   "r": [
+    "event-time",
+    "kafka-basics",
+    "stateful-streaming"
+   ]
+  },
+  {
+   "id": "stateful-streaming",
+   "t": "de",
+   "title": "Stateful streaming and windowed aggregations",
+   "mod": "Streaming",
+   "lv": "A",
+   "kw": "stateful streaming state store windows tumbling sliding session window aggregation stream join state ttl rocksdb",
+   "s": "Stateful streaming keeps information across events, such as running counts, open windows or recent events for joins, so results can be computed continuously.",
+   "d": "Tumbling windows are fixed and don't overlap (every 5 minutes). Sliding or hopping windows overlap (a 10-minute window every minute). Session windows close after a gap of inactivity. Stream-stream joins buffer events from both sides until they match or a time limit passes. State lives in a state store, often RocksDB, and is checkpointed; without watermarks or a time-to-live it grows forever and the job eventually fails. Keep state small with sensible windows, TTLs and keys, and monitor its size.",
+   "e": "A session window with a 30-minute gap groups each user's app events into sessions in real time. The watermark lets the engine close a session and free its state once the user has gone quiet.",
+   "c": "Why does a streaming deduplication job without a watermark eventually run out of memory?",
+   "i": "Expect window types, stream joins, state stores, and how you stop state from growing without limit.",
+   "r": [
+    "stream-processing",
+    "event-time",
+    "gaps-islands"
+   ]
+  },
+  {
+   "id": "schema-registry",
+   "t": "de",
+   "title": "Schema registry and Avro contracts",
+   "mod": "Streaming",
+   "lv": "I",
+   "kw": "schema registry avro protobuf json schema compatibility backward forward serialization subject version contract kafka",
+   "s": "A schema registry stores the schema of each event type and enforces compatibility rules, so producers can't break consumers by changing message formats.",
+   "d": "Producers register a schema (Avro, Protobuf or JSON Schema) and send a small schema id with each message instead of the full schema; consumers fetch the schema by id to deserialise. Each subject has a compatibility mode, such as backward, forward or full, and the registry rejects new versions that would break it. Avro and Protobuf messages are compact and typed, unlike free-form JSON. Combined with ownership and review, the registry turns event formats into enforced data contracts.",
+   "e": "A team tries to rename the amount field in the payments topic. The registry rejects the new schema as backward-incompatible, so they add a new field with a default value instead.",
+   "c": "Why does each message carry a schema id instead of the full schema?",
+   "i": "Expect compatibility modes, Avro versus JSON, and how a registry prevents breaking changes in event-driven systems.",
+   "r": [
+    "schema-evolution",
+    "kafka-basics",
+    "file-formats"
+   ]
+  }
+ ],
+ "questions": [
+  {
+   "r": [
+    "de"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "distributed-basics",
+   "tg": [
+    "spark"
+   ],
+   "q": "Explain how a distributed engine counts events per product across billions of rows.",
+   "p": [
+    {
+     "t": "Data is split into partitions processed in parallel",
+     "k": [
+      "partition",
+      "parallel"
+     ]
+    },
+    {
+     "t": "Each task aggregates its partition locally",
+     "k": [
+      "map step",
+      "locally",
+      "partial"
+     ]
+    },
+    {
+     "t": "A shuffle brings each product's counts together",
+     "k": [
+      "shuffle",
+      "network"
+     ]
+    },
+    {
+     "t": "A reduce step combines them",
+     "k": [
+      "reduce",
+      "combine",
+      "final count"
+     ]
+    },
+    {
+     "t": "Failed tasks are retried",
+     "k": [
+      "retr",
+      "fail"
+     ]
+    }
+   ],
+   "a": "The data is split into partitions spread across the cluster, and each worker processes its partitions in parallel. In the map step each task counts events per product locally, a partial aggregation. A shuffle then sends all partial counts for the same product to the same worker over the network, where the reduce step combines them into final counts. If a machine fails, the framework retries its tasks elsewhere."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "distributed-basics",
+   "tg": [
+    "spark"
+   ],
+   "q": "Why doesn't doubling the cluster size always halve a job's run time?",
+   "p": [
+    {
+     "t": "Serial parts cap the speed-up (Amdahl's law)",
+     "k": [
+      "amdahl",
+      "serial"
+     ]
+    },
+    {
+     "t": "Shuffle and coordination overhead grows",
+     "k": [
+      "shuffle",
+      "coordination",
+      "network"
+     ]
+    },
+    {
+     "t": "Skew leaves one straggler task",
+     "k": [
+      "skew",
+      "straggler"
+     ]
+    },
+    {
+     "t": "Too few partitions to use the extra cores",
+     "k": [
+      "fewer partitions",
+      "idle",
+      "partitions than cores"
+     ]
+    },
+    {
+     "t": "The bottleneck may be elsewhere",
+     "k": [
+      "bottleneck",
+      "source",
+      "i/o"
+     ]
+    }
+   ],
+   "a": "Some work doesn't parallelise, like the driver's planning or a final single-threaded step, and Amdahl's law says that serial part caps the speed-up. Shuffles add network and coordination overhead that grows with the cluster. Data skew leaves one straggler task running long after the rest. If there are fewer partitions than cores, the extra machines sit idle. And the bottleneck may be elsewhere, such as source I/O or a database the job writes to."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "spark-architecture",
+   "tg": [
+    "spark"
+   ],
+   "q": "What do the driver and the executors do in Spark?",
+   "p": [
+    {
+     "t": "The driver plans the job as a DAG",
+     "k": [
+      "driver",
+      "dag",
+      "plan"
+     ]
+    },
+    {
+     "t": "It splits work into stages and tasks",
+     "k": [
+      "stage",
+      "task"
+     ]
+    },
+    {
+     "t": "Executors run tasks, one per partition",
+     "k": [
+      "executor",
+      "one per partition"
+     ]
+    },
+    {
+     "t": "Executors hold cached data",
+     "k": [
+      "cache",
+      "memory"
+     ]
+    },
+    {
+     "t": "A cluster manager allocates resources",
+     "k": [
+      "cluster manager",
+      "yarn",
+      "kubernetes"
+     ]
+    }
+   ],
+   "a": "The driver runs your program, builds and optimises the plan as a DAG, and splits it into jobs, stages and tasks, which it schedules. Executors run on worker nodes, execute those tasks, one per partition, and keep cached data in memory. A cluster manager such as YARN or Kubernetes allocates the resources for the driver and the executors."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "spark-architecture",
+   "tg": [
+    "spark",
+    "pyspark"
+   ],
+   "q": "What does lazy evaluation mean in Spark, and why does it matter?",
+   "p": [
+    {
+     "t": "Transformations only build a plan",
+     "k": [
+      "transformation",
+      "lazy",
+      "plan"
+     ]
+    },
+    {
+     "t": "Actions trigger execution",
+     "k": [
+      "action",
+      "collect",
+      "count"
+     ]
+    },
+    {
+     "t": "The optimiser sees the whole plan",
+     "k": [
+      "catalyst",
+      "optimis",
+      "optimiz"
+     ]
+    },
+    {
+     "t": "Each action recomputes unless cached",
+     "k": [
+      "recompute",
+      "cache"
+     ]
+    },
+    {
+     "t": "Errors appear only when an action runs",
+     "k": [
+      "error",
+      "debug"
+     ]
+    }
+   ],
+   "a": "Transformations like filter, select and join don't run anything; they only add to a plan, which is what lazy means. Execution happens when an action such as count, collect or write is called. Because Spark sees the whole plan first, the Catalyst optimiser can push filters down, prune columns and choose join strategies. The pitfalls: each action recomputes the plan from the start unless you cache, and an error in a transformation only appears when an action runs, which makes debugging confusing."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "pyspark-api",
+   "tg": [
+    "pyspark",
+    "spark"
+   ],
+   "q": "Why should you avoid Python UDFs in PySpark, and what are the alternatives?",
+   "p": [
+    {
+     "t": "Rows are serialised between the JVM and Python",
+     "k": [
+      "serializ",
+      "serialis",
+      "jvm"
+     ]
+    },
+    {
+     "t": "The optimiser can't see inside a UDF",
+     "k": [
+      "black box",
+      "catalyst",
+      "optimis"
+     ]
+    },
+    {
+     "t": "Use built-in functions",
+     "k": [
+      "built-in",
+      "pyspark.sql.functions"
+     ]
+    },
+    {
+     "t": "Pandas UDFs with Arrow if needed",
+     "k": [
+      "pandas udf",
+      "arrow",
+      "vectoris",
+      "vectoriz"
+     ]
+    },
+    {
+     "t": "Or Spark SQL expressions",
+     "k": [
+      "spark sql",
+      "sql expression"
+     ]
+    }
+   ],
+   "a": "A Python UDF sends every row from the JVM to a Python worker and back, so serialization dominates and it's often many times slower. Catalyst also treats it as a black box, so it can't optimise around it. Built-in functions from pyspark.sql.functions run inside the JVM, so I use them, or a Spark SQL expression, whenever possible. If custom Python is unavoidable, a pandas UDF processes vectorised batches through Arrow and is much faster than a row-by-row UDF."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any",
+    "ecom"
+   ],
+   "c": "pyspark-api",
+   "tg": [
+    "pyspark"
+   ],
+   "q": "Write PySpark logic to keep each customer's latest order.",
+   "p": [
+    {
+     "t": "A window partitioned by customer, newest first",
+     "k": [
+      "window",
+      "partitionby"
+     ]
+    },
+    {
+     "t": "row_number over that window",
+     "k": [
+      "row_number",
+      "row number"
+     ]
+    },
+    {
+     "t": "Keep rn == 1",
+     "k": [
+      "rn == 1",
+      "rn = 1"
+     ]
+    },
+    {
+     "t": "A tie-breaker for equal timestamps",
+     "k": [
+      "tie-breaker",
+      "deterministic"
+     ]
+    },
+    {
+     "t": "Avoid groupBy-and-join or collect",
+     "k": [
+      "collect",
+      "groupby",
+      "joined back"
+     ]
+    }
+   ],
+   "a": "Define w = Window.partitionBy('customer_id').orderBy(F.col('order_ts').desc(), F.col('order_id').desc()), add F.row_number().over(w) as rn, and filter rn == 1. The order_id is a tie-breaker, so results are deterministic when two orders share a timestamp. This runs in one pass and avoids the older pattern of a groupBy on the max timestamp joined back to the table, and it never collects data to the driver."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "spark-joins",
+   "tg": [
+    "spark"
+   ],
+   "q": "How does Spark choose between a broadcast join and a sort-merge join?",
+   "p": [
+    {
+     "t": "Broadcast when one side is under the threshold",
+     "k": [
+      "threshold",
+      "autobroadcast",
+      "10 mb"
+     ]
+    },
+    {
+     "t": "Broadcast copies the small table to every executor, no shuffle",
+     "k": [
+      "every executor",
+      "no shuffle",
+      "without shuffling"
+     ]
+    },
+    {
+     "t": "Sort-merge shuffles and sorts both sides",
+     "k": [
+      "sort-merge",
+      "sort merge"
+     ]
+    },
+    {
+     "t": "Hints and AQE can change the choice",
+     "k": [
+      "hint",
+      "aqe",
+      "adaptive"
+     ]
+    },
+    {
+     "t": "Broadcasting something too big exhausts memory",
+     "k": [
+      "memory",
+      "oom",
+      "too large"
+     ]
+    }
+   ],
+   "a": "If one side is below spark.sql.autoBroadcastJoinThreshold, 10 MB by default, or you add a broadcast hint, Spark copies the small table to every executor and joins without shuffling the large side. Otherwise it uses a sort-merge join, which shuffles both sides by the join key, sorts and merges them. With adaptive query execution, Spark can switch to a broadcast join at runtime once it sees the real size after filters. Broadcasting something too large can exhaust driver or executor memory, so the threshold matters."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "any",
+    "log"
+   ],
+   "c": "spark-joins",
+   "tg": [
+    "spark",
+    "databricks"
+   ],
+   "q": "A join between two large tables has one task running for an hour while the others finish in minutes. What do you do?",
+   "p": [
+    {
+     "t": "It's skew: confirm in the Spark UI",
+     "k": [
+      "skew",
+      "spark ui"
+     ]
+    },
+    {
+     "t": "Find the hot keys",
+     "k": [
+      "hot key",
+      "key distribution"
+     ]
+    },
+    {
+     "t": "AQE skew join handling",
+     "k": [
+      "aqe",
+      "skew join",
+      "adaptive"
+     ]
+    },
+    {
+     "t": "Salt the hot keys",
+     "k": [
+      "salt",
+      "random suffix"
+     ]
+    },
+    {
+     "t": "Handle hot or NULL keys separately",
+     "k": [
+      "separately",
+      "null"
+     ]
+    }
+   ],
+   "a": "That's data skew. I'd confirm in the Spark UI by comparing task durations and input sizes in the stage, then check the key distribution to find the hot keys; often it's NULL or a default like 'unknown'. Fixes: enable AQE skew join handling so Spark splits the oversized partition, salt the hot keys by adding a random suffix on the large side and replicating the small side, or process the hot keys separately with a broadcast join. NULL keys that can never match can simply be filtered out before the join."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "spark-tuning",
+   "tg": [
+    "spark",
+    "databricks"
+   ],
+   "q": "Your Spark job spills heavily and sometimes fails with out-of-memory errors. How do you investigate and fix it?",
+   "p": [
+    {
+     "t": "Find the stage in the Spark UI",
+     "k": [
+      "spark ui",
+      "stage",
+      "garbage collection"
+     ]
+    },
+    {
+     "t": "Partitions too large: increase shuffle partitions",
+     "k": [
+      "shuffle partitions",
+      "partition size",
+      "aqe"
+     ]
+    },
+    {
+     "t": "Check for skew",
+     "k": [
+      "skew",
+      "only a few tasks"
+     ]
+    },
+    {
+     "t": "Review executor memory and overhead",
+     "k": [
+      "executor memory",
+      "overhead"
+     ]
+    },
+    {
+     "t": "Reduce data first: filter, select, no collect",
+     "k": [
+      "filter early",
+      "collect",
+      "select only"
+     ]
+    }
+   ],
+   "a": "I'd open the Spark UI to find the stage with heavy spill, long garbage collection or failed tasks. Usually partitions are too large, so I'd increase spark.sql.shuffle.partitions or let AQE size them, aiming for 100 to 200 MB each. If only a few tasks spill, it's skew and needs skew handling instead. Then I'd check executor memory and memory overhead, especially with Python or wide rows. Before adding memory, reduce the data: filter early, select only the needed columns, and make sure nothing calls collect on a large dataset."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "spark-tuning",
+   "tg": [
+    "spark"
+   ],
+   "q": "What does adaptive query execution do in Spark?",
+   "p": [
+    {
+     "t": "Re-optimises at runtime with real statistics",
+     "k": [
+      "runtime",
+      "actual statistics"
+     ]
+    },
+    {
+     "t": "Coalesces small shuffle partitions",
+     "k": [
+      "coalesce",
+      "small partitions"
+     ]
+    },
+    {
+     "t": "Switches to broadcast joins",
+     "k": [
+      "broadcast",
+      "small side"
+     ]
+    },
+    {
+     "t": "Splits skewed partitions",
+     "k": [
+      "skew",
+      "split"
+     ]
+    },
+    {
+     "t": "On by default since Spark 3.2",
+     "k": [
+      "default",
+      "3.2"
+     ]
+    }
+   ],
+   "a": "Adaptive query execution re-optimises the plan at runtime, using actual statistics from completed shuffle stages instead of estimates. It coalesces many small shuffle partitions into fewer reasonable ones, switches a sort-merge join to a broadcast join when one side turns out to be small, and splits skewed partitions in joins. It's enabled by default since Spark 3.2."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "caching",
+   "tg": [
+    "spark"
+   ],
+   "q": "When should you cache a DataFrame in Spark?",
+   "p": [
+    {
+     "t": "When several actions reuse it",
+     "k": [
+      "reuse",
+      "several actions"
+     ]
+    },
+    {
+     "t": "And it's expensive to recompute",
+     "k": [
+      "expensive",
+      "recompute",
+      "lineage"
+     ]
+    },
+    {
+     "t": "Pick a storage level",
+     "k": [
+      "memory_and_disk",
+      "storage level"
+     ]
+    },
+    {
+     "t": "Unpersist when done",
+     "k": [
+      "unpersist",
+      "free executor memory",
+      "release"
+     ]
+    },
+    {
+     "t": "Not for single use",
+     "k": [
+      "used once",
+      "single use"
+     ]
+    }
+   ],
+   "a": "Cache when the same DataFrame is reused by several actions and is expensive to recompute, because Spark otherwise reruns its whole lineage each time. Pick a storage level: MEMORY_AND_DISK is a safe default for large data. Caching is lazy and fills on the first action, and you should call unpersist when it's no longer needed to free executor memory. A DataFrame used once shouldn't be cached; that only adds cost."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "caching",
+   "tg": [
+    "spark"
+   ],
+   "q": "What's the difference between cache and checkpoint in Spark?",
+   "p": [
+    {
+     "t": "Cache keeps the lineage",
+     "k": [
+      "keeps the lineage",
+      "lineage is kept"
+     ]
+    },
+    {
+     "t": "Checkpoint writes to reliable storage and truncates lineage",
+     "k": [
+      "truncat",
+      "reliable storage"
+     ]
+    },
+    {
+     "t": "Checkpoints suit long iterative and streaming jobs",
+     "k": [
+      "iterative",
+      "streaming"
+     ]
+    },
+    {
+     "t": "Lost cached partitions are recomputed",
+     "k": [
+      "recompute",
+      "executor fails"
+     ]
+    }
+   ],
+   "a": "cache stores computed data in executor memory or local disk, but the lineage is kept, so if an executor fails the lost partitions are recomputed from the source. checkpoint writes the data to reliable storage such as HDFS or S3 and truncates the lineage, so Spark no longer needs to recompute from the start. Checkpointing helps long iterative jobs where the lineage grows huge, and streaming jobs use checkpoints to recover state and offsets."
+  },
+  {
+   "r": [
+    "da",
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "query-engines",
+   "tg": [
+    "sql",
+    "snowflake"
+   ],
+   "q": "How do you read a query plan to find why a query is slow?",
+   "p": [
+    {
+     "t": "Use EXPLAIN or the query profile",
+     "k": [
+      "explain",
+      "profile"
+     ]
+    },
+    {
+     "t": "Look for full scans with no pruning",
+     "k": [
+      "full scan",
+      "pruning"
+     ]
+    },
+    {
+     "t": "Look for joins that explode row counts",
+     "k": [
+      "explode",
+      "cross join",
+      "row count"
+     ]
+    },
+    {
+     "t": "Look for big shuffles or exchanges",
+     "k": [
+      "shuffle",
+      "exchange"
+     ]
+    },
+    {
+     "t": "Look for spills and the slowest step",
+     "k": [
+      "spill",
+      "most time"
+     ]
+    }
+   ],
+   "a": "Run EXPLAIN for the plan, or better, look at the query profile with actual rows, bytes and time per step. I look for full scans where I expected partition pruning, joins where the row count explodes, often from a missing condition or a cross join, large shuffles or exchanges that redistribute data across workers, and steps that spill to disk. The step with the most time or bytes is where to start."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "query-engines",
+   "tg": [
+    "bigquery",
+    "snowflake"
+   ],
+   "q": "Compare Trino, BigQuery and Snowflake as query engines.",
+   "p": [
+    {
+     "t": "Trino queries data in place and federates",
+     "k": [
+      "trino",
+      "in place",
+      "federat"
+     ]
+    },
+    {
+     "t": "BigQuery is serverless and charges by bytes scanned",
+     "k": [
+      "bigquery",
+      "serverless",
+      "bytes scanned"
+     ]
+    },
+    {
+     "t": "Snowflake separates storage and compute with virtual warehouses",
+     "k": [
+      "virtual warehouse",
+      "credits"
+     ]
+    },
+    {
+     "t": "Managed storage versus open formats",
+     "k": [
+      "managed storage",
+      "iceberg",
+      "open format"
+     ]
+    },
+    {
+     "t": "Choose by workload, cost and ecosystem",
+     "k": [
+      "workload",
+      "cost model",
+      "ecosystem"
+     ]
+    }
+   ],
+   "a": "Trino is an open-source distributed SQL engine that queries data in place, usually files in a lake through a catalog, and can federate across sources. BigQuery is Google's serverless warehouse: no clusters to manage, and on-demand pricing is by bytes scanned. Snowflake separates storage and compute, with virtual warehouses you size and pay for in credits. BigQuery and Snowflake mostly use their own managed storage, though both now read open formats like Iceberg. The choice depends on workload, cost model, cloud and ecosystem."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "kafka-basics",
+   "tg": [
+    "kafka"
+   ],
+   "q": "Explain topics, partitions and consumer groups in Kafka.",
+   "p": [
+    {
+     "t": "A topic is split into partitions",
+     "k": [
+      "topic",
+      "partition"
+     ]
+    },
+    {
+     "t": "Ordering is per partition, by key",
+     "k": [
+      "ordering",
+      "key"
+     ]
+    },
+    {
+     "t": "A consumer group shares the partitions",
+     "k": [
+      "consumer group",
+      "assigned"
+     ]
+    },
+    {
+     "t": "Offsets track progress",
+     "k": [
+      "offset",
+      "how far"
+     ]
+    },
+    {
+     "t": "Partitions cap the group's parallelism",
+     "k": [
+      "parallelism",
+      "idle"
+     ]
+    }
+   ],
+   "a": "A topic is a named stream of events, split into partitions spread across brokers. Events with the same key go to the same partition, so ordering is guaranteed per key, within a partition. Consumers in a consumer group share the partitions: each partition is assigned to one consumer in the group, so the partition count caps the group's parallelism and extra consumers sit idle. Consumers commit offsets to record how far they've read."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "m",
+   "d": [
+    "any",
+    "fin"
+   ],
+   "c": "kafka-basics",
+   "tg": [
+    "kafka"
+   ],
+   "q": "How do you choose the message key and number of partitions for a Kafka topic?",
+   "p": [
+    {
+     "t": "Key by the entity that needs ordering",
+     "k": [
+      "key",
+      "ordering",
+      "entity"
+     ]
+    },
+    {
+     "t": "Spread load evenly, avoiding hot partitions",
+     "k": [
+      "hot partition",
+      "evenly",
+      "skew"
+     ]
+    },
+    {
+     "t": "Size partitions for throughput and parallelism",
+     "k": [
+      "throughput",
+      "parallelism"
+     ]
+    },
+    {
+     "t": "Adding partitions later remaps keys",
+     "k": [
+      "later",
+      "remap"
+     ]
+    },
+    {
+     "t": "Too many partitions add overhead",
+     "k": [
+      "overhead",
+      "too many"
+     ]
+    }
+   ],
+   "a": "The key should be the entity whose events must stay in order, like order_id or account_id, while spreading load evenly; a key with a few very hot values creates hot partitions and skew. The partition count is sized for target throughput and the consumer parallelism needed, with headroom. Choose it carefully up front, because adding partitions later remaps keys to different partitions and breaks per-key ordering for a while. Too many partitions add overhead on brokers and clients, so don't overdo it."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any",
+    "fin"
+   ],
+   "c": "delivery-semantics",
+   "tg": [
+    "kafka"
+   ],
+   "q": "Explain at-most-once, at-least-once and exactly-once delivery.",
+   "p": [
+    {
+     "t": "At-most-once may lose messages",
+     "k": [
+      "at-most-once",
+      "lose"
+     ]
+    },
+    {
+     "t": "At-least-once may duplicate them",
+     "k": [
+      "at-least-once",
+      "duplicate"
+     ]
+    },
+    {
+     "t": "Exactly-once affects the result once",
+     "k": [
+      "exactly-once",
+      "exactly once"
+     ]
+    },
+    {
+     "t": "Kafka transactions and idempotent producers",
+     "k": [
+      "transaction",
+      "idempotent producer"
+     ]
+    },
+    {
+     "t": "At-least-once plus an idempotent sink in practice",
+     "k": [
+      "idempotent sink",
+      "upsert",
+      "merge"
+     ]
+    }
+   ],
+   "a": "At-most-once commits the offset before processing, so a crash loses messages but never duplicates them. At-least-once commits after processing, so a crash replays messages and can create duplicates but loses nothing. Exactly-once means each message affects the result once; Kafka supports it within Kafka using the idempotent producer and transactions, and engines like Flink extend it with checkpoints and transactional sinks. In practice, at-least-once plus an idempotent sink, such as an upsert or MERGE on a key, gives the same effect more simply."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "any",
+    "fin"
+   ],
+   "c": "delivery-semantics",
+   "tg": [
+    "kafka"
+   ],
+   "q": "Your consumer writes events to a database, and you see duplicates after every deployment. Why, and how do you fix it?",
+   "p": [
+    {
+     "t": "Uncommitted offsets are replayed on restart",
+     "k": [
+      "replay",
+      "offset",
+      "restart"
+     ]
+    },
+    {
+     "t": "That's at-least-once behaviour",
+     "k": [
+      "at-least-once",
+      "at least once",
+      "normal behaviour"
+     ]
+    },
+    {
+     "t": "Make writes idempotent on an event id",
+     "k": [
+      "idempotent",
+      "event id",
+      "upsert"
+     ]
+    },
+    {
+     "t": "Shut down gracefully and commit on rebalance",
+     "k": [
+      "graceful",
+      "rebalance"
+     ]
+    },
+    {
+     "t": "Keep a dedup step downstream",
+     "k": [
+      "dedup",
+      "deduplicat"
+     ]
+    }
+   ],
+   "a": "When the consumer stops during a deployment, events it processed after its last offset commit are replayed on restart, which is normal at-least-once behaviour; rebalances cause the same thing. The robust fix is idempotent writes: upsert on a unique event id, so replays overwrite instead of inserting twice. It also helps to shut down gracefully and commit offsets on rebalance, and to keep a dedup step downstream for safety."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any",
+    "log"
+   ],
+   "c": "event-time",
+   "tg": [
+    "kafka",
+    "spark"
+   ],
+   "q": "What's the difference between event time and processing time, and why does it matter?",
+   "p": [
+    {
+     "t": "Event time is when it happened",
+     "k": [
+      "event time",
+      "happened"
+     ]
+    },
+    {
+     "t": "Processing time is when the system sees it",
+     "k": [
+      "processing time",
+      "receives"
+     ]
+    },
+    {
+     "t": "Events arrive late and out of order",
+     "k": [
+      "out of order",
+      "late"
+     ]
+    },
+    {
+     "t": "Event-time windows give correct results",
+     "k": [
+      "window",
+      "correct"
+     ]
+    },
+    {
+     "t": "Replays give the same answer",
+     "k": [
+      "replay",
+      "reprocess"
+     ]
+    }
+   ],
+   "a": "Event time is when something actually happened, recorded in the event; processing time is when the system receives or processes it. They differ because devices go offline and networks delay messages, so events arrive late and out of order. Aggregating by event time puts each event in the right window, so results are correct, and a replay or reprocess gives the same answer. Processing-time windows are simpler, but their results depend on when data happened to arrive."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "event-time",
+   "tg": [
+    "spark",
+    "flink"
+   ],
+   "q": "How do watermarks work, and what happens to events that arrive after the watermark?",
+   "p": [
+    {
+     "t": "An estimate that no older events are still coming",
+     "k": [
+      "estimate",
+      "older"
+     ]
+    },
+    {
+     "t": "Usually max event time minus a delay",
+     "k": [
+      "maximum event time",
+      "max event time",
+      "minus"
+     ]
+    },
+    {
+     "t": "It finalises windows and frees state",
+     "k": [
+      "finalis",
+      "finaliz",
+      "state"
+     ]
+    },
+    {
+     "t": "Very late events are dropped or side-output",
+     "k": [
+      "dropped",
+      "side output"
+     ]
+    },
+    {
+     "t": "Completeness versus latency trade-off",
+     "k": [
+      "trade-off",
+      "latency"
+     ]
+    }
+   ],
+   "a": "A watermark is the engine's estimate that no events older than a certain time are still to come, usually the maximum event time seen minus an allowed delay, such as 10 minutes. When the watermark passes the end of a window, the window is finalised, results are emitted and its state can be freed. Events that arrive later than the allowed lateness are dropped or sent to a side output, like a late events table, for separate handling. A longer delay gives more complete results but needs more state and adds latency, so it's a trade-off."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "stream-processing",
+   "tg": [
+    "flink",
+    "spark",
+    "databricks"
+   ],
+   "q": "Flink or Spark Structured Streaming: how would you choose?",
+   "p": [
+    {
+     "t": "Spark: micro-batches, shared API with batch",
+     "k": [
+      "micro-batch",
+      "batch jobs"
+     ]
+    },
+    {
+     "t": "Flink: event at a time, lower latency",
+     "k": [
+      "flink",
+      "one at a time",
+      "lower latency"
+     ]
+    },
+    {
+     "t": "Flink has richer state and event-time handling",
+     "k": [
+      "state",
+      "event time"
+     ]
+    },
+    {
+     "t": "Team skills and platform",
+     "k": [
+      "team",
+      "skills",
+      "platform"
+     ]
+    },
+    {
+     "t": "Decide on the latency requirement",
+     "k": [
+      "latency requirement",
+      "milliseconds"
+     ]
+    }
+   ],
+   "a": "Spark Structured Streaming processes micro-batches and shares the DataFrame API with batch jobs, so it's a natural fit for teams already on Spark or Databricks, with latency of seconds. Flink processes events one at a time, giving lower latency, down to milliseconds, and has richer state and event time handling for complex stateful jobs. I'd decide on the latency requirement, how complex the state is, and the team's skills and platform."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "stream-processing",
+   "tg": [
+    "spark",
+    "kafka"
+   ],
+   "q": "What happens when a streaming job crashes, and how does it recover without losing or duplicating data?",
+   "p": [
+    {
+     "t": "Checkpoints store offsets and state",
+     "k": [
+      "checkpoint",
+      "offset"
+     ]
+    },
+    {
+     "t": "It restarts from the last checkpoint",
+     "k": [
+      "restart",
+      "last checkpoint"
+     ]
+    },
+    {
+     "t": "The source is replayed from saved offsets",
+     "k": [
+      "replay",
+      "source"
+     ]
+    },
+    {
+     "t": "The sink must be idempotent or transactional",
+     "k": [
+      "idempotent",
+      "transactional"
+     ]
+    },
+    {
+     "t": "Checkpoints live on durable storage",
+     "k": [
+      "durable",
+      "s3"
+     ]
+    }
+   ],
+   "a": "The job periodically writes checkpoints to durable storage like S3: the source offsets it has read and the state it holds. After a crash it restarts from the last checkpoint, restores the state and replays the source from the saved offsets. Events processed after that checkpoint are processed again, so the sink must be idempotent or transactional to avoid duplicates; with that, the results are effectively exactly-once."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any",
+    "saas"
+   ],
+   "c": "stateful-streaming",
+   "tg": [
+    "spark",
+    "flink"
+   ],
+   "q": "Explain tumbling, sliding and session windows, with an example of each.",
+   "p": [
+    {
+     "t": "Tumbling: fixed and non-overlapping",
+     "k": [
+      "tumbling",
+      "non-overlapping"
+     ]
+    },
+    {
+     "t": "Sliding or hopping: overlapping",
+     "k": [
+      "sliding",
+      "hopping",
+      "overlap"
+     ]
+    },
+    {
+     "t": "Session: closed by a gap of inactivity",
+     "k": [
+      "session",
+      "inactivity",
+      "gap"
+     ]
+    },
+    {
+     "t": "Gives examples",
+     "k": [
+      "for example",
+      "example"
+     ]
+    }
+   ],
+   "a": "Tumbling windows are fixed and non-overlapping, for example orders per 5-minute window from 10:00 to 10:05, then 10:05 to 10:10. Sliding or hopping windows overlap, for example a 10-minute window recomputed every minute, so each event falls into ten windows; they're good for smooth moving averages. Session windows group each user's events until a gap of inactivity, for example a session ends after 30 minutes without activity, so they vary in length."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "stateful-streaming",
+   "tg": [
+    "spark",
+    "flink"
+   ],
+   "q": "Your streaming deduplication job's memory keeps growing until it crashes. Why, and how do you fix it?",
+   "p": [
+    {
+     "t": "State keeps every key forever",
+     "k": [
+      "state",
+      "every key",
+      "forever"
+     ]
+    },
+    {
+     "t": "No watermark or TTL to expire it",
+     "k": [
+      "watermark",
+      "ttl"
+     ]
+    },
+    {
+     "t": "Deduplicate within a bounded window",
+     "k": [
+      "withwatermark",
+      "dropduplicates",
+      "bounded"
+     ]
+    },
+    {
+     "t": "Use RocksDB and monitor state size",
+     "k": [
+      "rocksdb",
+      "state size",
+      "monitor"
+     ]
+    }
+   ],
+   "a": "Deduplication keeps every key it has seen in state, and without a watermark or TTL nothing ever expires, so the state grows forever until memory runs out. The fix is to keep it bounded: add a watermark and deduplicate within it, for example withWatermark on event time plus dropDuplicates in Spark, or set a state TTL in Flink, so keys older than the dedup window are dropped. For large state, use a RocksDB state store and monitor the state size per operator."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "schema-registry",
+   "tg": [
+    "kafka"
+   ],
+   "q": "What does a schema registry do in a Kafka-based platform?",
+   "p": [
+    {
+     "t": "Stores versioned schemas per subject",
+     "k": [
+      "version",
+      "subject"
+     ]
+    },
+    {
+     "t": "Enforces compatibility",
+     "k": [
+      "compatib",
+      "can't register",
+      "rejects"
+     ]
+    },
+    {
+     "t": "Messages carry a schema id",
+     "k": [
+      "schema id",
+      "small id"
+     ]
+    },
+    {
+     "t": "Used to serialise and deserialise",
+     "k": [
+      "serializ",
+      "deserializ",
+      "serialis"
+     ]
+    },
+    {
+     "t": "Prevents breaking changes",
+     "k": [
+      "breaking",
+      "contract"
+     ]
+    }
+   ],
+   "a": "A schema registry stores each event type's schema, versioned per subject. Producers register the schema and send a small schema id with each message, and consumers use the id to fetch the schema and deserialize. The registry enforces a compatibility mode, so a producer can't register a version that would break existing consumers. That makes event formats an enforced contract instead of an informal agreement."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "schema-registry",
+   "tg": [
+    "kafka"
+   ],
+   "q": "Why use Avro or Protobuf instead of plain JSON for Kafka events?",
+   "p": [
+    {
+     "t": "Compact binary, smaller messages",
+     "k": [
+      "compact",
+      "binary",
+      "smaller"
+     ]
+    },
+    {
+     "t": "Typed fields enforced by a schema",
+     "k": [
+      "types",
+      "schema"
+     ]
+    },
+    {
+     "t": "Controlled evolution with the registry",
+     "k": [
+      "evolution",
+      "compatib"
+     ]
+    },
+    {
+     "t": "Faster to serialise and parse",
+     "k": [
+      "faster",
+      "parse"
+     ]
+    },
+    {
+     "t": "JSON without a schema is error-prone",
+     "k": [
+      "error-prone",
+      "typo"
+     ]
+    }
+   ],
+   "a": "Avro and Protobuf are compact binary formats, so messages are smaller and faster to serialize and parse than JSON. Every message follows a schema with defined types, so a producer can't send a string where a number is expected. With a schema registry they support controlled evolution with compatibility rules. Plain JSON is flexible and human-readable, but without a schema it's error-prone: typos and type changes reach consumers unnoticed."
+  }
+ ],
+ "searchChecks": [
+  [
+   "driver and executors",
+   "spark-architecture"
+  ],
+  [
+   "broadcast join",
+   "spark-joins"
+  ],
+  [
+   "spark out of memory spill",
+   "spark-tuning"
+  ],
+  [
+   "cache vs checkpoint",
+   "caching"
+  ],
+  [
+   "kafka consumer groups",
+   "kafka-basics"
+  ],
+  [
+   "exactly once delivery",
+   "delivery-semantics"
+  ],
+  [
+   "event time vs processing time",
+   "event-time"
+  ],
+  [
+   "flink vs spark streaming",
+   "stream-processing"
+  ],
+  [
+   "session window",
+   "stateful-streaming"
+  ],
+  [
+   "schema registry avro",
+   "schema-registry"
+  ],
+  [
+   "mapreduce",
+   "distributed-basics"
+  ],
+  [
+   "python udf slow",
+   "pyspark-api"
+  ],
+  [
+   "trino presto",
+   "query-engines"
+  ]
+ ]
+}

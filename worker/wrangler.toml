@@ -1,0 +1,45 @@
+name = "datakul-gateway"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+# Comma-separated list of sites allowed to call the gateway.
+# Use "*" while testing, then set it to your real site, e.g.
+# ALLOWED_ORIGINS = "https://datakul.pages.dev"
+ALLOWED_ORIGINS = "*"
+# Your site's address, sent to OpenRouter as the referrer (optional).
+SITE_URL = ""
+# Layer 2 tuning (optional): different askers needed before a topic is drafted, and drafts per night.
+MIN_ASKERS = "10"
+DRAFTS_PER_RUN = "3"
+# Model used for drafting community cards (optional; defaults to the first provider in the fallback order).
+# DRAFT_PROVIDER = "groq"
+# DRAFT_MODEL = "openai/gpt-oss-120b"
+
+# Meta Llama via Cloudflare Workers AI. No API key needed; uses your account's free daily allowance.
+# Delete these two lines to turn Llama off.
+[ai]
+binding = "AI"
+
+# API keys are secrets, never put them in this file. Add only the ones you have:
+#   npx wrangler secret put GEMINI_API_KEY
+#   npx wrangler secret put GROQ_API_KEY
+#   npx wrangler secret put OPENROUTER_API_KEY
+#   npx wrangler secret put MISTRAL_API_KEY
+
+# ---- Layer 2: the shared library that grows from learners' questions (optional) ----
+# The automatic deploy (tools/deploy.mjs) does steps 1-3 for you and fills in database_id on the runner. Leave the placeholder here.
+# By hand:
+# 1. npx wrangler d1 create datakul        (copy the database_id it prints below)
+# 2. npx wrangler d1 migrations apply datakul --remote
+# 3. npx wrangler secret put ADMIN_TOKEN   (a long random password for the review page)
+# Delete this block to turn layer 2 off; the app keeps working without it.
+[[d1_databases]]
+binding = "DB"
+database_name = "datakul"
+database_id = "REPLACE_WITH_YOUR_DATABASE_ID"
+migrations_dir = "migrations"
+
+# Nightly at 02:00 India time (20:30 UTC): group questions, draft cards, delete questions older than 180 days.
+[triggers]
+crons = ["30 20 * * *"]

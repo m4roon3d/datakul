@@ -1,0 +1,62 @@
+name: Checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  gateway:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Gateway's grader copy matches the app
+        run: node tools/sync-grader.mjs --check
+      - name: App scripts parse
+        run: for f in web/*.js; do node --check "$f" || exit 1; done
+      - name: Gateway tests
+        run: |
+          set -o pipefail
+          node --no-warnings tests/gateway.mjs 2>&1 | tee "$RUNNER_TEMP/gw.txt" || { grep -E "FAIL|Error" "$RUNNER_TEMP/gw.txt" | head -10 | while read -r l; do echo "::error title=Gateway test::$l"; done; exit 1; }
+      - name: Layer 2 tests (database, drafting, review, publish)
+        run: |
+          set -o pipefail
+          node --no-warnings tests/layer2.mjs 2>&1 | tee "$RUNNER_TEMP/l2.txt" || { grep -E "^FAIL|Error" "$RUNNER_TEMP/l2.txt" | head -10 | while read -r l; do echo "::error title=Layer 2 test::$l"; done; exit 1; }
+      - name: Gateway bundles for Cloudflare (dry run, no account needed)
+        working-directory: worker
+        run: npx --yes wrangler@4.112.0 deploy --dry-run --outdir "$RUNNER_TEMP/dist"
+
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Playwright and Chromium
+        run: |
+          pip install playwright==1.63.0
+          python -m playwright install --with-deps chromium
+      - name: Start the test server (real gateway, test database, stubbed AI)
+        run: |
+          node --no-warnings tests/l2server.mjs 8788 > "$RUNNER_TEMP/server.log" 2>&1 &
+          sleep 2
+          cat "$RUNNER_TEMP/server.log"
+      - name: Browser tests (app and review page)
+        run: |
+          set -o pipefail
+          python3 tests/l2ui.py 2>&1 | tee "$RUNNER_TEMP/ui.txt" || { grep -E "^FAIL|Error" "$RUNNER_TEMP/ui.txt" | head -10 | while read -r l; do echo "::error title=Browser test::$l"; done; exit 1; }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        continue-on-error: true   # screenshots are a nice-to-have; the account's artifact storage is shared with Hodlr's APKs
+        with:
+          retention-days: 3
+          name: screenshots
+          path: tests/out/*.png
+          if-no-files-found: ignore

@@ -1,0 +1,1815 @@
+{
+ "batch": 13,
+ "name": "Fintech pack and career prep",
+ "concepts": [
+  {
+   "id": "upi-lifecycle",
+   "t": "de",
+   "title": "UPI architecture and transaction lifecycle",
+   "mod": "Domain pack: fintech and UPI payments",
+   "lv": "F",
+   "kw": "upi unified payments interface npci psp payer psp payee psp remitter bank beneficiary bank vpa upi id collect request intent rrn deemed pending timeout reversal",
+   "s": "UPI moves money between bank accounts in seconds through NPCI's switch, with apps, banks and NPCI each playing a part. Its data comes from every step of that flow.",
+   "d": "A payer uses a UPI app run by a payment service provider (PSP), identifying the payee by a UPI ID (VPA), QR code or intent link. The payer PSP sends the request to the NPCI UPI switch, which resolves the payee's bank, asks the remitter bank to debit the payer after PIN verification, and asks the beneficiary bank to credit the payee. Each transaction gets a unique reference such as the RRN. Outcomes are success, failure, or deemed or pending when a response times out; pending transactions are resolved later through status checks, and failed debits must be reversed. Collect requests pull money, pay requests push it. Data teams track status changes, response codes and timings at each hop.",
+   "e": "A shopper scans a kirana store's QR, enters the PIN, and the debit succeeds, but the beneficiary bank times out. The transaction shows as deemed, and a later status check confirms the credit, so no reversal is needed.",
+   "c": "Why do UPI systems need a \"deemed\" or pending status as well as success and failure?",
+   "i": "Fintech interviews ask you to explain the UPI flow, the parties involved, transaction statuses and how you'd model the events.",
+   "r": [
+    "payment-reconciliation",
+    "payment-success-metrics",
+    "event-time"
+   ]
+  },
+  {
+   "id": "payment-reconciliation",
+   "t": "de",
+   "title": "Payment reconciliation",
+   "mod": "Domain pack: fintech and UPI payments",
+   "lv": "I",
+   "kw": "payment reconciliation recon matching internal ledger bank statement npci settlement file psp report breaks mismatches auto matching three way",
+   "s": "Reconciliation checks that every payment recorded internally matches the records of banks, payment networks and gateways, and investigates every difference.",
+   "d": "A payment company compares its own transaction records and ledger with external files: payment gateway or PSP reports, NPCI settlement and raw transaction files, and bank statements. Matching uses keys such as RRN or UTR, amount, date and status, first with exact rules, then with tolerances and many-to-one matching for batched settlements. Unmatched items are breaks: missing on one side, amount or status mismatches, duplicates or timing differences across days. Breaks are classified, aged and assigned for investigation, and fixes such as reversals or manual adjustments are recorded. Two-way or three-way reconciliation runs daily, with automation rates and break ageing tracked as KPIs.",
+   "e": "Of 2.4 million UPI transactions, 99.93% auto-match the NPCI settlement file. 1,700 breaks remain: most are pending transactions settled the next day, and 40 are successes internally that NPCI shows as failed, which need reversal checks.",
+   "c": "Why do many reconciliation breaks turn out to be timing differences?",
+   "i": "Expect to design a reconciliation pipeline, describe matching rules and break types, and explain how you'd monitor it.",
+   "r": [
+    "upi-lifecycle",
+    "settlement",
+    "ledger-design"
+   ]
+  },
+  {
+   "id": "settlement",
+   "t": "de",
+   "title": "Settlement cycles and merchant payouts",
+   "mod": "Domain pack: fintech and UPI payments",
+   "lv": "I",
+   "kw": "settlement cycles merchant payouts t+1 net settlement npci settlement payment aggregator escrow nodal account mdr fees payout reconciliation",
+   "s": "Payment authorisation happens in seconds, but the actual movement of money between banks happens later, in settlement cycles, and merchants are paid out on their own schedule.",
+   "d": "For UPI, NPCI calculates net positions between banks across several settlement cycles each day, and banks settle through their accounts with the RBI. A payment aggregator receives funds for its merchants into an escrow account, as RBI's payment aggregator rules require, then pays merchants out, typically on T+1 or a similar schedule, after deducting fees such as MDR where it applies, refunds, chargebacks and reserves. Payout data must track the gross amount, each deduction and the net amount per merchant per cycle, and be reconciled against bank credits. Delays and holds are common sources of merchant complaints.",
+   "e": "A merchant's Monday sales of Rs 1,00,000 settle on Tuesday as Rs 98,200: Rs 1,200 of refunds and Rs 600 of fees deducted, with a payout report listing every transaction behind the net amount.",
+   "c": "Why is a merchant's payout usually different from their total sales for the day?",
+   "i": "Expect to explain settlement cycles, net settlement, payout calculations and how you'd model and reconcile them.",
+   "r": [
+    "payment-reconciliation",
+    "ledger-design",
+    "freight-settlement"
+   ]
+  },
+  {
+   "id": "ledger-design",
+   "t": "de",
+   "title": "Ledger design and double-entry accounting",
+   "mod": "Domain pack: fintech and UPI payments",
+   "lv": "I",
+   "kw": "ledger design double entry accounting debit credit journal entries accounts balances immutable append only idempotency trial balance chart of accounts",
+   "s": "A ledger is the system of record for money. Double-entry bookkeeping records every movement as equal debits and credits, so the books always balance and every rupee is traceable.",
+   "d": "Each transaction is a journal entry with two or more lines that debit some accounts and credit others by the same total, for example debiting a customer wallet and crediting a merchant payable. Balances are derived from entries, not edited directly. Ledgers are append-only: mistakes are corrected with reversing entries, never by updating or deleting rows. Entries carry an idempotency key so retries can't double-post, plus timestamps, references to the business event, and amounts stored as integers in paise or as DECIMAL. A trial balance checks total debits equal total credits, and reconciliation compares ledger balances with bank balances.",
+   "e": "A Rs 500 wallet payment to a merchant posts two lines: debit customer_wallet 500, credit merchant_payable 500. A refund posts the reverse entry instead of deleting the original.",
+   "c": "Why are ledger corrections made with reversing entries rather than updates?",
+   "i": "Fintech engineering interviews ask you to design a ledger schema, explain double entry, and handle retries and corrections safely.",
+   "r": [
+    "payment-reconciliation",
+    "idempotency",
+    "settlement"
+   ]
+  },
+  {
+   "id": "payment-success-metrics",
+   "t": "de",
+   "title": "Payment success rate and failure analysis",
+   "mod": "Domain pack: fintech and UPI payments",
+   "lv": "I",
+   "kw": "payment success rate failure analysis response codes technical decline business decline bank downtime timeout uptime routing conversion upi failures",
+   "s": "Payment success rate is a core fintech metric, and analysing failures by cause, bank and app shows what can be fixed and what is the customer's choice.",
+   "d": "Define success rate carefully: successful transactions over attempted ones, excluding duplicates and test traffic, and decide how pending transactions are counted. Split failures using response codes into technical declines (bank or network timeouts, server errors, downtime) and business or customer declines (insufficient balance, wrong PIN, limits exceeded). Technical failures are the platform's problem to fix through routing, retries and bank escalations; business declines reflect customer behaviour. Slice by remitter bank, PSP, app version, amount band, time of day and device. Monitor in near real time, because a single bank's outage can drop success rates within minutes.",
+   "e": "Overall UPI success fell from 94% to 89% between 7 and 8 pm. Response codes show timeouts concentrated on one remitter bank, which had a partial outage, while business declines stayed flat.",
+   "c": "Why separate technical declines from business declines?",
+   "i": "Expect to define success rate, classify failures, and investigate a drop in success rate.",
+   "r": [
+    "upi-lifecycle",
+    "metric-rca",
+    "pipeline-monitoring"
+   ]
+  },
+  {
+   "id": "refunds-chargebacks",
+   "t": "de",
+   "title": "Refunds, chargebacks and disputes",
+   "mod": "Domain pack: fintech and UPI payments",
+   "lv": "I",
+   "kw": "refunds chargebacks disputes reason codes representment arbitration merchant initiated refund customer complaint tat turnaround time upi dispute card network",
+   "s": "Refunds are returns started by the merchant, while chargebacks and disputes are started by the customer through their bank, with deadlines, evidence and rules set by the networks.",
+   "d": "A refund is initiated by the merchant, fully or partially, and linked to the original transaction, with its own status and timings. A dispute or chargeback starts when a customer complains to their bank, for example \"amount debited but not credited\" or \"goods not received\". The bank raises it through the network with a reason code; the merchant or acquirer can accept it or contest it with evidence (representment), and unresolved cases can go to arbitration. Each step has a turnaround time, and RBI's harmonised turnaround time rules require compensation when failed transactions aren't reversed in time. Data teams track dispute rates, reasons, win rates, ageing and the cost of losses.",
+   "e": "A merchant's chargeback rate jumps to 1.4% with \"product not received\" reasons. Linking disputes to delivery data shows a courier partner marking undelivered parcels as delivered.",
+   "c": "Why must every refund and chargeback link back to the original transaction?",
+   "i": "Expect to explain the refund and dispute lifecycle, the data model behind it, and the metrics you'd monitor.",
+   "r": [
+    "payment-reconciliation",
+    "returns-analytics",
+    "fraud-signals"
+   ]
+  },
+  {
+   "id": "fraud-signals",
+   "t": "de",
+   "title": "Fraud detection signals and rules",
+   "mod": "Domain pack: fintech and UPI payments",
+   "lv": "A",
+   "kw": "fraud detection signals rules velocity checks device fingerprint geolocation mule accounts account takeover risk score rule engine machine learning false positives",
+   "s": "Fraud detection combines rules and models over signals about the transaction, user, device and network, deciding in milliseconds whether to allow, challenge or block.",
+   "d": "Useful signals include velocity (transactions or new payees in the last few minutes), amount compared with the user's history, new devices or SIM changes, device fingerprints shared across many accounts, location and IP mismatches, new accounts receiving many small credits (mule accounts), and graph links between accounts. Rules are fast and explainable, such as blocking more than 5 new payees in 10 minutes, while machine learning models score combined risk. Features must be computed in real time, often with streaming state. Measure fraud caught, losses, false positive rate and customer friction, and feed confirmed fraud back into labels.",
+   "e": "An account that received 60 credits of Rs 990 from different users in a day, from a device linked to 12 other accounts, scores as a likely mule, and outgoing transfers are held for review.",
+   "c": "Why combine rules with a machine learning model rather than using only one?",
+   "i": "Senior fintech interviews ask you to design fraud detection: signals, real-time features, rules versus models, and how to measure it.",
+   "r": [
+    "anomaly-detection",
+    "class-imbalance",
+    "stateful-streaming"
+   ]
+  },
+  {
+   "id": "kyc-compliance",
+   "t": "de",
+   "title": "KYC and compliance data",
+   "mod": "Domain pack: fintech and UPI payments",
+   "lv": "I",
+   "kw": "kyc know your customer ckyc aadhaar ekyc video kyc pan aml anti money laundering transaction monitoring str fiu-ind sanctions screening pep audit trail",
+   "s": "KYC verifies who customers are, and anti-money-laundering (AML) checks keep watching what they do. Both generate sensitive data that must be accurate, auditable and tightly protected.",
+   "d": "KYC uses identity documents and checks such as PAN verification, Aadhaar-based eKYC, video KYC and the Central KYC (CKYC) registry, with risk categories that decide how often KYC is refreshed. AML adds sanctions and politically exposed person (PEP) screening, and transaction monitoring rules for patterns like structuring or rapid movement of funds, with suspicious transaction reports filed to FIU-IND. Data requirements: full audit trails of checks and decisions, retention for the periods regulations set, strict access control and masking, and never storing full Aadhaar numbers outside approved vaults. Analysts also report KYC completion, rejection reasons and case backlogs.",
+   "e": "A wallet app tracks onboarding: 82% complete video KYC on the first attempt, while most rejections are blurry PAN images, so the app adds an image quality check before upload.",
+   "c": "Why must KYC and AML systems keep a full audit trail of checks and decisions?",
+   "i": "Expect to explain KYC and AML processes, the data they produce, and how you'd protect and report on it.",
+   "r": [
+    "pii-handling",
+    "privacy-regulation",
+    "access-control"
+   ]
+  },
+  {
+   "id": "credit-scoring",
+   "t": "de",
+   "title": "Credit risk scoring basics",
+   "mod": "Domain pack: fintech and UPI payments",
+   "lv": "A",
+   "kw": "credit risk scoring probability of default loan default risk default rate pd lgd ead bureau score cibil scorecard woe information value gini ks reject inference expected loss",
+   "s": "Credit scoring estimates how likely a borrower is to default, which drives approval, limits and pricing, under strict expectations of explainability and fairness.",
+   "d": "The core quantity is probability of default (PD) over a period, often defined as 90 or more days past due within 12 months. Expected loss is PD times loss given default (LGD) times exposure at default (EAD). Inputs include bureau data such as CIBIL scores and repayment history, application data, banking transactions and, for new-to-credit customers, alternative data. Traditional scorecards use logistic regression on binned features with weight of evidence, which is transparent; gradient boosting often ranks better but needs explanations. Models are evaluated with Gini or AUC and KS, checked for stability over time, and must handle reject inference, because outcomes are only known for approved applicants.",
+   "e": "A personal loan model gives an applicant PD 4%. With LGD 60% and exposure Rs 2,00,000, expected loss is about Rs 4,800, which feeds the interest rate offered.",
+   "c": "Why is reject inference a problem in credit scoring?",
+   "i": "Expect PD, LGD and EAD, how scorecards work, evaluation metrics, and fairness and explainability requirements.",
+   "r": [
+    "logistic-regression",
+    "roc-calibration",
+    "model-fairness"
+   ]
+  },
+  {
+   "id": "de-system-design",
+   "t": "ar",
+   "title": "Data system design interviews",
+   "mod": "Career: interviews and portfolio",
+   "lv": "A",
+   "kw": "data system design interview pipeline design requirements clarify scale estimates architecture diagram trade offs bottlenecks failure modes data engineering interview",
+   "s": "Data system design interviews ask you to design a pipeline or platform end to end in about 45 minutes, judging how you clarify, structure, trade off and handle failure.",
+   "d": "A reliable structure: clarify requirements and use cases, including freshness, volumes, consumers and correctness needs; estimate scale, such as events per second and storage per year; sketch a high-level architecture from sources through ingestion, storage, processing and serving; then go deep on the hardest parts, such as late data, deduplication, schema changes or backfills. Discuss trade-offs explicitly, such as batch versus streaming or cost versus latency, and cover failure modes, monitoring, data quality and security. Think aloud, use the interviewer's hints, and keep the design simple until a requirement forces complexity.",
+   "e": "Asked to design ride-hailing trip analytics, a candidate first asks about freshness needs (finance next day, operations within 5 minutes), estimates 2,000 trip events a second, then proposes Kafka feeding both a streaming aggregate and a lakehouse with daily models.",
+   "c": "Why should you clarify requirements and estimate scale before drawing the architecture?",
+   "i": "Senior data engineering and architect loops nearly always include a system design round.",
+   "r": [
+    "batch-stream",
+    "lambda-kappa",
+    "nfrs"
+   ]
+  },
+  {
+   "id": "sql-interview-strategy",
+   "t": "ar",
+   "title": "SQL interview strategy",
+   "mod": "Career: interviews and portfolio",
+   "lv": "I",
+   "kw": "sql interview strategy live coding clarify grain edge cases ctes window functions test with examples explain approach timed sql round",
+   "s": "SQL rounds test whether you can turn a business question into correct, readable SQL under time pressure, and how you reason about edge cases.",
+   "d": "Start by restating the question and clarifying the grain of each table, what counts as a duplicate, how to treat NULLs and ties, and the expected output columns. Sketch the approach before typing. Build the query in readable steps with CTEs, checking each step's row count mentally or with small examples. Know the common patterns: joins and anti-joins, GROUP BY with HAVING, window functions for ranking, running totals and lag, deduplication, gaps and islands, and date handling. Before finishing, walk through edge cases such as empty groups, ties and NULLs, and mention indexes or performance if asked.",
+   "e": "For \"top 3 products by revenue per category\", a candidate asks whether ties should both be included, chooses DENSE_RANK in a CTE, and checks that categories with fewer than 3 products still appear.",
+   "c": "Why ask about ties before writing a top-N query?",
+   "i": "Almost every data analyst and data engineer loop includes a timed SQL round, often in a shared editor.",
+   "r": [
+    "window-functions",
+    "ctes-subqueries",
+    "null-handling"
+   ]
+  },
+  {
+   "id": "analytics-case",
+   "t": "ar",
+   "title": "Analytics case interviews",
+   "mod": "Career: interviews and portfolio",
+   "lv": "I",
+   "kw": "analytics case interview product sense metric investigation framework hypotheses prioritise structure business case estimation recommendation",
+   "s": "Analytics case interviews give an open business problem, such as a falling metric or a feature decision, and test how you structure it, use data and reach a recommendation.",
+   "d": "Typical cases: diagnose a metric drop, define success metrics for a feature, decide whether to launch based on an experiment, or size an opportunity. Clarify the goal and definitions first, then lay out a structure, such as decomposing the metric or listing hypotheses across internal and external causes, and prioritise which to check first. Say what data and analysis you'd use for each, interpret the numbers the interviewer gives, and watch for traps like mix shift, seasonality and confounding. Finish with a clear recommendation, its risks and the next step, rather than a list of possibilities.",
+   "e": "Case: \"Repeat orders fell 6% last month.\" The candidate checks the definition and data, compares cohorts, segments by city and acquisition channel, finds a drop concentrated in customers acquired by a heavy discount campaign, and recommends adjusting the campaign targeting.",
+   "c": "Why finish an analytics case with a recommendation rather than a list of possible causes?",
+   "i": "Analyst and product analytics interviews at consumer companies almost always include a case round.",
+   "r": [
+    "metric-rca",
+    "kpi-metrics",
+    "ab-testing"
+   ]
+  },
+  {
+   "id": "behavioural-star",
+   "t": "ar",
+   "title": "Behavioural interviews with the STAR method",
+   "mod": "Career: interviews and portfolio",
+   "lv": "F",
+   "kw": "behavioural interview star method situation task action result stories examples conflict failure leadership impact metrics",
+   "s": "Behavioural interviews ask about past situations to predict how you'll work. The STAR method, Situation, Task, Action and Result, keeps your answers clear and specific.",
+   "d": "Situation sets brief context, Task states your responsibility, Action explains what you personally did and why, which should be most of the answer, and Result gives the outcome, quantified where possible, plus what you learned. Prepare 6 to 8 stories that cover common themes: a difficult stakeholder, a production incident, a failure, influencing without authority, a tight deadline, and a decision with trade-offs, each adaptable to several questions. Say \"I\" for your contribution, keep each answer to about two minutes, and be honest about mistakes.",
+   "e": "Situation: the nightly finance load missed its SLA three times in a month. Task: I owned the pipeline. Action: I profiled it, found a full reload of a 400 million row table, and made it incremental. Result: runtime fell from 3 hours to 25 minutes and there were no breaches for two quarters.",
+   "c": "Why should the Action part be the longest part of a STAR answer?",
+   "i": "Every interview loop includes behavioural questions, and senior roles weight them heavily.",
+   "r": [
+    "analytics-case",
+    "portfolio",
+    "data-storytelling"
+   ]
+  },
+  {
+   "id": "portfolio",
+   "t": "ar",
+   "title": "Building a data portfolio",
+   "mod": "Career: interviews and portfolio",
+   "lv": "F",
+   "kw": "data portfolio projects github readme end to end project public datasets dashboard write up blog case study resume interviews",
+   "s": "A portfolio of real, well-explained projects shows employers what you can do, which matters most for career changers and early-career candidates.",
+   "d": "Choose two or three end-to-end projects that match the roles you want: for data engineering, a pipeline that ingests a real API or public dataset, models it with dbt, tests it and schedules it; for analysis, an investigation with a clear question, findings and a dashboard; for data science, a model with honest evaluation and a simple deployed demo. Use realistic, messy data, ideally from a domain you know, such as logistics or payments. Each project needs a README covering the problem, architecture, decisions, results and what you'd improve. Quality and explanation beat quantity, and a short write-up or blog post helps interviewers engage with it.",
+   "e": "A logistics analyst builds a project that pulls public port and freight data, models it in DuckDB with dbt, tests it, and publishes a dashboard on container dwell times with a README explaining each design choice.",
+   "c": "Why is a README explaining your decisions as important as the code?",
+   "i": "Interviewers often ask you to walk through a project in depth, so be ready to explain every choice and trade-off.",
+   "r": [
+    "behavioural-star",
+    "git-for-data",
+    "dbt-basics"
+   ]
+  }
+ ],
+ "questions": [
+  {
+   "r": [
+    "de",
+    "da"
+   ],
+   "l": "m",
+   "d": [
+    "fin"
+   ],
+   "c": "upi-lifecycle",
+   "tg": [
+    "upi"
+   ],
+   "q": "Walk me through what happens in a UPI payment.",
+   "p": [
+    {
+     "t": "Payer app and payer PSP start the request",
+     "k": [
+      "payer psp",
+      "upi app"
+     ]
+    },
+    {
+     "t": "NPCI UPI switch routes it",
+     "k": [
+      "npci",
+      "switch"
+     ]
+    },
+    {
+     "t": "Remitter bank debits after PIN verification",
+     "k": [
+      "remitter bank",
+      "pin"
+     ]
+    },
+    {
+     "t": "Beneficiary bank credits the payee",
+     "k": [
+      "beneficiary bank",
+      "credit"
+     ]
+    },
+    {
+     "t": "Unique reference and final status",
+     "k": [
+      "rrn",
+      "status"
+     ]
+    }
+   ],
+   "a": "The payer opens a UPI app, enters the payee's UPI ID or scans a QR, and the payer PSP sends the request to the NPCI UPI switch. NPCI resolves the payee's bank and asks the remitter bank to debit the payer after PIN verification. Then it asks the beneficiary bank to credit the payee's account. Each transaction carries a unique reference such as the RRN, and the final status, success, failure or deemed if a response timed out, flows back to both apps."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "fin"
+   ],
+   "c": "upi-lifecycle",
+   "tg": [
+    "upi",
+    "kafka"
+   ],
+   "q": "How would you model UPI transaction events for analytics?",
+   "p": [
+    {
+     "t": "One event per status change",
+     "k": [
+      "status change",
+      "event per"
+     ]
+    },
+    {
+     "t": "Keys such as RRN and transaction id",
+     "k": [
+      "rrn",
+      "transaction id"
+     ]
+    },
+    {
+     "t": "Timestamps for each hop",
+     "k": [
+      "timestamp",
+      "hop"
+     ]
+    },
+    {
+     "t": "Response codes and parties",
+     "k": [
+      "response code",
+      "remitter"
+     ]
+    },
+    {
+     "t": "Current-state table derived from events",
+     "k": [
+      "current state",
+      "latest status"
+     ]
+    }
+   ],
+   "a": "I'd store one event per status change, such as initiated, debit success, credit pending and final success, rather than overwriting a single row. Each carries keys such as the RRN and internal transaction id, timestamps for each hop so latency can be measured, response codes, and the parties: payer PSP, remitter bank, beneficiary bank and merchant. A current state table with the latest status per transaction is derived from the events for reporting, and the history supports reconciliation and failure analysis."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "fin"
+   ],
+   "c": "payment-reconciliation",
+   "tg": [
+    "upi",
+    "sql"
+   ],
+   "q": "How would you build a daily reconciliation between your transactions and the bank or NPCI files?",
+   "p": [
+    {
+     "t": "Load and standardise both sides",
+     "k": [
+      "standardis",
+      "both sides"
+     ]
+    },
+    {
+     "t": "Exact matching on reference, amount and date",
+     "k": [
+      "exact",
+      "rrn",
+      "amount"
+     ]
+    },
+    {
+     "t": "Tolerance and many-to-one matching",
+     "k": [
+      "tolerance",
+      "many-to-one"
+     ]
+    },
+    {
+     "t": "Classify and age the breaks",
+     "k": [
+      "break",
+      "age"
+     ]
+    },
+    {
+     "t": "Track auto-match rate and resolution",
+     "k": [
+      "auto-match",
+      "resolution"
+     ]
+    }
+   ],
+   "a": "Load internal transactions and the external files, standardising both sides: formats, statuses, time zones and amounts in paise. First do exact matching on the RRN or UTR, amount and date. Then apply rules with tolerance, like date windows for transactions near midnight, and many-to-one matching for batched settlements. What's left are breaks, which I classify by type, such as missing on one side or status mismatch, and age so old ones get attention. I'd track the auto-match rate, break counts and resolution times daily."
+  },
+  {
+   "r": [
+    "de",
+    "da"
+   ],
+   "l": "m",
+   "d": [
+    "fin"
+   ],
+   "c": "payment-reconciliation",
+   "tg": [
+    "sql"
+   ],
+   "q": "What types of reconciliation breaks do you expect, and how do you handle them?",
+   "p": [
+    {
+     "t": "Timing differences across days",
+     "k": [
+      "timing",
+      "next day"
+     ]
+    },
+    {
+     "t": "Missing on one side",
+     "k": [
+      "missing",
+      "one side"
+     ]
+    },
+    {
+     "t": "Status mismatches",
+     "k": [
+      "status mismatch",
+      "failed"
+     ]
+    },
+    {
+     "t": "Amount mismatches and duplicates",
+     "k": [
+      "amount mismatch",
+      "duplicate"
+     ]
+    },
+    {
+     "t": "Assign, investigate and record fixes",
+     "k": [
+      "assign",
+      "investigat"
+     ]
+    }
+   ],
+   "a": "Timing differences, where a transaction near midnight or a pending one appears in the next day's file, which usually clear themselves. Records missing on one side, such as a transaction the bank has but we don't. Status mismatches, like success internally but failed at NPCI, which may need a reversal. Amount mismatches and duplicates. Breaks that don't clear are assigned to an operations team to investigate, and each fix, like a reversal or adjustment, is recorded with a reason."
+  },
+  {
+   "r": [
+    "de",
+    "da"
+   ],
+   "l": "m",
+   "d": [
+    "fin"
+   ],
+   "c": "settlement",
+   "tg": [
+    "upi"
+   ],
+   "q": "Explain how a merchant's payout is calculated and settled.",
+   "p": [
+    {
+     "t": "Funds collected into an escrow account",
+     "k": [
+      "escrow",
+      "collected"
+     ]
+    },
+    {
+     "t": "Gross sales for the settlement period",
+     "k": [
+      "gross",
+      "period"
+     ]
+    },
+    {
+     "t": "Deductions such as refunds, chargebacks and fees",
+     "k": [
+      "refunds",
+      "fees"
+     ]
+    },
+    {
+     "t": "Net payout on a schedule such as T+1",
+     "k": [
+      "net",
+      "t+1"
+     ]
+    },
+    {
+     "t": "Payout report and reconciliation",
+     "k": [
+      "payout report",
+      "reconcil"
+     ]
+    }
+   ],
+   "a": "The payment aggregator collects customer payments into an escrow account. For each merchant and settlement period it starts from gross sales, then subtracts deductions: refunds, chargebacks, fees such as MDR where applicable, and any reserves or holds. The net amount is paid out on a schedule such as T+1. The merchant gets a payout report listing every transaction behind the net amount, and the payout is reconciled against bank credits."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "fin"
+   ],
+   "c": "settlement",
+   "tg": [
+    "sql",
+    "data modeling"
+   ],
+   "q": "How would you model settlements and payouts in a data warehouse?",
+   "p": [
+    {
+     "t": "Transaction-level fact",
+     "k": [
+      "transaction",
+      "fact"
+     ]
+    },
+    {
+     "t": "Settlement batch or cycle table",
+     "k": [
+      "settlement batch",
+      "cycle"
+     ]
+    },
+    {
+     "t": "Deduction lines by type",
+     "k": [
+      "deduction",
+      "type"
+     ]
+    },
+    {
+     "t": "Payout fact linked to bank credits",
+     "k": [
+      "payout",
+      "bank credit"
+     ]
+    },
+    {
+     "t": "Keys linking every transaction to its payout",
+     "k": [
+      "link",
+      "payout id"
+     ]
+    }
+   ],
+   "a": "A transaction level fact holds each payment with amount, fees and status. A settlement batch table holds each cycle per merchant, with its period and totals. Deductions get their own lines by type, such as refund, chargeback, fee and reserve, so the net can be explained. A payout fact records each transfer to the merchant and links to bank credit records for reconciliation. Keys link every transaction to its settlement batch and payout id, so any rupee can be traced from sale to payout."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "fin"
+   ],
+   "c": "ledger-design",
+   "tg": [
+    "data modeling",
+    "sql"
+   ],
+   "q": "Design the core tables of a double-entry ledger.",
+   "p": [
+    {
+     "t": "Accounts table",
+     "k": [
+      "accounts",
+      "account type"
+     ]
+    },
+    {
+     "t": "Journal entries for each business event",
+     "k": [
+      "journal entr",
+      "business event"
+     ]
+    },
+    {
+     "t": "Entry lines with debits and credits that balance",
+     "k": [
+      "debit",
+      "credit",
+      "balance"
+     ]
+    },
+    {
+     "t": "Append-only with reversing entries",
+     "k": [
+      "append-only",
+      "reversing"
+     ]
+    },
+    {
+     "t": "Idempotency keys and integer amounts",
+     "k": [
+      "idempotency",
+      "paise"
+     ]
+    }
+   ],
+   "a": "An accounts table lists each account, such as customer wallets, merchant payables and fee income, with its account type. A journal entries table records one row per business event, with a timestamp and reference. Entry lines hold each debit and credit against an account, and the lines of every entry must balance to zero. The ledger is append-only: corrections are reversing entries, never updates. Each entry carries an idempotency key so retries can't double-post, and amounts are stored as integers in paise."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "fin"
+   ],
+   "c": "ledger-design",
+   "tg": [
+    "data modeling"
+   ],
+   "q": "How do you prevent a payment from being posted twice to the ledger when a request is retried?",
+   "p": [
+    {
+     "t": "Idempotency key per business event",
+     "k": [
+      "idempotency key",
+      "business event"
+     ]
+    },
+    {
+     "t": "Unique constraint on the key",
+     "k": [
+      "unique constraint",
+      "unique index"
+     ]
+    },
+    {
+     "t": "Return the original result on retry",
+     "k": [
+      "original result",
+      "retry"
+     ]
+    },
+    {
+     "t": "Post all lines in one transaction",
+     "k": [
+      "one transaction",
+      "atomic"
+     ]
+    },
+    {
+     "t": "Reconcile to catch anything missed",
+     "k": [
+      "reconcil",
+      "trial balance"
+     ]
+    }
+   ],
+   "a": "Each business event carries an idempotency key, such as the payment id, sent by the caller. The ledger has a unique constraint on that key, so a second insert fails, and the service returns the original result on retry rather than an error. All lines of an entry are posted in one transaction, atomic, so a crash can't leave half an entry. Daily reconciliation and a trial balance check catch anything that slips through."
+  },
+  {
+   "r": [
+    "de",
+    "da"
+   ],
+   "l": "m",
+   "d": [
+    "fin"
+   ],
+   "c": "payment-success-metrics",
+   "tg": [
+    "upi",
+    "sql"
+   ],
+   "q": "How would you define and analyse payment success rate?",
+   "p": [
+    {
+     "t": "Successes over attempts, with exclusions",
+     "k": [
+      "attempts",
+      "exclud"
+     ]
+    },
+    {
+     "t": "Decide how pending is treated",
+     "k": [
+      "pending",
+      "final status"
+     ]
+    },
+    {
+     "t": "Technical versus business declines",
+     "k": [
+      "technical",
+      "business decline"
+     ]
+    },
+    {
+     "t": "Slice by bank, app version and time",
+     "k": [
+      "bank",
+      "app version"
+     ]
+    },
+    {
+     "t": "Near real-time monitoring",
+     "k": [
+      "real-time",
+      "monitor"
+     ]
+    }
+   ],
+   "a": "Success rate is successful transactions over attempts, with exclusions for duplicates, retries of the same payment and test traffic, all written down. Decide how pending transactions are treated, such as counting final status after resolution. Using response codes, split failures into technical declines like timeouts and downtime, which the platform must fix, and business declines like insufficient balance or wrong PIN. Slice by remitter bank, PSP, app version, amount band and time of day. And monitor it in near real-time, since a bank outage hits within minutes."
+  },
+  {
+   "r": [
+    "de",
+    "da"
+   ],
+   "l": "s",
+   "d": [
+    "fin"
+   ],
+   "c": "payment-success-metrics",
+   "tg": [
+    "upi"
+   ],
+   "q": "UPI success rate dropped 5 points in an hour. How do you investigate?",
+   "p": [
+    {
+     "t": "Check the data and tracking first",
+     "k": [
+      "pipeline",
+      "tracking"
+     ]
+    },
+    {
+     "t": "Split by response code",
+     "k": [
+      "response code",
+      "declines"
+     ]
+    },
+    {
+     "t": "Find the concentrated bank, PSP or app version",
+     "k": [
+      "remitter bank",
+      "app version"
+     ]
+    },
+    {
+     "t": "Check incidents and status pages",
+     "k": [
+      "incident",
+      "downtime"
+     ]
+    },
+    {
+     "t": "Mitigate and communicate",
+     "k": [
+      "mitigat",
+      "communicat"
+     ]
+    }
+   ],
+   "a": "First confirm the pipeline and tracking are healthy, so it's not a data issue. Then split failures by response code to see whether technical declines like timeouts rose or business declines did. Slice by remitter bank, PSP and app version to find where it's concentrated; a single bank with rising timeouts usually means an outage. Check incidents, NPCI and bank downtime notices, and our own recent releases. Then mitigate, for example showing users a bank-downtime message or prompting another account, and communicate to operations and partners."
+  },
+  {
+   "r": [
+    "de",
+    "da"
+   ],
+   "l": "m",
+   "d": [
+    "fin",
+    "ecom"
+   ],
+   "c": "refunds-chargebacks",
+   "tg": [
+    "sql"
+   ],
+   "q": "What's the difference between a refund and a chargeback, and how would you model them?",
+   "p": [
+    {
+     "t": "Refund is started by the merchant",
+     "k": [
+      "refund",
+      "merchant"
+     ]
+    },
+    {
+     "t": "Chargeback is started by the customer via their bank",
+     "k": [
+      "chargeback",
+      "customer"
+     ]
+    },
+    {
+     "t": "Reason codes, evidence and deadlines",
+     "k": [
+      "reason code",
+      "deadline"
+     ]
+    },
+    {
+     "t": "Linked to the original transaction",
+     "k": [
+      "original transaction",
+      "link"
+     ]
+    },
+    {
+     "t": "Status history for each case",
+     "k": [
+      "status history",
+      "stage"
+     ]
+    }
+   ],
+   "a": "A refund is started by the merchant, fully or partially, for example after a return. A chargeback is started by the customer through their bank, which raises a dispute with a reason code; the merchant can accept it or contest it with evidence before a deadline. In the model, both are separate entities linked to the original transaction, with amounts, reasons and a status history recording each stage, from raised to representment to resolved, with timestamps for turnaround tracking."
+  },
+  {
+   "r": [
+    "da"
+   ],
+   "l": "s",
+   "d": [
+    "fin",
+    "ecom"
+   ],
+   "c": "refunds-chargebacks",
+   "tg": [
+    "sql"
+   ],
+   "q": "A merchant's chargeback rate has spiked. How do you analyse it?",
+   "p": [
+    {
+     "t": "Chargeback rate by count and value",
+     "k": [
+      "rate",
+      "value"
+     ]
+    },
+    {
+     "t": "Break down by reason code",
+     "k": [
+      "reason code",
+      "different causes"
+     ]
+    },
+    {
+     "t": "Link to orders, delivery and customer data",
+     "k": [
+      "delivery",
+      "order"
+     ]
+    },
+    {
+     "t": "Check for fraud patterns",
+     "k": [
+      "fraud",
+      "same device"
+     ]
+    },
+    {
+     "t": "Act: evidence, process fixes or limits",
+     "k": [
+      "evidence",
+      "limit"
+     ]
+    }
+   ],
+   "a": "Measure the rate by count and value against the merchant's history and category norms. Break down by reason code: fraud claims, product not received, and not as described point to different causes. Link disputes to order, delivery and customer data, for example a courier marking undelivered parcels as delivered. Check for fraud patterns like many disputes from the same device or new accounts. Then act: help the merchant submit evidence, fix processes, or apply reserves and transaction limits if risk is high."
+  },
+  {
+   "r": [
+    "de",
+    "ds"
+   ],
+   "l": "s",
+   "d": [
+    "fin"
+   ],
+   "c": "fraud-signals",
+   "tg": [
+    "machine learning",
+    "kafka"
+   ],
+   "q": "What signals would you use to detect payment fraud in real time?",
+   "p": [
+    {
+     "t": "Velocity of transactions or new payees",
+     "k": [
+      "velocity",
+      "new payees"
+     ]
+    },
+    {
+     "t": "Amount against the user's history",
+     "k": [
+      "history",
+      "unusual amount"
+     ]
+    },
+    {
+     "t": "Device and SIM changes",
+     "k": [
+      "device",
+      "sim"
+     ]
+    },
+    {
+     "t": "Location and IP mismatches",
+     "k": [
+      "location",
+      "ip"
+     ]
+    },
+    {
+     "t": "Mule patterns and account graphs",
+     "k": [
+      "mule",
+      "graph"
+     ]
+    }
+   ],
+   "a": "Velocity: transactions, amounts and new payees in the last few minutes and hours. Amount against the user's history, flagging an unusual amount or time. Device signals: a new device, a recent SIM change, or a device fingerprint shared by many accounts. Location and IP mismatches, such as a login from another country. Mule patterns: new accounts receiving many small credits then moving money out quickly, found through graph links between accounts."
+  },
+  {
+   "r": [
+    "de",
+    "ds"
+   ],
+   "l": "s",
+   "d": [
+    "fin"
+   ],
+   "c": "fraud-signals",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "How would you combine rules and machine learning in a fraud system, and how do you measure it?",
+   "p": [
+    {
+     "t": "Rules for known patterns and hard limits",
+     "k": [
+      "rules",
+      "known patterns"
+     ]
+    },
+    {
+     "t": "Model for combined risk scoring",
+     "k": [
+      "model",
+      "risk score"
+     ]
+    },
+    {
+     "t": "Decisions: allow, challenge or block",
+     "k": [
+      "challenge",
+      "block"
+     ]
+    },
+    {
+     "t": "Metrics: fraud caught, losses, false positives",
+     "k": [
+      "false positive",
+      "losses"
+     ]
+    },
+    {
+     "t": "Feedback of confirmed fraud as labels",
+     "k": [
+      "feedback",
+      "labels"
+     ]
+    }
+   ],
+   "a": "Rules handle known patterns and hard limits, such as more than five new payees in ten minutes, and are fast and explainable. A model produces a combined risk score from many features, catching patterns rules miss. Together they drive decisions: allow, challenge with extra verification, or block. I'd measure fraud caught, losses in rupees, the false positive rate and customer friction like challenge rates. Confirmed fraud and disputes feed back as labels for retraining, and rules are reviewed regularly."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "m",
+   "d": [
+    "fin"
+   ],
+   "c": "kyc-compliance",
+   "tg": [
+    "governance"
+   ],
+   "q": "What data does a KYC and AML process produce, and how should it be protected?",
+   "p": [
+    {
+     "t": "Identity documents and verification results",
+     "k": [
+      "identity",
+      "verification"
+     ]
+    },
+    {
+     "t": "Risk categories and screening results",
+     "k": [
+      "risk categor",
+      "screening"
+     ]
+    },
+    {
+     "t": "Transaction monitoring alerts and cases",
+     "k": [
+      "alert",
+      "case"
+     ]
+    },
+    {
+     "t": "Audit trail of decisions",
+     "k": [
+      "audit trail",
+      "who decided"
+     ]
+    },
+    {
+     "t": "Strict access, masking and Aadhaar vaults",
+     "k": [
+      "mask",
+      "vault"
+     ]
+    }
+   ],
+   "a": "It produces identity documents and verification results from PAN checks, eKYC, video KYC and CKYC; customer risk categories and sanctions and PEP screening results; and transaction monitoring alerts, investigation cases and reports filed to FIU-IND. Every check and decision needs an audit trail with who decided what and when. Protection means strict access by role, masking of identifiers, encryption, retention for the required periods, and full Aadhaar numbers only in approved vaults, never in analytics tables or logs."
+  },
+  {
+   "r": [
+    "de",
+    "da"
+   ],
+   "l": "m",
+   "d": [
+    "fin"
+   ],
+   "c": "kyc-compliance",
+   "tg": [
+    "sql"
+   ],
+   "q": "What metrics would you track for a digital KYC onboarding funnel?",
+   "p": [
+    {
+     "t": "Completion rate by step",
+     "k": [
+      "completion",
+      "step"
+     ]
+    },
+    {
+     "t": "First-attempt pass rate",
+     "k": [
+      "first attempt",
+      "pass rate"
+     ]
+    },
+    {
+     "t": "Rejection reasons",
+     "k": [
+      "rejection",
+      "reason"
+     ]
+    },
+    {
+     "t": "Time to complete and manual review backlog",
+     "k": [
+      "time to complete",
+      "backlog"
+     ]
+    },
+    {
+     "t": "Segment by channel, device and method",
+     "k": [
+      "device",
+      "method"
+     ]
+    }
+   ],
+   "a": "Completion rate by step, from starting KYC to verified, to see where users drop off. The first attempt pass rate for each check, such as video KYC. Rejection reasons, like blurry documents or name mismatches, which point to fixes. Time to complete and the manual review backlog. And all of it segmented by channel, device and KYC method, since older phones or one method may fail more."
+  },
+  {
+   "r": [
+    "ds",
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "fin"
+   ],
+   "c": "credit-scoring",
+   "tg": [
+    "machine learning",
+    "statistics"
+   ],
+   "q": "Explain PD, LGD and EAD, and how they combine.",
+   "p": [
+    {
+     "t": "PD: probability of default",
+     "k": [
+      "probability of default",
+      "pd"
+     ]
+    },
+    {
+     "t": "LGD: loss given default",
+     "k": [
+      "loss given default",
+      "lgd"
+     ]
+    },
+    {
+     "t": "EAD: exposure at default",
+     "k": [
+      "exposure at default",
+      "ead"
+     ]
+    },
+    {
+     "t": "Expected loss is PD times LGD times EAD",
+     "k": [
+      "expected loss",
+      "times"
+     ]
+    },
+    {
+     "t": "Drives pricing, limits and provisions",
+     "k": [
+      "pricing",
+      "provision"
+     ]
+    }
+   ],
+   "a": "PD is the probability of default within a period, such as 12 months. LGD, loss given default, is the share of the exposure lost if the borrower defaults, after recoveries. EAD, exposure at default, is the amount owed at that point, including drawn credit lines. Expected loss is PD times LGD times EAD, for example 4% times 60% times Rs 2,00,000 is Rs 4,800. These drive pricing, credit limits and the provisions a lender holds."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "s",
+   "d": [
+    "fin"
+   ],
+   "c": "credit-scoring",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "How do you evaluate a credit scoring model, and what special issues arise?",
+   "p": [
+    {
+     "t": "Ranking metrics: Gini, AUC and KS",
+     "k": [
+      "gini",
+      "ks"
+     ]
+    },
+    {
+     "t": "Calibration of PDs",
+     "k": [
+      "calibrat",
+      "actual default rates"
+     ]
+    },
+    {
+     "t": "Stability over time",
+     "k": [
+      "stability",
+      "psi"
+     ]
+    },
+    {
+     "t": "Reject inference",
+     "k": [
+      "reject inference",
+      "approved"
+     ]
+    },
+    {
+     "t": "Explainability and fairness",
+     "k": [
+      "explain",
+      "fair"
+     ]
+    }
+   ],
+   "a": "Ranking metrics: Gini, which is 2 x AUC minus 1, and the KS statistic, measured on out-of-time samples. Calibration, so predicted PDs match actual default rates, since they drive pricing. Stability over time, monitored with PSI on scores and features. Reject inference is a special issue: outcomes are only known for approved applicants, so the model may be biased when applied to everyone. And regulators and customers expect explainability and fair treatment, with reasons for declines."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "de-system-design",
+   "tg": [
+    "spark",
+    "kafka"
+   ],
+   "q": "How do you structure your answer in a data system design interview?",
+   "p": [
+    {
+     "t": "Clarify requirements and consumers",
+     "k": [
+      "clarify",
+      "requirements"
+     ]
+    },
+    {
+     "t": "Estimate scale",
+     "k": [
+      "estimate",
+      "per second"
+     ]
+    },
+    {
+     "t": "High-level architecture end to end",
+     "k": [
+      "high-level",
+      "architecture"
+     ]
+    },
+    {
+     "t": "Deep dive on the hardest parts",
+     "k": [
+      "deep dive",
+      "hardest"
+     ]
+    },
+    {
+     "t": "Trade-offs, failures and monitoring",
+     "k": [
+      "trade-off",
+      "failure"
+     ]
+    }
+   ],
+   "a": "First clarify requirements: the use cases, consumers, freshness, correctness and retention. Then estimate scale, such as events per second and storage per year, which shapes choices. Sketch a high-level architecture end to end: sources, ingestion, storage, processing, serving and governance. Then a deep dive on the hardest parts, like late events, deduplication or backfills. Throughout, state trade-offs explicitly, cover failure handling and monitoring, and keep it as simple as the requirements allow."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "ecom"
+   ],
+   "c": "de-system-design",
+   "tg": [
+    "kafka",
+    "spark"
+   ],
+   "q": "Design a pipeline that computes daily and near-real-time sales metrics for an e-commerce site.",
+   "p": [
+    {
+     "t": "Capture orders with CDC or events",
+     "k": [
+      "cdc",
+      "events"
+     ]
+    },
+    {
+     "t": "Kafka as the event backbone",
+     "k": [
+      "kafka",
+      "backbone"
+     ]
+    },
+    {
+     "t": "Streaming aggregates for near-real-time",
+     "k": [
+      "streaming",
+      "near-real-time"
+     ]
+    },
+    {
+     "t": "Lakehouse or warehouse batch models for daily",
+     "k": [
+      "lakehouse",
+      "daily"
+     ]
+    },
+    {
+     "t": "Reconcile the two and monitor quality",
+     "k": [
+      "reconcil",
+      "quality"
+     ]
+    }
+   ],
+   "a": "Capture orders, payments and cancellations from the order database with CDC, or as application events, into Kafka as the event backbone. For near-real-time metrics, a streaming job aggregates orders and revenue per minute by city and category, handling late and duplicate events with event time and keys, and writes to a fast store for dashboards. For daily metrics, events land in a lakehouse, where batch dbt models produce the governed daily numbers. The daily batch is the source of truth, so I'd reconcile the two and monitor quality and freshness on both paths."
+  },
+  {
+   "r": [
+    "da",
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "sql-interview-strategy",
+   "tg": [
+    "sql"
+   ],
+   "q": "How do you approach a live SQL interview question?",
+   "p": [
+    {
+     "t": "Restate and clarify the question",
+     "k": [
+      "clarify",
+      "restate"
+     ]
+    },
+    {
+     "t": "Understand the table grain",
+     "k": [
+      "grain",
+      "duplicates rows"
+     ]
+    },
+    {
+     "t": "Plan before writing",
+     "k": [
+      "plan",
+      "approach"
+     ]
+    },
+    {
+     "t": "Build step by step with CTEs",
+     "k": [
+      "cte",
+      "step by step"
+     ]
+    },
+    {
+     "t": "Check edge cases like NULLs and ties",
+     "k": [
+      "null",
+      "ties"
+     ]
+    }
+   ],
+   "a": "I restate the question and clarify anything ambiguous, such as how to treat ties, cancelled orders or time zones. I check the grain of each table, since joining at the wrong grain duplicates rows. I describe my plan before writing. Then I build the query step by step with CTEs, checking each step on a small example. Finally I check edge cases like NULLs, ties, empty groups and duplicates, and explain how I'd verify the result."
+  },
+  {
+   "r": [
+    "da",
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "sql-interview-strategy",
+   "tg": [
+    "sql"
+   ],
+   "q": "Which SQL patterns should you master for interviews?",
+   "p": [
+    {
+     "t": "Joins and anti-joins",
+     "k": [
+      "anti-join",
+      "left join"
+     ]
+    },
+    {
+     "t": "Aggregation with HAVING",
+     "k": [
+      "group by",
+      "having"
+     ]
+    },
+    {
+     "t": "Window functions for ranking and running totals",
+     "k": [
+      "window function",
+      "running total"
+     ]
+    },
+    {
+     "t": "Deduplication and latest record per key",
+     "k": [
+      "deduplicat",
+      "latest"
+     ]
+    },
+    {
+     "t": "Dates and gaps and islands",
+     "k": [
+      "date",
+      "gaps and islands"
+     ]
+    }
+   ],
+   "a": "Joins, including left join with a NULL check as an anti-join to find missing records. Aggregation with GROUP BY and HAVING. Window functions for ranking, top N per group, running totals and LAG for comparing with the previous row. Deduplication and picking the latest record per key with ROW_NUMBER. And date handling, such as monthly buckets and date differences, plus gaps and islands for streaks."
+  },
+  {
+   "r": [
+    "da"
+   ],
+   "l": "m",
+   "d": [
+    "any",
+    "ecom"
+   ],
+   "c": "analytics-case",
+   "tg": [
+    "statistics"
+   ],
+   "q": "How do you structure an analytics case like \"weekly active users dropped 10%\"?",
+   "p": [
+    {
+     "t": "Clarify the metric and timeframe",
+     "k": [
+      "clarify",
+      "definition"
+     ]
+    },
+    {
+     "t": "Rule out data issues",
+     "k": [
+      "data issue",
+      "tracking"
+     ]
+    },
+    {
+     "t": "Decompose and segment",
+     "k": [
+      "decompose",
+      "segment"
+     ]
+    },
+    {
+     "t": "Hypotheses across internal and external causes",
+     "k": [
+      "hypothes",
+      "external"
+     ]
+    },
+    {
+     "t": "Recommendation and next steps",
+     "k": [
+      "recommend",
+      "next step"
+     ]
+    }
+   ],
+   "a": "First clarify the definition of active, the timeframe and how sudden the drop was. Then rule out a data issue such as a tracking change. Next decompose the metric, for example new versus returning users, and segment by platform, region and channel to find where it's concentrated. Form hypotheses across internal causes, like a release or a campaign ending, and external causes, like a holiday or a competitor, and say what data would test each. Finish with a recommendation and next steps based on what the evidence shows."
+  },
+  {
+   "r": [
+    "da"
+   ],
+   "l": "s",
+   "d": [
+    "saas",
+    "ecom"
+   ],
+   "c": "analytics-case",
+   "tg": [
+    "statistics"
+   ],
+   "q": "How would you define success metrics for a new feature, such as a wishlist?",
+   "p": [
+    {
+     "t": "Tie to the feature's goal",
+     "k": [
+      "goal",
+      "purpose"
+     ]
+    },
+    {
+     "t": "Primary metric tied to it",
+     "k": [
+      "primary metric",
+      "purchases"
+     ]
+    },
+    {
+     "t": "Adoption and engagement metrics",
+     "k": [
+      "adoption",
+      "engagement"
+     ]
+    },
+    {
+     "t": "Guardrail metrics",
+     "k": [
+      "guardrail",
+      "nothing else breaks"
+     ]
+    },
+    {
+     "t": "Measure with an experiment",
+     "k": [
+      "experiment",
+      "a/b test"
+     ]
+    }
+   ],
+   "a": "Start from the feature's goal: a wishlist should help customers return and buy items they're considering. The primary metric might be purchases from wishlisted items, or repeat purchase rate among exposed users. Supporting adoption and engagement metrics: share of users who add an item, and items per wishlist. Guardrail metrics make sure nothing else breaks, such as checkout conversion and app speed. And measure the real impact with an experiment, an A/B test, rather than comparing users who chose to use it."
+  },
+  {
+   "r": [
+    "de",
+    "da",
+    "ds",
+    "ar"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "behavioural-star",
+   "tg": [
+    "governance"
+   ],
+   "q": "Explain the STAR method and how you'd prepare for behavioural interviews.",
+   "p": [
+    {
+     "t": "Situation and task briefly",
+     "k": [
+      "situation",
+      "task"
+     ]
+    },
+    {
+     "t": "Action is the largest part",
+     "k": [
+      "action",
+      "largest"
+     ]
+    },
+    {
+     "t": "Result quantified with learning",
+     "k": [
+      "result",
+      "quantif"
+     ]
+    },
+    {
+     "t": "Prepare a set of stories for common themes",
+     "k": [
+      "stories",
+      "themes"
+     ]
+    },
+    {
+     "t": "Use I and keep answers to two minutes",
+     "k": [
+      "two minutes",
+      "say i"
+     ]
+    }
+   ],
+   "a": "STAR stands for situation, task, action and result. Situation and task are brief context and your responsibility. The action is the largest part: what you personally did and why. The result is the outcome, quantified where possible, plus what you learned. To prepare, I'd write six to eight stories covering common themes like conflict, failure, incidents, influence and deadlines, each adaptable to several questions. In the interview, say I for your own contribution and keep answers to about two minutes."
+  },
+  {
+   "r": [
+    "de",
+    "da",
+    "ds",
+    "ar"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "behavioural-star",
+   "tg": [
+    "governance"
+   ],
+   "q": "How do you answer \"Tell me about a time you failed\"?",
+   "p": [
+    {
+     "t": "Choose a real, meaningful failure",
+     "k": [
+      "real",
+      "meaningful"
+     ]
+    },
+    {
+     "t": "Take ownership",
+     "k": [
+      "ownership",
+      "my mistake"
+     ]
+    },
+    {
+     "t": "Explain what you did to fix it",
+     "k": [
+      "fix",
+      "recover"
+     ]
+    },
+    {
+     "t": "Share the lesson",
+     "k": [
+      "lesson",
+      "learned"
+     ]
+    },
+    {
+     "t": "Show what changed afterwards",
+     "k": [
+      "changed",
+      "since then"
+     ]
+    }
+   ],
+   "a": "Choose a real, meaningful failure, not a disguised strength, ideally with stakes but not a disaster. Take ownership: describe your part as my mistake, without blaming others. Explain what you did to fix it or recover, such as rerunning reports and telling stakeholders. Share the lesson learned, and show what changed since then, like adding a data test or a review step, so the interviewer sees growth."
+  },
+  {
+   "r": [
+    "de",
+    "da",
+    "ds"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "portfolio",
+   "tg": [
+    "python",
+    "sql"
+   ],
+   "q": "What makes a strong data portfolio project?",
+   "p": [
+    {
+     "t": "Matches the roles you want",
+     "k": [
+      "roles",
+      "target"
+     ]
+    },
+    {
+     "t": "End-to-end with real, messy data",
+     "k": [
+      "end-to-end",
+      "messy"
+     ]
+    },
+    {
+     "t": "Clear question or problem",
+     "k": [
+      "clear question",
+      "starts from"
+     ]
+    },
+    {
+     "t": "README explaining decisions and results",
+     "k": [
+      "readme",
+      "decisions"
+     ]
+    },
+    {
+     "t": "Quality over quantity",
+     "k": [
+      "quantity",
+      "two or three"
+     ]
+    }
+   ],
+   "a": "It matches the roles you're targeting: pipelines and tests for engineering, investigations and dashboards for analysis, models with honest evaluation for data science. It's end-to-end and uses real, messy data, ideally from a domain you know. It starts from a clear question or problem. A README explains the architecture, decisions, results and what you'd improve. And quality matters more than quantity: two or three strong projects beat ten tutorials."
+  },
+  {
+   "r": [
+    "de",
+    "da"
+   ],
+   "l": "m",
+   "d": [
+    "log",
+    "fin"
+   ],
+   "c": "portfolio",
+   "tg": [
+    "dbt",
+    "python"
+   ],
+   "q": "Suggest a portfolio project for someone moving into data engineering from logistics.",
+   "p": [
+    {
+     "t": "Use a domain they know",
+     "k": [
+      "domain",
+      "logistics"
+     ]
+    },
+    {
+     "t": "Ingest real data from an API or files",
+     "k": [
+      "api",
+      "public data"
+     ]
+    },
+    {
+     "t": "Model and test with dbt",
+     "k": [
+      "dbt",
+      "test"
+     ]
+    },
+    {
+     "t": "Schedule and monitor the pipeline",
+     "k": [
+      "schedul",
+      "orchestrat"
+     ]
+    },
+    {
+     "t": "Publish a dashboard and write-up",
+     "k": [
+      "dashboard",
+      "write-up"
+     ]
+    }
+   ],
+   "a": "Use the domain they know: logistics. For example, ingest real data from a public API or files, such as port calls, freight indices or public transport GPS feeds, on a schedule. Land it in DuckDB or a free warehouse tier, then model and test it with dbt into facts like shipments and dwell times. Schedule it with an orchestrator such as GitHub Actions or Airflow, with alerts. Finally publish a dashboard and a write-up explaining the design, so interviewers can discuss real trade-offs."
+  }
+ ],
+ "searchChecks": [
+  [
+   "upi transaction flow",
+   "upi-lifecycle"
+  ],
+  [
+   "reconciliation breaks",
+   "payment-reconciliation"
+  ],
+  [
+   "merchant payout settlement",
+   "settlement"
+  ],
+  [
+   "double entry ledger",
+   "ledger-design"
+  ],
+  [
+   "payment success rate",
+   "payment-success-metrics"
+  ],
+  [
+   "chargeback",
+   "refunds-chargebacks"
+  ],
+  [
+   "mule accounts fraud",
+   "fraud-signals"
+  ],
+  [
+   "kyc aml",
+   "kyc-compliance"
+  ],
+  [
+   "probability of default",
+   "credit-scoring"
+  ],
+  [
+   "system design interview",
+   "de-system-design"
+  ],
+  [
+   "sql interview",
+   "sql-interview-strategy"
+  ],
+  [
+   "analytics case interview",
+   "analytics-case"
+  ],
+  [
+   "star method",
+   "behavioural-star"
+  ],
+  [
+   "data portfolio",
+   "portfolio"
+  ]
+ ]
+}

@@ -1,0 +1,1681 @@
+{
+ "batch": 9,
+ "name": "Evaluation, features and forecasting",
+ "concepts": [
+  {
+   "id": "roc-calibration",
+   "t": "ds",
+   "title": "ROC-AUC and probability calibration",
+   "mod": "Model evaluation",
+   "lv": "I",
+   "kw": "roc curve auc roc-auc pr auc true positive rate false positive rate ranking calibration reliability diagram platt scaling isotonic brier score",
+   "s": "ROC-AUC measures how well a model ranks positives above negatives, while calibration checks whether its predicted probabilities match real frequencies.",
+   "d": "The ROC curve plots the true positive rate against the false positive rate across all thresholds, and AUC is the area under it: the chance a random positive scores higher than a random negative. 0.5 is random and 1.0 perfect. With rare positives, the precision-recall curve and PR-AUC are more informative, because ROC-AUC can look high even when precision is poor. Calibration asks whether events predicted at 20% happen about 20% of the time, checked with a reliability diagram or the Brier score. Boosted trees and over-sampled models are often miscalibrated, fixed with Platt scaling or isotonic regression on validation data.",
+   "e": "A credit model has AUC 0.84, but customers predicted at 10% default actually default 18% of the time. Isotonic calibration fixes the probabilities, which matter because they feed loan pricing.",
+   "c": "Why can a model have a good AUC but badly calibrated probabilities?",
+   "i": "Expect to explain ROC-AUC, when PR-AUC is better, and why calibration matters when probabilities drive decisions.",
+   "r": [
+    "precision-recall",
+    "logistic-regression",
+    "class-imbalance"
+   ]
+  },
+  {
+   "id": "regression-metrics",
+   "t": "ds",
+   "title": "Regression metrics: MAE, RMSE and MAPE",
+   "mod": "Model evaluation",
+   "lv": "F",
+   "kw": "regression metrics mae rmse mape smape wape r squared mean absolute error root mean squared error percentage error forecast accuracy",
+   "s": "Regression and forecast models are judged by how far predictions are from actual values, and each metric weights errors differently.",
+   "d": "MAE, mean absolute error, is the average size of errors in the target's units and treats all errors equally. RMSE, root mean squared error, squares errors before averaging, so it punishes large misses more and is always at least the MAE. MAPE, mean absolute percentage error, is scale-free but explodes when actual values are near zero and penalises over-forecasts more than under-forecasts. WAPE, total absolute error divided by total actuals, avoids these problems and is common in demand forecasting. R-squared shows variance explained relative to predicting the mean. Pick the metric that matches the business cost.",
+   "e": "Daily demand for a slow-moving SKU is 0, 1, 0, 2. A forecast of 1 every day gives an infinite MAPE because of the zero days, while WAPE is 3 / 3 = 100%, which is honest and usable.",
+   "c": "Why is MAPE a poor metric for products that often sell zero units?",
+   "i": "Expect to compare MAE, RMSE and MAPE, and to choose a metric for a forecasting or pricing model.",
+   "r": [
+    "forecasting",
+    "loss-mle",
+    "backtesting"
+   ]
+  },
+  {
+   "id": "class-imbalance",
+   "t": "ds",
+   "title": "Handling class imbalance",
+   "mod": "Model evaluation",
+   "lv": "I",
+   "kw": "class imbalance imbalanced data rare class oversampling undersampling smote class weights threshold tuning precision recall fraud",
+   "s": "When one class is rare, such as fraud at 0.5%, accuracy is meaningless and models can ignore the rare class unless you handle the imbalance.",
+   "d": "First use the right metrics: precision, recall, PR-AUC and expected cost, not accuracy, since predicting \"never fraud\" is 99.5% accurate. Often the simplest fix is choosing a better threshold rather than 0.5. Class weights make errors on the rare class cost more during training. Resampling, by undersampling the majority or oversampling the minority, possibly with SMOTE to create synthetic examples, can help, but must only be applied to training data, never to validation or test sets. Resampling distorts predicted probabilities, so recalibrate afterwards. Stratified splits keep the class ratio in every fold.",
+   "e": "A fraud model trained on 0.5% fraud predicts no fraud for everything. Adding class weights and choosing the threshold that maximises expected savings catches 70% of fraud at a 1.2% review rate.",
+   "c": "Why must oversampling be done only on the training data?",
+   "i": "Expect metrics for imbalanced problems, resampling versus class weights, and the effect on probabilities.",
+   "r": [
+    "precision-recall",
+    "roc-calibration",
+    "cross-validation"
+   ]
+  },
+  {
+   "id": "interpretability",
+   "t": "ds",
+   "title": "Model interpretability: feature importance and SHAP",
+   "mod": "Model evaluation",
+   "lv": "I",
+   "kw": "interpretability explainability feature importance permutation importance shap values partial dependence lime global local explanations",
+   "s": "Interpretability explains what a model has learned and why it made a particular prediction, which builds trust, helps debugging and is often required by regulators.",
+   "d": "Global explanations describe the model overall: permutation importance measures how much performance drops when a feature is shuffled, and partial dependence plots show how predictions change with one feature. Built-in tree importances are quick but biased towards high-cardinality features. Local explanations explain a single prediction: SHAP values split a prediction into contributions from each feature, adding up to the difference from the average prediction, and LIME fits a simple model around one point. Correlated features share credit unpredictably, and explanations describe the model, not causation in the real world.",
+   "e": "For a declined loan, SHAP shows the main contributions were 3 missed EMIs (+0.21), high credit utilisation (+0.12) and short credit history (+0.05), which become the reasons given to the customer.",
+   "c": "Why can built-in tree feature importances be misleading?",
+   "i": "Expect global versus local explanations, how SHAP works intuitively, and the limits of feature importance.",
+   "r": [
+    "gradient-boosting",
+    "model-fairness",
+    "feature-engineering"
+   ]
+  },
+  {
+   "id": "model-fairness",
+   "t": "ds",
+   "title": "Fairness and bias in models",
+   "mod": "Model evaluation",
+   "lv": "A",
+   "kw": "fairness bias models protected attributes proxy discrimination demographic parity equal opportunity disparate impact audit responsible ai",
+   "s": "Models can treat groups of people unfairly, even without using protected attributes directly, so fairness has to be measured and managed deliberately.",
+   "d": "Bias enters through historical data that reflects past discrimination, unrepresentative samples, labels that measure the wrong thing, and proxies: features such as pin code that correlate with protected attributes like religion or caste. Fairness metrics compare groups: demographic parity (similar approval rates), equal opportunity (similar true positive rates) and calibration within groups. These definitions can conflict, so choose based on the use case and law. Mitigations include better data, removing or constraining proxies, reweighting, and group-aware thresholds where allowed. Audit models before launch and monitor them after.",
+   "e": "A loan model approves 42% of applicants from one region and 28% from another with similar repayment records. The pin code feature acted as a proxy, and replacing it with income stability features narrows the gap.",
+   "c": "Why doesn't simply removing the protected attribute make a model fair?",
+   "i": "Senior roles, especially in lending, hiring and insurance, ask how you'd detect and reduce unfair bias.",
+   "r": [
+    "interpretability",
+    "governance",
+    "sampling-bias"
+   ]
+  },
+  {
+   "id": "categorical-encoding",
+   "t": "ds",
+   "title": "Encoding categorical variables",
+   "mod": "Features and data preparation",
+   "lv": "F",
+   "kw": "categorical encoding one hot encoding label encoding ordinal encoding target encoding high cardinality hashing embeddings dummy variables",
+   "s": "Most models need numbers, so categorical features such as city, category or payment method must be encoded, and the right method depends on cardinality and the model.",
+   "d": "One-hot encoding creates a binary column per category and suits low-cardinality features in linear models. Ordinal encoding maps ordered categories, such as small, medium and large, to integers; plain label encoding of unordered categories works for tree models but misleads linear ones. For high-cardinality features like pin code or SKU, target encoding replaces each category with the average target, but it must be done out-of-fold with smoothing to avoid leakage. Feature hashing and learned embeddings are other options. Handle unseen categories at prediction time, and group rare ones into \"other\".",
+   "e": "City has 4 values, so it's one-hot encoded. Pin code has 19,000 values, so it gets out-of-fold target encoding of historical delivery delay, smoothed towards the overall average for rare pin codes.",
+   "c": "Why must target encoding be computed out-of-fold?",
+   "i": "Expect to choose encodings for different features and explain target encoding leakage.",
+   "r": [
+    "feature-engineering",
+    "data-leakage",
+    "linear-regression"
+   ]
+  },
+  {
+   "id": "feature-scaling",
+   "t": "ds",
+   "title": "Feature scaling and normalisation",
+   "mod": "Features and data preparation",
+   "lv": "F",
+   "kw": "feature scaling standardisation standardization z-score min max scaling normalisation robust scaler log transform distance based models gradient descent",
+   "s": "Feature scaling puts numeric features on comparable ranges, which matters for distance-based models, regularised models and gradient descent, but not for trees.",
+   "d": "Standardisation subtracts the mean and divides by the standard deviation, giving each feature mean 0 and standard deviation 1. Min-max scaling maps values to between 0 and 1 but is sensitive to outliers. Robust scaling uses the median and IQR. Log transforms reduce skew in features like income or order value. kNN, k-means, SVMs, PCA, regularised linear models and neural networks need scaling, while decision trees and their ensembles don't, because splits depend only on order. Fit the scaler on training data only and apply it unchanged to validation, test and production data, ideally inside a pipeline.",
+   "e": "In a churn model, monthly spend ranges up to Rs 50,000 and tenure up to 60 months. Without scaling, ridge regression penalises the tenure coefficient far more heavily than spend's, which distorts the model.",
+   "c": "Why must the scaler be fitted on training data only?",
+   "i": "Expect when scaling matters, which method to use, and how to avoid leakage by fitting within a pipeline.",
+   "r": [
+    "knn-distance",
+    "data-leakage",
+    "gradient-descent"
+   ]
+  },
+  {
+   "id": "missing-data",
+   "t": "ds",
+   "title": "Missing data and imputation",
+   "mod": "Features and data preparation",
+   "lv": "I",
+   "kw": "missing data imputation mcar mar mnar mean median imputation missing indicator iterative imputer knn imputer model based",
+   "s": "How you handle missing values depends on why they're missing, and the wrong choice can bias a model or leak information.",
+   "d": "Missing completely at random (MCAR) means missingness is unrelated to anything; missing at random (MAR) means it depends on other observed features; missing not at random (MNAR) means it depends on the missing value itself, such as high earners skipping the income question. Options: drop rows (only if few and MCAR), impute with the median or a constant, impute with models such as kNN or iterative imputation, and add a missing-indicator column, since missingness is often predictive. Gradient boosting libraries handle missing values natively. Fit imputers on training data only.",
+   "e": "Credit applications with a blank employer field default twice as often. Median-imputing it alone would hide that, so a \"employer_missing\" indicator is added and becomes one of the stronger features.",
+   "c": "Why can a missing-value indicator be a useful feature?",
+   "i": "Expect the types of missingness, imputation options and their trade-offs, and leakage risks.",
+   "r": [
+    "pandas-cleaning",
+    "feature-engineering",
+    "data-leakage"
+   ]
+  },
+  {
+   "id": "feature-stores",
+   "t": "ds",
+   "title": "Feature stores",
+   "mod": "Features and data preparation",
+   "lv": "A",
+   "kw": "feature store offline store online store point in time correct training serving skew feast tecton feature reuse low latency features",
+   "s": "A feature store manages machine learning features centrally, so the same definitions are used for training and for low-latency serving, without leakage.",
+   "d": "Features are defined once in code and computed in batch or streaming pipelines. The offline store keeps their history for building training sets, and point-in-time correct joins give each training example only the feature values known at that moment, which prevents leakage. The online store, such as Redis or DynamoDB, serves the latest values in milliseconds for real-time predictions. Using the same definitions for both removes training-serving skew. Feature stores also add discovery, reuse across teams, monitoring and access control. Tools include Feast, Tecton and those built into Databricks and SageMaker.",
+   "e": "A fraud model needs \"transactions on this card in the last 10 minutes\". A streaming job updates it in the online store for scoring in 20 ms, and the offline store provides its exact historical values for training.",
+   "c": "What is training-serving skew, and how does a feature store reduce it?",
+   "i": "Senior ML roles ask about point-in-time correctness, online versus offline stores, and when a feature store is worth adopting.",
+   "r": [
+    "feature-engineering",
+    "data-leakage",
+    "stateful-streaming"
+   ]
+  },
+  {
+   "id": "stationarity",
+   "t": "ds",
+   "title": "Stationarity, trend and seasonality",
+   "mod": "Time series",
+   "lv": "I",
+   "kw": "stationarity stationary time series trend seasonality differencing decomposition stl adf test autocorrelation acf pacf",
+   "s": "A stationary time series has stable statistical properties over time. Most business series aren't, because of trend and seasonality, which many models need removed or modelled.",
+   "d": "Decomposition, such as STL, splits a series into trend, seasonal and remainder components. A series is stationary if its mean, variance and autocorrelation don't change over time. Differencing, subtracting the previous value or the value one season ago, removes trend and seasonality, and log transforms stabilise variance that grows with level. The ADF test checks for a unit root, a sign of non-stationarity. Autocorrelation (ACF) and partial autocorrelation (PACF) plots show how values relate to past values and guide ARIMA model orders. Daily retail data often has several seasonalities: weekly and yearly.",
+   "e": "Daily orders grow 30% a year and peak every weekend and at Diwali. STL separates the growth trend, the weekly pattern and festival spikes, leaving a remainder used to spot anomalies.",
+   "c": "Why does differencing make a trending series stationary?",
+   "i": "Expect to explain stationarity, decomposition, differencing and how to read ACF and PACF plots.",
+   "r": [
+    "forecasting",
+    "arima-ets",
+    "anomaly-detection"
+   ]
+  },
+  {
+   "id": "arima-ets",
+   "t": "ds",
+   "title": "ARIMA and exponential smoothing",
+   "mod": "Time series",
+   "lv": "A",
+   "kw": "arima sarima exponential smoothing ets holt winters autoregressive moving average differencing seasonal statsmodels prophet",
+   "s": "ARIMA and exponential smoothing are classic statistical forecasting methods that work well for individual series with clear patterns.",
+   "d": "Exponential smoothing forecasts with weighted averages of past values, giving recent observations more weight; Holt-Winters (ETS) adds components for trend and seasonality. ARIMA combines autoregression (AR, past values), differencing (I, to make the series stationary) and moving average terms (MA, past forecast errors), and SARIMA adds seasonal terms. Orders can be chosen with ACF and PACF plots or automatically by AIC. Both give prediction intervals and are fast, but they handle one series at a time and struggle with external drivers, many seasonalities or very short histories. Prophet is a popular, easy decomposition-based alternative.",
+   "e": "Monthly diesel consumption for a fleet is forecast with Holt-Winters: a trend for fleet growth plus a seasonal pattern for monsoon months, with 80% prediction intervals for budgeting.",
+   "c": "What do the AR, I and MA parts of ARIMA each do?",
+   "i": "Expect to explain ARIMA components, exponential smoothing, and when you'd use them versus machine learning models.",
+   "r": [
+    "stationarity",
+    "forecasting",
+    "backtesting"
+   ]
+  },
+  {
+   "id": "backtesting",
+   "t": "ds",
+   "title": "Forecast evaluation and backtesting",
+   "mod": "Time series",
+   "lv": "I",
+   "kw": "backtesting forecast evaluation time series cross validation rolling origin expanding window walk forward horizon baseline naive forecast leakage",
+   "s": "Forecasts must be evaluated the way they'll be used: trained only on the past and tested on the future, over several cut-off dates.",
+   "d": "Random train-test splits leak the future into training. Instead, use backtesting, also called rolling-origin or walk-forward evaluation: choose several cut-off dates, train on data before each one, forecast the next horizon, and compare with what actually happened. Use an expanding or sliding window. Evaluate at the horizon that matters, such as 7 days ahead for staffing, and compare against simple baselines like the naive or seasonal naive forecast (same day last week), which are surprisingly hard to beat. Make sure features only use information available at forecast time.",
+   "e": "A demand model is backtested at 12 weekly cut-offs. It beats the seasonal naive forecast by 18% in WAPE at a 7-day horizon, but only by 3% at 28 days, so planning uses it for the short term only.",
+   "c": "Why compare a forecasting model against a seasonal naive baseline?",
+   "i": "Expect how you'd evaluate a forecast without leakage, choose a horizon, and pick baselines.",
+   "r": [
+    "forecasting",
+    "cross-validation",
+    "regression-metrics"
+   ]
+  },
+  {
+   "id": "forecasting-scale",
+   "t": "ds",
+   "title": "Forecasting thousands of series",
+   "mod": "Time series",
+   "lv": "A",
+   "kw": "at scale thousands of series global models hierarchical forecasts hierarchical reconciliation lightgbm sku store intermittent demand cold start",
+   "s": "Retailers and logistics firms forecast thousands of series, such as every SKU at every store, which calls for different methods than forecasting a single series.",
+   "d": "Fitting a separate ARIMA per series is slow and works badly for short or sparse series. Global models, such as one LightGBM model trained across all series with lag, rolling and calendar features plus SKU and store attributes, share patterns between series and handle new items better. Hierarchical forecasting keeps forecasts consistent across levels, such as SKU, category, store and region, using reconciliation methods. Intermittent demand, with many zeros, needs methods like Croston or specialised losses. Automate training, backtesting and monitoring, and track accuracy by segment, since a few series often drive most of the error.",
+   "e": "One LightGBM model forecasts 40,000 SKU and dark store combinations daily using lags, rolling means, price, promotions and weekday features, beating per-series models by 12% WAPE and running in 20 minutes.",
+   "c": "Why can a single global model beat thousands of individual models?",
+   "i": "Senior forecasting interviews ask how you'd design a system for many series, including hierarchy, sparse demand and new products.",
+   "r": [
+    "forecasting",
+    "gradient-boosting",
+    "backtesting"
+   ]
+  }
+ ],
+ "questions": [
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "roc-calibration",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "What does ROC-AUC measure, and when is PR-AUC a better choice?",
+   "p": [
+    {
+     "t": "ROC plots true positive rate against false positive rate",
+     "k": [
+      "true positive rate",
+      "false positive rate"
+     ]
+    },
+    {
+     "t": "AUC is ranking quality",
+     "k": [
+      "ranking",
+      "random positive"
+     ]
+    },
+    {
+     "t": "0.5 random, 1.0 perfect",
+     "k": [
+      "0.5",
+      "1.0"
+     ]
+    },
+    {
+     "t": "PR-AUC for rare positives",
+     "k": [
+      "pr-auc",
+      "rare"
+     ]
+    },
+    {
+     "t": "ROC can look good despite poor precision",
+     "k": [
+      "poor precision",
+      "look good"
+     ]
+    }
+   ],
+   "a": "The ROC curve plots the true positive rate against the false positive rate across all thresholds. AUC measures ranking quality: the probability that a random positive scores higher than a random negative, where 0.5 is random and 1.0 is perfect. When positives are rare, like fraud, PR-AUC is better, because ROC-AUC can look good despite poor precision: a small false positive rate on millions of negatives is still a flood of false alarms."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "s",
+   "d": [
+    "fin",
+    "any"
+   ],
+   "c": "roc-calibration",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "What is probability calibration, and how do you check and fix it?",
+   "p": [
+    {
+     "t": "Predicted probabilities match observed frequencies",
+     "k": [
+      "observed",
+      "frequenc"
+     ]
+    },
+    {
+     "t": "Reliability diagram or Brier score",
+     "k": [
+      "reliability diagram",
+      "brier"
+     ]
+    },
+    {
+     "t": "Boosting and resampling distort probabilities",
+     "k": [
+      "boost",
+      "resampl"
+     ]
+    },
+    {
+     "t": "Platt scaling or isotonic regression",
+     "k": [
+      "platt",
+      "isotonic"
+     ]
+    },
+    {
+     "t": "Fit on held-out data",
+     "k": [
+      "held-out",
+      "validation"
+     ]
+    }
+   ],
+   "a": "A model is calibrated when its predicted probabilities match observed frequencies: of loans predicted at 10% default, about 10% actually default. Check it with a reliability diagram, binning predictions and plotting average prediction against actual rate, or with the Brier score. Gradient boosting models and resampling for class imbalance often distort probabilities. Fix them with Platt scaling or isotonic regression, fitted on held-out validation data. It matters whenever probabilities feed decisions such as pricing or expected cost."
+  },
+  {
+   "r": [
+    "ds",
+    "da"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "regression-metrics",
+   "tg": [
+    "machine learning",
+    "forecasting"
+   ],
+   "q": "Compare MAE, RMSE and MAPE.",
+   "p": [
+    {
+     "t": "MAE: average absolute error in units",
+     "k": [
+      "mae",
+      "absolute"
+     ]
+    },
+    {
+     "t": "RMSE: penalises large errors",
+     "k": [
+      "rmse",
+      "large errors"
+     ]
+    },
+    {
+     "t": "MAPE: percentage, scale-free",
+     "k": [
+      "mape",
+      "percentage"
+     ]
+    },
+    {
+     "t": "MAPE breaks near zero",
+     "k": [
+      "near zero",
+      "zero"
+     ]
+    },
+    {
+     "t": "Choose by business cost",
+     "k": [
+      "business",
+      "cost"
+     ]
+    }
+   ],
+   "a": "MAE is the average absolute error in the target's units, easy to explain and treating all errors equally. RMSE squares errors before averaging, so it penalises large errors more, useful when big misses are especially costly. MAPE expresses error as a percentage, so it's scale-free and comparable across products, but it breaks when actual values are near zero and is asymmetric. I choose based on the business cost of errors, and often use WAPE for demand forecasting."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "ecom",
+    "log"
+   ],
+   "c": "regression-metrics",
+   "tg": [
+    "forecasting"
+   ],
+   "q": "Which accuracy metric would you use for a demand forecast across thousands of SKUs, and why?",
+   "p": [
+    {
+     "t": "WAPE: total absolute error over total actuals",
+     "k": [
+      "wape",
+      "total actuals"
+     ]
+    },
+    {
+     "t": "Handles zeros and slow movers",
+     "k": [
+      "zeros",
+      "slow"
+     ]
+    },
+    {
+     "t": "Weights by volume",
+     "k": [
+      "volume",
+      "weights"
+     ]
+    },
+    {
+     "t": "Track bias as well",
+     "k": [
+      "bias",
+      "over-forecast"
+     ]
+    },
+    {
+     "t": "Report by segment",
+     "k": [
+      "segment",
+      "category"
+     ]
+    }
+   ],
+   "a": "I'd use WAPE: the sum of absolute errors divided by total actuals. Unlike MAPE it handles zeros and slow movers, because errors are pooled, and it weights by volume, so high-selling SKUs matter more, as they do for the business. I'd also track bias, whether we systematically over-forecast or under-forecast, since that drives stock-outs or waste. And I'd report accuracy by segment, such as category and store, to find where errors concentrate."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "fin"
+   ],
+   "c": "class-imbalance",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "How would you handle a fraud dataset where only 0.5% of transactions are fraud?",
+   "p": [
+    {
+     "t": "Don't use accuracy",
+     "k": [
+      "accuracy",
+      "useless"
+     ]
+    },
+    {
+     "t": "Use precision, recall and PR-AUC",
+     "k": [
+      "precision",
+      "recall",
+      "pr-auc"
+     ]
+    },
+    {
+     "t": "Class weights",
+     "k": [
+      "class weight",
+      "weights"
+     ]
+    },
+    {
+     "t": "Resample only the training data",
+     "k": [
+      "oversampl",
+      "undersampl",
+      "smote"
+     ]
+    },
+    {
+     "t": "Tune the threshold on expected cost",
+     "k": [
+      "threshold",
+      "expected cost"
+     ]
+    }
+   ],
+   "a": "First, don't use accuracy: predicting no fraud for everything is 99.5% accurate and useless. Use precision, recall and PR-AUC, with stratified splits. During training, class weights make mistakes on fraud cost more. Resampling, by undersampling the majority, oversampling fraud or using SMOTE, can help, but only on the training data. Most importantly, tune the threshold on expected cost: the value of fraud caught versus the cost of reviewing or blocking genuine transactions."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "class-imbalance",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "What are the risks of oversampling or SMOTE?",
+   "p": [
+    {
+     "t": "Leakage if applied before splitting",
+     "k": [
+      "before splitting",
+      "leak"
+     ]
+    },
+    {
+     "t": "Overfitting to duplicated minority examples",
+     "k": [
+      "overfit",
+      "duplicat"
+     ]
+    },
+    {
+     "t": "Synthetic points may be unrealistic",
+     "k": [
+      "synthetic",
+      "unrealistic"
+     ]
+    },
+    {
+     "t": "Distorted probabilities need recalibration",
+     "k": [
+      "probabilit",
+      "recalibrat"
+     ]
+    },
+    {
+     "t": "Class weights or threshold tuning are often enough",
+     "k": [
+      "class weights",
+      "threshold"
+     ]
+    }
+   ],
+   "a": "If applied before splitting, oversampled copies end up in both training and validation sets, which leaks and inflates scores; it must happen inside each training fold. Duplicating minority examples can make the model overfit to them. SMOTE's synthetic points may be unrealistic, especially with categorical features or noisy data. Resampling also distorts probabilities, so they need recalibration if probabilities are used. Often class weights or threshold tuning are enough and simpler."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "fin",
+    "any"
+   ],
+   "c": "interpretability",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "What are SHAP values, and how would you use them?",
+   "p": [
+    {
+     "t": "Split a prediction into feature contributions",
+     "k": [
+      "contribution",
+      "split"
+     ]
+    },
+    {
+     "t": "Contributions add up to the prediction minus the average",
+     "k": [
+      "add up",
+      "average"
+     ]
+    },
+    {
+     "t": "Local explanations for single predictions",
+     "k": [
+      "local",
+      "single prediction",
+      "individual"
+     ]
+    },
+    {
+     "t": "Global importance by averaging",
+     "k": [
+      "global",
+      "mean absolute"
+     ]
+    },
+    {
+     "t": "Caveats: correlated features and not causal",
+     "k": [
+      "correlated",
+      "causal"
+     ]
+    }
+   ],
+   "a": "SHAP values split one prediction into contributions from each feature, based on game theory, and the contributions add up to the prediction minus the average prediction. So they give local explanations for a single prediction, for example why one loan was declined. Averaging the mean absolute SHAP values across many predictions gives global importance. Caveats: correlated features share credit in ways that can mislead, and SHAP explains the model, not causal effects in the real world."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "interpretability",
+   "tg": [
+    "machine learning",
+    "xgboost"
+   ],
+   "q": "Why might built-in feature importance from a tree model be misleading, and what would you use instead?",
+   "p": [
+    {
+     "t": "Biased towards high-cardinality or continuous features",
+     "k": [
+      "high-cardinality",
+      "continuous"
+     ]
+    },
+    {
+     "t": "Measured on training data",
+     "k": [
+      "training data",
+      "overfit"
+     ]
+    },
+    {
+     "t": "Correlated features split importance",
+     "k": [
+      "correlated",
+      "split"
+     ]
+    },
+    {
+     "t": "Use permutation importance on validation data",
+     "k": [
+      "permutation",
+      "validation"
+     ]
+    },
+    {
+     "t": "Or SHAP for detail",
+     "k": [
+      "shap",
+      "detailed view"
+     ]
+    }
+   ],
+   "a": "Split-based importance is biased towards high-cardinality or continuous features, which offer many split points, even if they're noise. It's measured on training data, so it rewards features the model used to overfit. Correlated features split importance between them, so each can look unimportant. I'd use permutation importance on validation data, which measures the actual drop in performance when a feature is shuffled, or SHAP for a more detailed view."
+  },
+  {
+   "r": [
+    "ds",
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "fin"
+   ],
+   "c": "model-fairness",
+   "tg": [
+    "machine learning",
+    "governance"
+   ],
+   "q": "How would you check a lending model for unfair bias?",
+   "p": [
+    {
+     "t": "Define the groups and the fairness metrics",
+     "k": [
+      "groups",
+      "metric"
+     ]
+    },
+    {
+     "t": "Compare approval and error rates across groups",
+     "k": [
+      "approval rate",
+      "error rate",
+      "true positive rate"
+     ]
+    },
+    {
+     "t": "Look for proxy features",
+     "k": [
+      "proxy",
+      "pin code"
+     ]
+    },
+    {
+     "t": "Check calibration within groups",
+     "k": [
+      "calibration",
+      "within each group"
+     ]
+    },
+    {
+     "t": "Mitigate and monitor",
+     "k": [
+      "mitigat",
+      "monitor"
+     ]
+    }
+   ],
+   "a": "Define the groups to check, such as gender, region or age band, and the fairness metrics that fit the use case and law. Compare approval rates and error rates, especially true positive rates among people who would repay, across groups. Look for proxy features such as pin code that encode protected attributes. Check calibration within each group, so a 10% risk means the same for everyone. If gaps appear, mitigate through better data, removing proxies or reweighting, then monitor after launch."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "model-fairness",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "Why doesn't removing protected attributes make a model fair?",
+   "p": [
+    {
+     "t": "Proxies carry the same information",
+     "k": [
+      "proxies",
+      "correlate"
+     ]
+    },
+    {
+     "t": "Historical bias in labels",
+     "k": [
+      "historical",
+      "labels"
+     ]
+    },
+    {
+     "t": "Unrepresentative training data",
+     "k": [
+      "unrepresentative",
+      "under-represented"
+     ]
+    },
+    {
+     "t": "You can't measure bias without the attribute",
+     "k": [
+      "can't measure",
+      "measure"
+     ]
+    }
+   ],
+   "a": "Other features act as proxies: pin code, name, school or shopping patterns can correlate with religion, caste or gender, so the model can still learn the same patterns. Historical labels may reflect past bias, such as who was approved before, and the model reproduces it. Training data may be unrepresentative, with some groups under-represented. And without the attribute you can't measure bias at all, so many teams keep it aside for auditing even when it's not a model input."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "categorical-encoding",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "How would you encode a categorical feature with 4 values versus one with 20,000 values?",
+   "p": [
+    {
+     "t": "Low cardinality: one-hot encoding",
+     "k": [
+      "one-hot",
+      "4 values"
+     ]
+    },
+    {
+     "t": "High cardinality: target encoding",
+     "k": [
+      "target encoding",
+      "20,000 values"
+     ]
+    },
+    {
+     "t": "Out-of-fold with smoothing",
+     "k": [
+      "out-of-fold",
+      "smoothing"
+     ]
+    },
+    {
+     "t": "Alternatives: hashing or embeddings",
+     "k": [
+      "hashing",
+      "embedding"
+     ]
+    },
+    {
+     "t": "Handle rare and unseen categories",
+     "k": [
+      "unseen",
+      "rare"
+     ]
+    }
+   ],
+   "a": "With 4 values, one-hot encoding is simple and works for any model. With 20,000 values, one-hot creates too many sparse columns, so I'd use target encoding: each category becomes the average target, computed out-of-fold with smoothing towards the overall mean so rare categories don't leak or overfit. Alternatives are feature hashing or learned embeddings. Either way, handle rare and unseen categories by grouping them into an 'other' bucket."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "categorical-encoding",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "What's the risk with target encoding, and how do you avoid it?",
+   "p": [
+    {
+     "t": "Leakage of the target into the feature",
+     "k": [
+      "leak",
+      "own target"
+     ]
+    },
+    {
+     "t": "Overfitting on rare categories",
+     "k": [
+      "rare",
+      "overfit"
+     ]
+    },
+    {
+     "t": "Compute out-of-fold",
+     "k": [
+      "out-of-fold",
+      "other folds"
+     ]
+    },
+    {
+     "t": "Smooth towards the global mean",
+     "k": [
+      "smooth",
+      "global mean"
+     ]
+    },
+    {
+     "t": "Fit on training data only",
+     "k": [
+      "training data only",
+      "test"
+     ]
+    }
+   ],
+   "a": "The risk is leakage: if a row's own target is used to compute its category's average, the feature contains the answer, so validation scores look far better than reality. Rare categories make it worse and cause overfitting, as their averages come from a handful of rows. Avoid it by computing encodings out-of-fold, using only the other folds for each row, smoothing towards the global mean, and fitting on training data only before applying to test data."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "feature-scaling",
+   "tg": [
+    "machine learning",
+    "scikit-learn"
+   ],
+   "q": "Which models need feature scaling and which don't?",
+   "p": [
+    {
+     "t": "Distance-based models need it",
+     "k": [
+      "knn",
+      "k-means",
+      "distance"
+     ]
+    },
+    {
+     "t": "Regularised linear models need it",
+     "k": [
+      "regularis",
+      "ridge",
+      "lasso"
+     ]
+    },
+    {
+     "t": "Neural networks and gradient descent",
+     "k": [
+      "neural",
+      "gradient descent"
+     ]
+    },
+    {
+     "t": "Tree models don't",
+     "k": [
+      "tree",
+      "don't need"
+     ]
+    },
+    {
+     "t": "Because splits depend on order",
+     "k": [
+      "order",
+      "split"
+     ]
+    }
+   ],
+   "a": "Distance-based models such as kNN, k-means and SVMs need it, otherwise large-valued features dominate the distance. Regularised linear models like ridge and lasso need it so the penalty treats coefficients fairly. Neural networks and anything trained by gradient descent converge faster with it. Tree models such as random forests and gradient boosting don't need scaling, because a split depends only on the order of values, not their scale."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "feature-scaling",
+   "tg": [
+    "machine learning",
+    "scikit-learn"
+   ],
+   "q": "Compare standardisation, min-max scaling and robust scaling.",
+   "p": [
+    {
+     "t": "Standardisation: mean 0, standard deviation 1",
+     "k": [
+      "standardis",
+      "mean 0"
+     ]
+    },
+    {
+     "t": "Min-max: range 0 to 1",
+     "k": [
+      "min-max",
+      "0 and 1"
+     ]
+    },
+    {
+     "t": "Min-max is sensitive to outliers",
+     "k": [
+      "outlier",
+      "squash"
+     ]
+    },
+    {
+     "t": "Robust scaling: median and IQR",
+     "k": [
+      "robust",
+      "median",
+      "iqr"
+     ]
+    },
+    {
+     "t": "Fit on training data in a pipeline",
+     "k": [
+      "pipeline",
+      "training data"
+     ]
+    }
+   ],
+   "a": "Standardisation subtracts the mean and divides by the standard deviation, giving mean 0 and standard deviation 1; it's the usual default. Min-max scaling maps values to between 0 and 1, useful for bounded inputs, but it's sensitive to outliers: one extreme value can squash everything else into a tiny range. Robust scaling uses the median and IQR, so it handles outliers better. In all cases fit the scaler on training data inside a pipeline."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "missing-data",
+   "tg": [
+    "machine learning",
+    "statistics"
+   ],
+   "q": "Explain MCAR, MAR and MNAR, and why they matter.",
+   "p": [
+    {
+     "t": "MCAR: unrelated to anything",
+     "k": [
+      "mcar",
+      "completely at random"
+     ]
+    },
+    {
+     "t": "MAR: depends on observed features",
+     "k": [
+      "mar",
+      "observed"
+     ]
+    },
+    {
+     "t": "MNAR: depends on the missing value itself",
+     "k": [
+      "mnar",
+      "missing value itself"
+     ]
+    },
+    {
+     "t": "Determines whether dropping or imputing biases results",
+     "k": [
+      "bias",
+      "dropping"
+     ]
+    },
+    {
+     "t": "A concrete example",
+     "k": [
+      "for example",
+      "income"
+     ]
+    }
+   ],
+   "a": "MCAR, missing completely at random, means missingness is unrelated to anything, like a random sensor glitch. MAR, missing at random, means it depends on other observed features, such as older customers skipping an app-only field. MNAR, missing not at random, means it depends on the missing value itself, for example high earners leaving income blank. It matters because it determines whether dropping or imputing values biases results: only MCAR makes simple dropping safe, and MNAR usually means missingness itself carries information."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "missing-data",
+   "tg": [
+    "machine learning",
+    "scikit-learn"
+   ],
+   "q": "What are your options for imputing missing values in a model?",
+   "p": [
+    {
+     "t": "Drop rows or columns",
+     "k": [
+      "drop rows",
+      "few are missing"
+     ]
+    },
+    {
+     "t": "Simple imputation with median or constant",
+     "k": [
+      "median",
+      "constant"
+     ]
+    },
+    {
+     "t": "Model-based imputation",
+     "k": [
+      "iterative",
+      "knn imputer",
+      "model-based"
+     ]
+    },
+    {
+     "t": "Add missing indicators",
+     "k": [
+      "indicator",
+      "predictive"
+     ]
+    },
+    {
+     "t": "Native handling in gradient boosting, fitted on training only",
+     "k": [
+      "natively",
+      "training data"
+     ]
+    }
+   ],
+   "a": "Drop rows or columns, but only when few are missing and missingness is random. Simple imputation with the median or a constant like 0 or 'unknown'. Model-based imputation, such as a kNN imputer or iterative imputer, which predicts missing values from other features. Add missing indicators, since missingness is often predictive. Gradient boosting libraries like LightGBM handle missing values natively. Whichever I use, imputers are fitted on training data only."
+  },
+  {
+   "r": [
+    "ds",
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "any",
+    "fin"
+   ],
+   "c": "feature-stores",
+   "tg": [
+    "mlops"
+   ],
+   "q": "What is a feature store, and what problems does it solve?",
+   "p": [
+    {
+     "t": "Central, reusable feature definitions",
+     "k": [
+      "central",
+      "reuse"
+     ]
+    },
+    {
+     "t": "Offline store for training with history",
+     "k": [
+      "offline store",
+      "history"
+     ]
+    },
+    {
+     "t": "Online store for low-latency serving",
+     "k": [
+      "online store",
+      "low-latency",
+      "milliseconds"
+     ]
+    },
+    {
+     "t": "Point-in-time correct joins prevent leakage",
+     "k": [
+      "point-in-time",
+      "leakage"
+     ]
+    },
+    {
+     "t": "Avoids training-serving skew",
+     "k": [
+      "training-serving skew",
+      "same definition"
+     ]
+    }
+   ],
+   "a": "A feature store keeps central feature definitions that teams can discover and reuse. Its offline store holds feature history for building training sets, and its online store serves the latest values with low latency, in milliseconds, for real-time predictions. Point-in-time correct joins give each training example only values known at that time, which prevents leakage. Because training and serving use the same definition, it avoids training-serving skew."
+  },
+  {
+   "r": [
+    "ds",
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "feature-stores",
+   "tg": [
+    "mlops"
+   ],
+   "q": "What is a point-in-time correct join, and why does it matter for training data?",
+   "p": [
+    {
+     "t": "Feature values as of each label's timestamp",
+     "k": [
+      "as of",
+      "timestamp"
+     ]
+    },
+    {
+     "t": "Never use values from after the event",
+     "k": [
+      "after the event",
+      "future"
+     ]
+    },
+    {
+     "t": "Prevents leakage and inflated scores",
+     "k": [
+      "leakage",
+      "inflated"
+     ]
+    },
+    {
+     "t": "Requires historical feature values",
+     "k": [
+      "historical",
+      "history"
+     ]
+    },
+    {
+     "t": "A concrete example",
+     "k": [
+      "for example",
+      "fraud"
+     ]
+    }
+   ],
+   "a": "For each training example, it joins feature values as of that example's timestamp, never values from after the event. For example, for a fraud label on a 3 pm transaction, the card's transaction count must be the count at 3 pm, not today's, which includes later activity. Without it, future information leaks into training and offline scores are inflated, then the model disappoints in production. It requires keeping historical feature values, which the offline store provides."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "stationarity",
+   "tg": [
+    "forecasting",
+    "statistics"
+   ],
+   "q": "What does stationarity mean, and how do you make a series stationary?",
+   "p": [
+    {
+     "t": "Mean, variance and autocorrelation stable over time",
+     "k": [
+      "mean",
+      "variance",
+      "constant over time"
+     ]
+    },
+    {
+     "t": "Trend and seasonality break it",
+     "k": [
+      "trend",
+      "seasonal"
+     ]
+    },
+    {
+     "t": "Differencing removes them",
+     "k": [
+      "differenc",
+      "previous value"
+     ]
+    },
+    {
+     "t": "Log transform for growing variance",
+     "k": [
+      "log transform",
+      "variance"
+     ]
+    },
+    {
+     "t": "ADF test to check",
+     "k": [
+      "adf",
+      "unit root"
+     ]
+    }
+   ],
+   "a": "A stationary series has a mean, variance and autocorrelation that stay constant over time. Trend and seasonality break it, as in growing daily orders with weekend peaks. Differencing, subtracting the previous value, or the value a season ago for seasonality, removes them. A log transform stabilises variance that grows with the level. Then the ADF test checks for a unit root to confirm the result is stationary."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "stationarity",
+   "tg": [
+    "forecasting"
+   ],
+   "q": "How do you decompose a time series, and what do you use the components for?",
+   "p": [
+    {
+     "t": "Trend, seasonal and remainder",
+     "k": [
+      "trend",
+      "seasonal",
+      "remainder"
+     ]
+    },
+    {
+     "t": "STL or classical decomposition",
+     "k": [
+      "stl",
+      "classical"
+     ]
+    },
+    {
+     "t": "Additive or multiplicative",
+     "k": [
+      "additive",
+      "multiplicative"
+     ]
+    },
+    {
+     "t": "Remainder for anomaly detection",
+     "k": [
+      "anomal",
+      "remainder"
+     ]
+    },
+    {
+     "t": "Multiple seasonalities",
+     "k": [
+      "weekly",
+      "yearly",
+      "multiple"
+     ]
+    }
+   ],
+   "a": "Decomposition splits the series into trend, seasonal and remainder components, using STL or classical decomposition. It can be additive, when seasonal swings are constant, or multiplicative, when they grow with the level, often handled with a log. The trend shows underlying growth, the seasonal part shows patterns to plan around, and the remainder is useful for anomaly detection. Daily data often has multiple seasonalities, weekly and yearly, which methods like MSTL handle."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "arima-ets",
+   "tg": [
+    "forecasting",
+    "statistics"
+   ],
+   "q": "Explain the components of an ARIMA model.",
+   "p": [
+    {
+     "t": "AR uses past values",
+     "k": [
+      "ar",
+      "past values"
+     ]
+    },
+    {
+     "t": "I is differencing",
+     "k": [
+      "differenc",
+      "stationary"
+     ]
+    },
+    {
+     "t": "MA uses past forecast errors",
+     "k": [
+      "ma",
+      "past forecast errors",
+      "past errors"
+     ]
+    },
+    {
+     "t": "Orders p, d, q chosen by ACF/PACF or AIC",
+     "k": [
+      "acf",
+      "aic",
+      "p, d"
+     ]
+    },
+    {
+     "t": "SARIMA adds seasonal terms",
+     "k": [
+      "sarima",
+      "seasonal"
+     ]
+    }
+   ],
+   "a": "AR, autoregressive, predicts from past values of the series. I, integrated, is the differencing applied to make the series stationary. MA, moving average, uses past forecast errors. The orders p, d and q set how many lags or differences each uses, chosen from ACF and PACF plots or automatically by AIC. SARIMA adds seasonal terms, such as for weekly or yearly patterns."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "s",
+   "d": [
+    "ecom",
+    "log"
+   ],
+   "c": "arima-ets",
+   "tg": [
+    "forecasting",
+    "lightgbm"
+   ],
+   "q": "When would you use classical models like ARIMA or ETS instead of machine learning for forecasting?",
+   "p": [
+    {
+     "t": "Few series with long, stable history",
+     "k": [
+      "few series",
+      "long",
+      "stable"
+     ]
+    },
+    {
+     "t": "Little external data",
+     "k": [
+      "external",
+      "drivers"
+     ]
+    },
+    {
+     "t": "Need interpretability and intervals",
+     "k": [
+      "interpret",
+      "interval"
+     ]
+    },
+    {
+     "t": "ML for many series and many features",
+     "k": [
+      "many series",
+      "lightgbm",
+      "machine learning"
+     ]
+    },
+    {
+     "t": "Compare in a backtest",
+     "k": [
+      "backtest",
+      "baseline"
+     ]
+    }
+   ],
+   "a": "Classical models suit a few series with long, stable history and clear trend and seasonality, especially when there's little external data to use as drivers. They're fast, interpretable and give prediction intervals. Machine learning such as LightGBM is better with many series and many features, like prices, promotions and weather, because one model learns across series. In practice I'd compare both against a baseline in a backtest."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "backtesting",
+   "tg": [
+    "forecasting"
+   ],
+   "q": "How would you evaluate a forecasting model properly?",
+   "p": [
+    {
+     "t": "Never random splits",
+     "k": [
+      "random split",
+      "leak"
+     ]
+    },
+    {
+     "t": "Rolling-origin backtest at several cut-offs",
+     "k": [
+      "rolling",
+      "cut-off"
+     ]
+    },
+    {
+     "t": "Evaluate at the horizon that matters",
+     "k": [
+      "horizon",
+      "7 days"
+     ]
+    },
+    {
+     "t": "Compare with naive baselines",
+     "k": [
+      "naive",
+      "baseline"
+     ]
+    },
+    {
+     "t": "Only use information available at forecast time",
+     "k": [
+      "available at forecast time",
+      "leakage"
+     ]
+    }
+   ],
+   "a": "Never random splits, which leak the future into training. Use a rolling-origin backtest: pick several cut-off dates, train on data before each, forecast the next period, and compare with actuals. Evaluate at the horizon that matters for the decision, such as 7 days for staffing. Compare with naive baselines like seasonal naive, the same day last week. And make sure features only use information available at forecast time, to avoid leakage, for example not using actual promotion sales."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "backtesting",
+   "tg": [
+    "forecasting"
+   ],
+   "q": "Your forecast backtests well, but performs badly in production. What could be wrong?",
+   "p": [
+    {
+     "t": "Leakage in features",
+     "k": [
+      "leak",
+      "future information"
+     ]
+    },
+    {
+     "t": "Features unavailable or late in production",
+     "k": [
+      "unavailable",
+      "late"
+     ]
+    },
+    {
+     "t": "Distribution shift",
+     "k": [
+      "shift",
+      "changed"
+     ]
+    },
+    {
+     "t": "Backtest periods unrepresentative",
+     "k": [
+      "unrepresentative",
+      "period"
+     ]
+    },
+    {
+     "t": "Pipeline bugs or training-serving skew",
+     "k": [
+      "skew",
+      "bug"
+     ]
+    }
+   ],
+   "a": "Most likely leakage: features in the backtest used future information, like final sales of a promotion or revised data. Or features are unavailable or late in production, such as yesterday's sales arriving after the forecast runs. There may be distribution shift: demand patterns changed after a new competitor or price change. The backtest periods may have been unrepresentative, missing festival seasons. Or there are pipeline bugs and training-serving skew, where production features are computed differently."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "s",
+   "d": [
+    "ecom",
+    "log"
+   ],
+   "c": "forecasting-scale",
+   "tg": [
+    "forecasting",
+    "lightgbm"
+   ],
+   "q": "How would you forecast daily demand for 40,000 SKU-store combinations?",
+   "p": [
+    {
+     "t": "One global model across series",
+     "k": [
+      "global model",
+      "across series"
+     ]
+    },
+    {
+     "t": "Lag, rolling and calendar features",
+     "k": [
+      "lag",
+      "rolling",
+      "calendar"
+     ]
+    },
+    {
+     "t": "Item and store attributes and promotions",
+     "k": [
+      "attributes",
+      "promotion",
+      "price"
+     ]
+    },
+    {
+     "t": "Handle intermittent demand and new items",
+     "k": [
+      "intermittent",
+      "new items",
+      "cold start"
+     ]
+    },
+    {
+     "t": "Hierarchical consistency and automated backtests",
+     "k": [
+      "hierarch",
+      "backtest"
+     ]
+    }
+   ],
+   "a": "Rather than 40,000 separate models, I'd train one global model across series, such as LightGBM, with lag features, rolling means and calendar features like weekday and festivals. Add item and store attributes, price and promotion features, so patterns transfer between similar SKUs. Intermittent demand needs suitable losses or methods like Croston for very sparse series, and new items rely on attributes for a cold start. Reconcile forecasts so they're hierarchically consistent across SKU, category and region, and automate backtests and accuracy monitoring by segment."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "s",
+   "d": [
+    "ecom"
+   ],
+   "c": "forecasting-scale",
+   "tg": [
+    "forecasting"
+   ],
+   "q": "What is hierarchical forecasting, and why does reconciliation matter?",
+   "p": [
+    {
+     "t": "Forecasts at several levels of a hierarchy",
+     "k": [
+      "level",
+      "hierarch"
+     ]
+    },
+    {
+     "t": "Forecasts should add up",
+     "k": [
+      "add up",
+      "consistent"
+     ]
+    },
+    {
+     "t": "Bottom-up and top-down",
+     "k": [
+      "bottom-up",
+      "top-down"
+     ]
+    },
+    {
+     "t": "Optimal reconciliation like MinT",
+     "k": [
+      "mint",
+      "reconcil"
+     ]
+    },
+    {
+     "t": "Different teams use different levels",
+     "k": [
+      "teams",
+      "planning"
+     ]
+    }
+   ],
+   "a": "Demand is often forecast at several levels of a hierarchy: SKU, category, store, region and total. Independent forecasts usually don't add up, so they aren't consistent, which confuses planning. Bottom-up sums SKU forecasts, which is noisy, and top-down splits a total forecast, which loses detail. Optimal reconciliation methods like MinT combine all levels into coherent forecasts that are often more accurate. It matters because different teams use different levels: finance plans by region, while replenishment works by SKU and store."
+  }
+ ],
+ "searchChecks": [
+  [
+   "roc auc",
+   "roc-calibration"
+  ],
+  [
+   "rmse mape",
+   "regression-metrics"
+  ],
+  [
+   "imbalanced smote",
+   "class-imbalance"
+  ],
+  [
+   "shap values",
+   "interpretability"
+  ],
+  [
+   "model fairness bias",
+   "model-fairness"
+  ],
+  [
+   "one hot target encoding",
+   "categorical-encoding"
+  ],
+  [
+   "standardisation min max",
+   "feature-scaling"
+  ],
+  [
+   "imputation",
+   "missing-data"
+  ],
+  [
+   "feature store",
+   "feature-stores"
+  ],
+  [
+   "stationarity",
+   "stationarity"
+  ],
+  [
+   "arima",
+   "arima-ets"
+  ],
+  [
+   "backtesting",
+   "backtesting"
+  ],
+  [
+   "hierarchical forecasting",
+   "forecasting-scale"
+  ]
+ ]
+}
