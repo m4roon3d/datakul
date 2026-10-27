@@ -1,0 +1,2060 @@
+{
+ "batch": 12,
+ "name": "Governance, integration and delivery",
+ "concepts": [
+  {
+   "id": "data-catalog",
+   "t": "ar",
+   "title": "Data catalogues and metadata",
+   "mod": "Governance and security",
+   "lv": "I",
+   "kw": "data catalog catalogue data catalog catalogs metadata technical metadata business glossary lineage discovery datahub openmetadata unity catalog collibra alation ownership",
+   "s": "A data catalogue is a searchable inventory of an organisation's data assets with their meaning, owners, quality and lineage, so people can find and trust data.",
+   "d": "Technical metadata, such as schemas, columns, types, freshness and usage, is harvested automatically from warehouses, BI tools and pipelines. Business metadata adds descriptions, owners, a business glossary of agreed terms, and classifications such as PII. Lineage shows how data flows from sources through transformations to dashboards, at table or column level, which helps impact analysis and debugging. Popular tools include DataHub, OpenMetadata, Unity Catalog, Collibra and Alation. Catalogues only stay useful when metadata collection is automated and owners keep descriptions current as part of their normal workflow.",
+   "e": "Before changing a column in the orders table, an engineer checks column-level lineage in the catalogue and finds it feeds 14 dashboards and one finance extract, then notifies their owners.",
+   "c": "Why must most catalogue metadata be collected automatically?",
+   "i": "Expect what a catalogue contains, how lineage helps, and how you'd get people to keep it current.",
+   "r": [
+    "governance",
+    "data-observability",
+    "pii-handling"
+   ]
+  },
+  {
+   "id": "access-control",
+   "t": "ar",
+   "title": "Access control: RBAC, ABAC, row and column security",
+   "mod": "Governance and security",
+   "lv": "I",
+   "kw": "access control rbac abac role based attribute based row level security column level security masking policies least privilege grants tags",
+   "s": "Access control decides who can see which data. Roles, attributes, and row and column policies let one dataset safely serve many users.",
+   "d": "Role-based access control (RBAC) grants privileges to roles, such as analyst_finance, and users get roles, which is simple to audit. Attribute-based access control (ABAC) evaluates attributes of the user, data and context, such as department, region or a column's PII tag, so policies scale without creating a role for every combination. Row-level security filters rows per user, such as sales managers seeing only their region, and column-level security or masking hides sensitive columns. Follow least privilege, grant through groups from the identity provider, use tag-based policies, and review access regularly.",
+   "e": "One sales table serves all regions: a row access policy filters rows by the user's region attribute, and a masking policy shows customer phone numbers only to the support role.",
+   "c": "When does ABAC scale better than RBAC?",
+   "i": "Expect to design access for a shared dataset, explain RBAC versus ABAC, and how row and column security work in a warehouse.",
+   "r": [
+    "governance",
+    "pii-handling",
+    "snowflake"
+   ]
+  },
+  {
+   "id": "privacy-regulation",
+   "t": "ar",
+   "title": "Privacy regulation: India's DPDP Act and GDPR",
+   "mod": "Governance and security",
+   "lv": "I",
+   "kw": "privacy regulation dpdp act digital personal data protection act 2023 dpdp rules 2025 gdpr consent data fiduciary data principal purpose limitation erasure breach notification",
+   "s": "India's Digital Personal Data Protection (DPDP) Act and Europe's GDPR set rules for collecting and using personal data, which shape how data platforms store, process and delete it.",
+   "d": "Under the DPDP Act 2023, organisations deciding why and how personal data is processed are data fiduciaries, and individuals are data principals. Processing needs valid consent or a permitted legitimate use, limited to the stated purpose; principals can access, correct and erase their data; breaches must be reported to the Data Protection Board and affected people; and penalties can reach Rs 250 crore. The DPDP Rules were notified in November 2025, with obligations phasing in over 12 to 18 months. GDPR has similar principles with more lawful bases and applies to EU residents' data. For platforms this means data inventories, consent records, purpose tags, retention limits, deletion pipelines and breach response.",
+   "e": "When a customer withdraws consent for marketing, the consent service publishes an event; pipelines remove them from marketing audiences within 24 hours while keeping order records needed for tax law.",
+   "c": "How does a right-to-erasure request affect a data warehouse and its backups?",
+   "i": "Expect the key obligations, how you'd implement consent and deletion in a data platform, and differences between DPDP and GDPR.",
+   "r": [
+    "pii-handling",
+    "governance",
+    "retention-archival"
+   ]
+  },
+  {
+   "id": "retention-archival",
+   "t": "ar",
+   "title": "Data retention and archival",
+   "mod": "Governance and security",
+   "lv": "I",
+   "kw": "data retention archival retention policy legal hold storage tiers glacier archive deletion lifecycle rules purge compliance cold storage",
+   "s": "Retention policies decide how long each kind of data is kept and where, balancing legal duties, business value, privacy and cost.",
+   "d": "Define retention per data category: for example, tax and invoice records kept for the years tax law requires, logs for months, and marketing data only while consent and purpose last. Move ageing data through storage tiers, from hot to infrequent access to archive classes such as S3 Glacier, using lifecycle rules. Deletion must be real: purge from tables, snapshots and time travel, and let backups expire on schedule. Legal holds pause deletion for data involved in disputes. Document the policy, automate it, and keep evidence that it runs.",
+   "e": "Raw clickstream older than 13 months moves to an archive tier and is deleted after 25 months, while GST invoice data stays in the warehouse for eight years, as the finance policy requires.",
+   "c": "Why does deleting rows from a table not necessarily remove the data?",
+   "i": "Expect to design a retention policy, use storage tiers, and handle deletion and legal holds.",
+   "r": [
+    "privacy-regulation",
+    "object-storage",
+    "cost-optimisation"
+   ]
+  },
+  {
+   "id": "enterprise-dq",
+   "t": "ar",
+   "title": "Enterprise data quality frameworks",
+   "mod": "Governance and security",
+   "lv": "A",
+   "kw": "enterprise data quality framework dimensions accuracy completeness timeliness consistency validity uniqueness scorecards ownership issue management dq rules",
+   "s": "An enterprise data quality framework defines how quality is measured, owned and improved across the organisation, rather than leaving it to individual pipelines.",
+   "d": "It starts with quality dimensions: completeness, validity, accuracy, consistency, timeliness and uniqueness. Critical data elements, such as customer id or invoice amount, get rules for each relevant dimension, thresholds and a business owner. Rules run automatically at ingestion and in the warehouse, results feed scorecards by domain, and failures create issues that are triaged, assigned and tracked to root-cause fixes, ideally at the source. Governance bodies prioritise improvements by business impact. Tools range from dbt tests and Great Expectations to enterprise suites such as Informatica Data Quality.",
+   "e": "The supplier master scorecard shows GSTIN validity at 92% against a 99% target. Root cause analysis finds a free-text field in the vendor onboarding form, which is replaced with a validated input.",
+   "c": "Why should data quality issues be fixed at the source where possible?",
+   "i": "Senior governance roles ask you to design a quality framework: dimensions, rules, ownership, scorecards and issue management.",
+   "r": [
+    "data-quality",
+    "governance",
+    "mdm"
+   ]
+  },
+  {
+   "id": "integration-patterns",
+   "t": "ar",
+   "title": "Integration patterns: batch, API, events and files",
+   "mod": "Integration architecture",
+   "lv": "F",
+   "kw": "integration patterns batch file transfer sftp api rest synchronous asynchronous events messaging cdc point to point latency coupling",
+   "s": "Systems exchange data in four main ways: scheduled batch or file transfers, synchronous APIs, asynchronous events and messaging, and database change capture.",
+   "d": "Batch and file transfers, such as CSV or EDI files over SFTP, are simple and robust for large volumes where hours of delay are acceptable. Synchronous APIs give an immediate answer, such as checking stock, but couple the caller to the provider's availability. Asynchronous events and messaging decouple systems: producers publish and consumers react when ready, which suits order and shipment updates. Change data capture streams database changes without touching the application. The choice depends on latency, volume, coupling, reliability needs and what each system supports. Avoid a tangle of point-to-point integrations by using shared platforms.",
+   "e": "An ERP sends nightly item master files to the TMS, the TMS calls a carrier rating API synchronously during load planning, and shipment status events flow asynchronously to customer notifications.",
+   "c": "When would you choose an asynchronous event over a synchronous API call?",
+   "i": "Expect to choose a pattern for a scenario and explain the trade-offs in latency, coupling and reliability.",
+   "r": [
+    "api-ingestion",
+    "file-ingestion",
+    "cdc"
+   ]
+  },
+  {
+   "id": "event-driven",
+   "t": "ar",
+   "title": "Event-driven architecture",
+   "mod": "Integration architecture",
+   "lv": "I",
+   "kw": "event driven architecture events publish subscribe pub sub event broker kafka event sourcing choreography orchestration saga idempotent consumers decoupling",
+   "s": "In an event-driven architecture, services announce facts as events, such as OrderPlaced, and other services react independently, which decouples systems.",
+   "d": "Producers publish events to a broker such as Kafka, and any number of consumers subscribe. Events describe something that happened, carry a unique id and timestamp, and follow a versioned schema. Choreography lets services react to each other's events, while orchestration uses a central workflow; long-running processes across services use sagas with compensating actions instead of distributed transactions. Event sourcing stores state as the sequence of events. Benefits include loose coupling, scalability and a built-in history; challenges include eventual consistency, debugging flows across services, ordering, duplicates and schema governance.",
+   "e": "When ShipmentDelivered is published, the billing service raises an invoice, the notification service messages the customer, and analytics records the delivery time, without the TMS knowing about any of them.",
+   "c": "Why must event consumers be idempotent?",
+   "i": "Expect to explain events versus commands, choreography versus orchestration, and how you handle duplicates and ordering.",
+   "r": [
+    "kafka-basics",
+    "delivery-semantics",
+    "schema-registry"
+   ]
+  },
+  {
+   "id": "data-apis",
+   "t": "ar",
+   "title": "Designing APIs for data products",
+   "mod": "Integration architecture",
+   "lv": "I",
+   "kw": "data apis data api design api design rest graphql pagination filtering rate limiting versioning authentication oauth caching sla data products openapi",
+   "s": "Data APIs give applications and partners controlled, real-time access to data products, so they need careful design for performance, security and change.",
+   "d": "Design resources around consumer needs, such as /shipments/{id}/events, with filtering, sorting and pagination (cursor-based for large or changing data). Serve from a store built for low-latency lookups, such as a cache or operational database fed by pipelines, not from heavy warehouse queries. Secure with OAuth or API keys and scopes, apply rate limits, and document with OpenAPI. Version the API so changes don't break consumers, and publish an SLA for latency and availability. GraphQL lets clients choose fields, which suits varied consumers but needs query cost limits.",
+   "e": "A carrier visibility API serves shipment ETAs from a Redis cache updated every minute by a streaming job, with cursor pagination, partner-specific API keys and 100 requests a minute per partner.",
+   "c": "Why serve a data API from a cache or operational store rather than directly from the warehouse?",
+   "i": "Expect REST design choices, pagination, security, versioning, and where the API's data should come from.",
+   "r": [
+    "api-ingestion",
+    "data-contracts",
+    "data-slas"
+   ]
+  },
+  {
+   "id": "ipaas-esb",
+   "t": "ar",
+   "title": "Enterprise integration: ESB and iPaaS",
+   "mod": "Integration architecture",
+   "lv": "I",
+   "kw": "enterprise service bus esb ipaas integration platform mulesoft boomi informatica cloud azure integration services sap pi po cpi connectors mapping orchestration",
+   "s": "Enterprise service buses and integration platforms as a service (iPaaS) connect many business applications through central routing, transformation and connectors.",
+   "d": "An ESB, such as older SAP PI/PO or IBM Integration Bus, sits in the middle of the enterprise, routing messages between systems and transforming formats, often on-premises. iPaaS products such as MuleSoft, Boomi, Informatica Cloud, SAP Integration Suite and Azure Integration Services provide this as a cloud service, with prebuilt connectors to SaaS and ERP systems, visual mappings, API management and monitoring. They suit application-to-application integration, such as syncing orders between ERP, TMS and WMS. Analytical data movement at volume usually belongs in data pipelines instead. Govern reusable APIs and mappings to avoid recreating point-to-point spaghetti inside the platform.",
+   "e": "MuleSoft exposes an order API from SAP and routes order events to the WMS and TMS, mapping SAP IDocs to each system's JSON format, while bulk history for analytics goes through Data Factory.",
+   "c": "Why isn't an iPaaS usually the right tool for loading large volumes into a data warehouse?",
+   "i": "Integration architecture roles ask when to use an ESB or iPaaS, how it differs from data pipelines, and common enterprise patterns.",
+   "r": [
+    "integration-patterns",
+    "edi-carriers",
+    "informatica"
+   ]
+  },
+  {
+   "id": "canonical-models",
+   "t": "ar",
+   "title": "Canonical data models",
+   "mod": "Integration architecture",
+   "lv": "I",
+   "kw": "canonical data model common data model standard message format integration mapping translation reduce point to point mappings industry standards oagis gs1",
+   "s": "A canonical data model defines a shared, system-neutral format for key business objects, so each system maps to the canonical form once instead of to every other system.",
+   "d": "With many systems exchanging orders or shipments, point-to-point mappings grow with the square of the number of systems. A canonical model, such as a standard Shipment message with agreed fields, codes and units, means each system needs only one mapping to and from it. It can borrow from industry standards such as GS1, OAGIS or EDI transaction sets. The risks are designing an over-complicated universal model nobody fully uses, and slow change through central governance. Keep it focused on shared core attributes, version it, allow extensions, and evolve it with the teams that use it.",
+   "e": "Five carriers, a TMS, a WMS and an ERP exchange shipment data through one canonical Shipment v2 message, so onboarding a sixth carrier means writing one mapping instead of three.",
+   "c": "How does a canonical model reduce the number of mappings between systems?",
+   "i": "Expect to explain why canonical models help, their risks, and how you'd govern and version one.",
+   "r": [
+    "integration-patterns",
+    "edi-carriers",
+    "data-contracts"
+   ]
+  },
+  {
+   "id": "nfrs",
+   "t": "ar",
+   "title": "Non-functional requirements for data platforms",
+   "mod": "Design and delivery",
+   "lv": "I",
+   "kw": "non functional requirements nfrs performance scalability availability reliability security latency freshness recoverability rpo rto maintainability cost",
+   "s": "Non-functional requirements describe how well a data platform must work, such as how fast, fresh, available, secure and recoverable, and they drive most architecture decisions.",
+   "d": "Typical data platform NFRs: data freshness (sales data by 7:00 am), query performance (dashboards under 3 seconds at 200 concurrent users), throughput and scalability (10 million events an hour, growing 50% a year), availability, recoverability (RPO and RTO), security and compliance (encryption, access audit, data residency), maintainability and observability, and cost limits. Each must be measurable and agreed with stakeholders, then traced to design choices and tested before go-live. Vague NFRs like \"fast\" or \"scalable\" can't be designed or tested against.",
+   "e": "\"Dashboards should be fast\" becomes \"95% of dashboard queries return within 3 seconds with 200 concurrent users on month-end data volumes\", which drives the choice of an aggregate layer and BI caching.",
+   "c": "Why must non-functional requirements be measurable rather than words like fast?",
+   "i": "Expect to list NFRs for a platform, make them measurable, and show how they change the design.",
+   "r": [
+    "data-slas",
+    "dr-ha",
+    "solution-design-docs"
+   ]
+  },
+  {
+   "id": "finops",
+   "t": "ar",
+   "title": "Cost architecture and FinOps",
+   "mod": "Design and delivery",
+   "lv": "A",
+   "kw": "finops cost architecture unit cost showback chargeback tagging budgets forecasting reserved capacity commitments cost per query cost governance",
+   "s": "FinOps brings financial accountability to cloud spend: engineering, finance and business teams share responsibility for cost, measured against the value delivered.",
+   "d": "Cost architecture designs for cost from the start: choosing pricing models (on-demand versus committed capacity), storage tiers, compute isolation and auto-scaling. FinOps runs in cycles of inform, optimise and operate. Inform: tag resources and allocate every cost to a team, product or pipeline, with showback or chargeback. Optimise: right-size, remove waste and commit to discounts where usage is steady. Operate: budgets, alerts, forecasts and regular reviews. Unit economics, such as cost per dashboard query, per 1,000 events or per customer, show whether spend tracks value as the business grows.",
+   "e": "Tagging every Databricks job by team showed that one experimental ML team drove 38% of compute. Showback reports and a budget alert halved its spend in two months without slowing other teams.",
+   "c": "Why are unit costs more useful than the total monthly bill?",
+   "i": "Senior architecture interviews ask how you'd design for cost, allocate spend to teams, and run an ongoing FinOps practice.",
+   "r": [
+    "cost-optimisation",
+    "storage-compute",
+    "nfrs"
+   ]
+  },
+  {
+   "id": "adrs",
+   "t": "ar",
+   "title": "Architecture decision records",
+   "mod": "Design and delivery",
+   "lv": "F",
+   "kw": "architecture decision records adr decision log context decision consequences alternatives trade offs status superseded markdown git",
+   "s": "An architecture decision record (ADR) is a short document capturing one significant decision, its context, the options considered and the consequences, so future teams understand why.",
+   "d": "Each ADR covers a single decision, such as \"Use Iceberg as the table format\", and has a title, status (proposed, accepted, superseded), context (the problem and constraints), options considered with their trade-offs, the decision, and its consequences, good and bad. ADRs are numbered, kept in Git next to the code or in a shared space, and never edited after acceptance; a new ADR supersedes an old one. They're short, often one page, and written when the decision is made. They prevent reopening settled debates and help new team members.",
+   "e": "ADR-014: \"Use dbt for warehouse transformations.\" Context: 300 stored procedures with no tests. Options: keep procedures, Dataform, dbt. Decision: dbt. Consequences: retraining analysts, a migration of six months.",
+   "c": "Why are accepted ADRs superseded by new ones rather than edited?",
+   "i": "Expect to explain what goes in an ADR and how you'd use them to document architecture decisions on a project.",
+   "r": [
+    "solution-design-docs",
+    "git-for-data",
+    "nfrs"
+   ]
+  },
+  {
+   "id": "migrations",
+   "t": "ar",
+   "title": "Legacy-to-cloud migration strategies",
+   "mod": "Design and delivery",
+   "lv": "A",
+   "kw": "migration strategies legacy to cloud lift and shift rehost replatform refactor rebuild retire 6 rs teradata hadoop oracle parallel run reconciliation cutover waves",
+   "s": "Moving a legacy data platform, such as Teradata, Oracle, Hadoop or on-premises ETL, to the cloud needs a strategy per workload, careful validation and a staged cutover.",
+   "d": "Start with discovery: inventory sources, pipelines, reports, dependencies, usage and data volumes, and retire what nobody uses. Choose a strategy per workload using the classic options: rehost (lift and shift), replatform (move with small changes, such as to a cloud warehouse), refactor or rebuild (redesign, for example into ELT with dbt), and retire. Automated code conversion tools help with SQL and ETL translation. Migrate in waves by domain, run old and new in parallel, and reconcile results with row counts, totals and sample comparisons. Plan the cutover, consumer communication and decommissioning, and avoid moving old problems unchanged.",
+   "e": "A Teradata warehouse migrates to Snowflake in four waves by domain. Each wave runs in parallel for two month-ends, with automated reconciliation of 1,200 report totals before users switch.",
+   "c": "Why run old and new platforms in parallel before cutover?",
+   "i": "Senior architecture interviews ask you to plan a migration: discovery, strategy per workload, validation, cutover and risks.",
+   "r": [
+    "informatica",
+    "cloud-platforms",
+    "testing-pipelines"
+   ]
+  },
+  {
+   "id": "dr-ha",
+   "t": "ar",
+   "title": "High availability and disaster recovery",
+   "mod": "Design and delivery",
+   "lv": "A",
+   "kw": "high availability disaster recovery rpo rto recovery point objective recovery time objective replication multi region backups failover availability zones runbook",
+   "s": "High availability keeps a platform running through component failures, while disaster recovery restores it after a major outage, within agreed recovery targets.",
+   "d": "The recovery point objective (RPO) is how much data you can afford to lose, measured in time, and the recovery time objective (RTO) is how long recovery may take. High availability comes from redundancy within a region: multiple availability zones, managed services with built-in replication, and retries. Disaster recovery covers losing a whole region or a corruption event, using cross-region replication, backups and immutable snapshots, and infrastructure as code to rebuild quickly. Tighter RPO and RTO cost more, so tier datasets by criticality. Document runbooks and test failover regularly, because untested DR plans usually fail.",
+   "e": "The payments ledger replicates to a second region with RPO 5 minutes and RTO 1 hour, while the marketing mart is rebuilt from the lake within a day, as agreed for its tier.",
+   "c": "What's the difference between RPO and RTO?",
+   "i": "Expect to define RPO and RTO, design HA and DR for a data platform, and explain how you'd test it.",
+   "r": [
+    "nfrs",
+    "iac-terraform",
+    "object-storage"
+   ]
+  },
+  {
+   "id": "solution-design-docs",
+   "t": "ar",
+   "title": "Writing solution designs and SOWs",
+   "mod": "Design and delivery",
+   "lv": "I",
+   "kw": "solution design document sow statement of work scope deliverables assumptions dependencies risks architecture diagrams acceptance criteria estimates out of scope",
+   "s": "A solution design document explains how a system will meet its requirements, and a statement of work (SOW) defines what will be delivered, by when and on what terms.",
+   "d": "A solution design covers the business context and requirements, functional and non-functional, the target architecture with diagrams, data flows and integrations, key design decisions with alternatives, security, operations, risks and open questions. A SOW turns it into a commercial commitment: objectives, scope and explicit out-of-scope items, deliverables with acceptance criteria, milestones and timeline, roles and responsibilities on both sides, assumptions and dependencies, estimates and pricing basis, and change control. Ambiguity in scope and assumptions causes most project disputes, so make them specific and agreed.",
+   "e": "A TMS integration SOW lists 6 interfaces in scope, states that carrier onboarding beyond the first 10 carriers is out of scope, assumes the client provides EDI test partners by week 3, and defines acceptance as 2 weeks of error-free parallel runs.",
+   "c": "Why are explicit out-of-scope items and assumptions so important in a SOW?",
+   "i": "Consulting and architect roles ask how you structure a solution design or SOW and how you manage scope and assumptions.",
+   "r": [
+    "adrs",
+    "nfrs",
+    "tms-data-model"
+   ]
+  }
+ ],
+ "questions": [
+  {
+   "r": [
+    "ar",
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "data-catalog",
+   "tg": [
+    "governance"
+   ],
+   "q": "What does a data catalogue contain, and how does it help?",
+   "p": [
+    {
+     "t": "Technical metadata harvested automatically",
+     "k": [
+      "technical metadata",
+      "automatically"
+     ]
+    },
+    {
+     "t": "Business glossary and descriptions",
+     "k": [
+      "glossary",
+      "descriptions"
+     ]
+    },
+    {
+     "t": "Owners and classifications",
+     "k": [
+      "owner",
+      "classification"
+     ]
+    },
+    {
+     "t": "Lineage for impact analysis",
+     "k": [
+      "lineage",
+      "impact"
+     ]
+    },
+    {
+     "t": "Helps people find and trust data",
+     "k": [
+      "find",
+      "trust"
+     ]
+    }
+   ],
+   "a": "It holds technical metadata harvested automatically: schemas, columns, freshness and usage. On top are business descriptions and a glossary of agreed terms, owners, and classifications such as PII. Lineage shows how data flows from sources to dashboards, which supports impact analysis before changes and debugging after incidents. Together this helps people find the right data and trust it, instead of asking around or rebuilding tables."
+  },
+  {
+   "r": [
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "data-catalog",
+   "tg": [
+    "governance"
+   ],
+   "q": "Catalogues often go stale after launch. How would you keep one useful?",
+   "p": [
+    {
+     "t": "Automate metadata collection",
+     "k": [
+      "automate",
+      "harvest"
+     ]
+    },
+    {
+     "t": "Make ownership part of the workflow",
+     "k": [
+      "ownership",
+      "workflow"
+     ]
+    },
+    {
+     "t": "Descriptions in code, such as dbt docs",
+     "k": [
+      "dbt",
+      "in code"
+     ]
+    },
+    {
+     "t": "Integrate with tools people use",
+     "k": [
+      "integrat",
+      "bi tool"
+     ]
+    },
+    {
+     "t": "Measure adoption and coverage",
+     "k": [
+      "adoption",
+      "coverage"
+     ]
+    }
+   ],
+   "a": "Automate metadata collection, so schemas, lineage and usage are always current. Make ownership part of the workflow: every dataset has an owner, and descriptions are written in code, such as dbt docs, reviewed in pull requests and synced to the catalogue. Integrate it with the tools people already use, like showing descriptions inside the BI tool and Slack search. Then measure adoption and coverage, such as the share of critical tables with owners and descriptions."
+  },
+  {
+   "r": [
+    "ar",
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "access-control",
+   "tg": [
+    "governance",
+    "snowflake"
+   ],
+   "q": "Explain RBAC and ABAC, and when you'd use each.",
+   "p": [
+    {
+     "t": "RBAC grants privileges to roles",
+     "k": [
+      "rbac",
+      "roles"
+     ]
+    },
+    {
+     "t": "Simple and easy to audit",
+     "k": [
+      "simple",
+      "audit"
+     ]
+    },
+    {
+     "t": "ABAC uses attributes of user, data and context",
+     "k": [
+      "abac",
+      "attributes"
+     ]
+    },
+    {
+     "t": "ABAC avoids role explosion",
+     "k": [
+      "role explosion",
+      "combinations"
+     ]
+    },
+    {
+     "t": "Often combined with tag-based policies",
+     "k": [
+      "tag",
+      "combine"
+     ]
+    }
+   ],
+   "a": "RBAC grants privileges to roles, and users get roles, such as analyst_finance; it's simple and easy to audit, and suits a modest number of stable access patterns. ABAC evaluates attributes of the user, data and context, such as the user's region, the column's PII tag, or the time, so one policy covers many cases. ABAC avoids role explosion when access depends on many combinations like region times department times sensitivity. In practice I combine them: roles for broad access and tag-based policies for sensitive data."
+  },
+  {
+   "r": [
+    "ar",
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "access-control",
+   "tg": [
+    "snowflake",
+    "power bi"
+   ],
+   "q": "How would you let regional managers see only their region's data in a shared sales table?",
+   "p": [
+    {
+     "t": "Row-level security policy",
+     "k": [
+      "row-level",
+      "row access"
+     ]
+    },
+    {
+     "t": "Map users to regions in a table or attributes",
+     "k": [
+      "mapping table",
+      "attribute"
+     ]
+    },
+    {
+     "t": "Apply in the warehouse, not only the BI tool",
+     "k": [
+      "warehouse",
+      "every tool"
+     ]
+    },
+    {
+     "t": "Mask sensitive columns too",
+     "k": [
+      "mask",
+      "column"
+     ]
+    },
+    {
+     "t": "Test and audit access",
+     "k": [
+      "test",
+      "audit"
+     ]
+    }
+   ],
+   "a": "Use a row-level security policy on the table that filters rows by the current user's region. Map users to regions in a mapping table or from identity provider attributes, so changes don't need code. Apply it in the warehouse, not only the BI tool, so it holds in every tool and query. Mask sensitive columns too, such as customer phone numbers, with column policies. Then test it with sample users of each role and audit access logs."
+  },
+  {
+   "r": [
+    "ar",
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "privacy-regulation",
+   "tg": [
+    "governance"
+   ],
+   "q": "What does India's DPDP Act require from a data platform?",
+   "p": [
+    {
+     "t": "Consent or legitimate use, tied to a purpose",
+     "k": [
+      "consent",
+      "purpose"
+     ]
+    },
+    {
+     "t": "Rights to access, correct and erase",
+     "k": [
+      "erase",
+      "correct"
+     ]
+    },
+    {
+     "t": "Retention only as long as needed",
+     "k": [
+      "retention",
+      "no longer needed"
+     ]
+    },
+    {
+     "t": "Security safeguards and breach reporting",
+     "k": [
+      "breach",
+      "safeguards"
+     ]
+    },
+    {
+     "t": "Platform needs inventory, consent records and deletion pipelines",
+     "k": [
+      "inventory",
+      "deletion"
+     ]
+    }
+   ],
+   "a": "Personal data needs valid consent or a permitted legitimate use, and can only be used for the stated purpose. Data principals have rights to access, correct and erase their data. Data should be kept only as long as needed for that purpose. Fiduciaries must apply reasonable security safeguards and report breaches to the Data Protection Board and affected people. So the platform needs a data inventory of where personal data lives, consent records linked to purposes, retention rules, and deletion pipelines that reach every copy."
+  },
+  {
+   "r": [
+    "ar",
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "privacy-regulation",
+   "tg": [
+    "governance"
+   ],
+   "q": "How would you implement a right-to-erasure request across a data platform?",
+   "p": [
+    {
+     "t": "Find every copy using the inventory and lineage",
+     "k": [
+      "lineage",
+      "every copy"
+     ]
+    },
+    {
+     "t": "Delete or anonymise in tables and downstream",
+     "k": [
+      "anonymis",
+      "downstream"
+     ]
+    },
+    {
+     "t": "Handle snapshots, time travel and backups",
+     "k": [
+      "time travel",
+      "backups"
+     ]
+    },
+    {
+     "t": "Keep data required by other laws",
+     "k": [
+      "tax",
+      "legal"
+     ]
+    },
+    {
+     "t": "Automate and record evidence",
+     "k": [
+      "automate",
+      "evidence"
+     ]
+    }
+   ],
+   "a": "Use the data inventory and lineage to find every copy of the person's data: source tables, the lake, warehouse marts, extracts and reverse ETL destinations. Delete or anonymise their records there and in all downstream copies. Snapshots, time travel and backups need handling too: shorten time travel on personal tables and let backups expire on a known schedule, recording that. Keep only data that other laws require, such as invoices for tax, restricted to that purpose. Automate the workflow from the request system and record evidence of completion."
+  },
+  {
+   "r": [
+    "ar",
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "retention-archival",
+   "tg": [
+    "aws",
+    "governance"
+   ],
+   "q": "How would you design a data retention policy for a platform?",
+   "p": [
+    {
+     "t": "Classify data and set periods by law and value",
+     "k": [
+      "classify",
+      "period"
+     ]
+    },
+    {
+     "t": "Storage tiers with lifecycle rules",
+     "k": [
+      "tier",
+      "lifecycle"
+     ]
+    },
+    {
+     "t": "Real deletion including snapshots and backups",
+     "k": [
+      "deletion",
+      "backups"
+     ]
+    },
+    {
+     "t": "Legal holds",
+     "k": [
+      "legal hold",
+      "disputes"
+     ]
+    },
+    {
+     "t": "Automate and document",
+     "k": [
+      "automate",
+      "document"
+     ]
+    }
+   ],
+   "a": "Classify data by category and set retention periods from legal requirements and business value: invoices kept for the period tax law requires, logs for months, marketing data only while consent lasts. Move ageing data through storage tiers with lifecycle rules, from hot storage to archive. Make deletion real, covering tables, snapshots, time travel and backups. Support legal holds that pause deletion for disputes. Then automate it all and document the policy, with evidence that it runs."
+  },
+  {
+   "r": [
+    "ar"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "retention-archival",
+   "tg": [
+    "aws"
+   ],
+   "q": "Why does deleting rows from a warehouse table not fully remove the data?",
+   "p": [
+    {
+     "t": "Time travel or table history",
+     "k": [
+      "time travel",
+      "history"
+     ]
+    },
+    {
+     "t": "Old files in table formats until vacuumed",
+     "k": [
+      "vacuum",
+      "old files"
+     ]
+    },
+    {
+     "t": "Backups and snapshots",
+     "k": [
+      "backups",
+      "snapshot"
+     ]
+    },
+    {
+     "t": "Downstream copies and extracts",
+     "k": [
+      "downstream",
+      "extract"
+     ]
+    },
+    {
+     "t": "Fix with retention settings and expiry",
+     "k": [
+      "expir",
+      "retention settings"
+     ]
+    }
+   ],
+   "a": "The warehouse may keep deleted data through time travel or table history for days. In lakehouse table formats, old files stay on storage until a vacuum or expire job removes them. Backups and snapshots still contain it. And downstream copies, such as marts, extracts and reverse ETL destinations, may hold it too. So deletion needs retention settings shortened for personal data, expiry of old files and backups on a known schedule, and propagation to downstream copies."
+  },
+  {
+   "r": [
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "enterprise-dq",
+   "tg": [
+    "governance",
+    "great expectations"
+   ],
+   "q": "Design an enterprise data quality framework.",
+   "p": [
+    {
+     "t": "Quality dimensions",
+     "k": [
+      "completeness",
+      "validity",
+      "timeliness"
+     ]
+    },
+    {
+     "t": "Critical data elements with owners",
+     "k": [
+      "critical data elements",
+      "owner"
+     ]
+    },
+    {
+     "t": "Automated rules with thresholds",
+     "k": [
+      "rules",
+      "threshold"
+     ]
+    },
+    {
+     "t": "Scorecards by domain",
+     "k": [
+      "scorecard",
+      "trends"
+     ]
+    },
+    {
+     "t": "Issue management and root-cause fixes",
+     "k": [
+      "issue",
+      "root cause"
+     ]
+    }
+   ],
+   "a": "Start with agreed dimensions: completeness, validity, accuracy, consistency, timeliness and uniqueness. Identify critical data elements, such as customer id, GSTIN and invoice amount, each with a business owner. Define automated rules per element and dimension with thresholds, running at ingestion and in the warehouse. Publish scorecards by domain so leaders see trends. Failures create issues that are triaged, assigned and tracked to root cause fixes, ideally at the source, with a governance forum prioritising by business impact."
+  },
+  {
+   "r": [
+    "ar",
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "enterprise-dq",
+   "tg": [
+    "governance"
+   ],
+   "q": "Why fix data quality at the source rather than in the warehouse?",
+   "p": [
+    {
+     "t": "Every downstream consumer benefits",
+     "k": [
+      "every downstream",
+      "consumer"
+     ]
+    },
+    {
+     "t": "Warehouse fixes hide the problem",
+     "k": [
+      "hide",
+      "mask"
+     ]
+    },
+    {
+     "t": "Fixes in many places drift apart",
+     "k": [
+      "drift",
+      "many places"
+     ]
+    },
+    {
+     "t": "Cheaper over time",
+     "k": [
+      "cheaper",
+      "cost"
+     ]
+    },
+    {
+     "t": "Contracts and validation at entry",
+     "k": [
+      "validation",
+      "contract"
+     ]
+    }
+   ],
+   "a": "When the source is fixed, every downstream consumer benefits, including operational systems, not just the warehouse. Cleaning in the warehouse hides the problem from the source team, so it keeps happening, and fixes in many places drift apart, giving different answers. It's cheaper over time too, since bad data multiplies as it flows. So I'd add validation at entry, such as validated GSTIN inputs, and data contracts with source teams, while keeping warehouse checks as a safety net."
+  },
+  {
+   "r": [
+    "ar",
+    "de"
+   ],
+   "l": "j",
+   "d": [
+    "any",
+    "log"
+   ],
+   "c": "integration-patterns",
+   "tg": [
+    "api",
+    "edi"
+   ],
+   "q": "Compare batch files, APIs, events and CDC for integrating systems.",
+   "p": [
+    {
+     "t": "Batch files: simple, high volume, delayed",
+     "k": [
+      "batch",
+      "file"
+     ]
+    },
+    {
+     "t": "Synchronous APIs: immediate but coupled",
+     "k": [
+      "synchronous",
+      "coupl"
+     ]
+    },
+    {
+     "t": "Events: asynchronous and decoupled",
+     "k": [
+      "event",
+      "decoupl"
+     ]
+    },
+    {
+     "t": "CDC: database changes without app changes",
+     "k": [
+      "cdc",
+      "database changes"
+     ]
+    },
+    {
+     "t": "Choose by latency, volume and reliability",
+     "k": [
+      "latency",
+      "volume"
+     ]
+    }
+   ],
+   "a": "Batch files, like nightly CSV or EDI files over SFTP, are simple and robust for high volumes but delayed by hours. Synchronous APIs give an immediate answer, like a rate quote, but the caller is coupled to the provider being up and fast. Events are asynchronous and decoupled: producers publish and consumers react when ready, good for status updates. CDC streams database changes without changing the application. I choose by latency, volume, reliability needs, coupling and what each system supports."
+  },
+  {
+   "r": [
+    "ar"
+   ],
+   "l": "m",
+   "d": [
+    "log"
+   ],
+   "c": "integration-patterns",
+   "tg": [
+    "api",
+    "edi"
+   ],
+   "q": "A TMS must integrate with an ERP, a WMS and 30 carriers. Which patterns would you use?",
+   "p": [
+    {
+     "t": "Master data in batch or events from ERP",
+     "k": [
+      "master data",
+      "erp"
+     ]
+    },
+    {
+     "t": "Orders and status via events or messages",
+     "k": [
+      "events",
+      "status"
+     ]
+    },
+    {
+     "t": "Carrier rating as synchronous APIs",
+     "k": [
+      "rating",
+      "synchronous"
+     ]
+    },
+    {
+     "t": "EDI or carrier APIs through a connectivity platform",
+     "k": [
+      "edi",
+      "connectivity"
+     ]
+    },
+    {
+     "t": "Monitoring and error handling",
+     "k": [
+      "monitor",
+      "error"
+     ]
+    }
+   ],
+   "a": "Item, location and customer master data from the ERP can flow in batch or as change events, since it changes slowly. Orders and shipment status move as events or messages between ERP, TMS and WMS, for near-real-time updates without tight coupling. Carrier rating and booking need synchronous APIs during planning. Carrier connectivity mixes EDI messages like 204 and 214 with carrier APIs, best handled through a connectivity platform or network rather than 30 custom integrations. All of it needs monitoring and error handling with retries."
+  },
+  {
+   "r": [
+    "ar",
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "event-driven",
+   "tg": [
+    "kafka"
+   ],
+   "q": "What are the benefits and challenges of event-driven architecture?",
+   "p": [
+    {
+     "t": "Loose coupling between services",
+     "k": [
+      "loose coupling",
+      "decoupl"
+     ]
+    },
+    {
+     "t": "Scalability and new consumers",
+     "k": [
+      "scal",
+      "new consumers"
+     ]
+    },
+    {
+     "t": "Eventual consistency",
+     "k": [
+      "eventual consistency",
+      "different times"
+     ]
+    },
+    {
+     "t": "Duplicates and ordering",
+     "k": [
+      "duplicate",
+      "ordering"
+     ]
+    },
+    {
+     "t": "Debugging and schema governance",
+     "k": [
+      "debug",
+      "schema"
+     ]
+    }
+   ],
+   "a": "Benefits: loose coupling, since producers don't know who consumes their events; scalability, with new consumers added without changing producers; and a built-in history of what happened. Challenges: eventual consistency, so different services see changes at slightly different times; handling duplicate deliveries and ordering; debugging flows across many services, which needs correlation ids and tracing; and schema governance, so event changes don't break consumers."
+  },
+  {
+   "r": [
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "ecom"
+   ],
+   "c": "event-driven",
+   "tg": [
+    "kafka"
+   ],
+   "q": "Compare choreography and orchestration for a multi-step order process.",
+   "p": [
+    {
+     "t": "Choreography: services react to events",
+     "k": [
+      "choreography",
+      "react"
+     ]
+    },
+    {
+     "t": "No central coordinator but harder to see the flow",
+     "k": [
+      "central",
+      "visib"
+     ]
+    },
+    {
+     "t": "Orchestration: a workflow directs steps",
+     "k": [
+      "orchestration",
+      "workflow"
+     ]
+    },
+    {
+     "t": "Sagas with compensating actions",
+     "k": [
+      "saga",
+      "compensat"
+     ]
+    },
+    {
+     "t": "Choose by complexity of the process",
+     "k": [
+      "complex",
+      "few steps"
+     ]
+    }
+   ],
+   "a": "In choreography, each service reacts to events: payment hears OrderPlaced and publishes PaymentCaptured, which the warehouse service reacts to, and so on. There's no central coordinator, which keeps services independent, but the end-to-end flow is harder to see and change. In orchestration, a workflow engine directs each step and tracks state. Either way, failures are handled with a saga: compensating actions such as refunding the payment if the warehouse can't fulfil. Choreography suits simple flows with few steps; orchestration suits complex ones with many branches."
+  },
+  {
+   "r": [
+    "ar",
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "log",
+    "any"
+   ],
+   "c": "data-apis",
+   "tg": [
+    "api"
+   ],
+   "q": "How would you design an API that gives partners shipment tracking data?",
+   "p": [
+    {
+     "t": "Resource design around partner needs",
+     "k": [
+      "resource",
+      "/shipments"
+     ]
+    },
+    {
+     "t": "Pagination and filtering",
+     "k": [
+      "pagination",
+      "filter"
+     ]
+    },
+    {
+     "t": "Serve from a low-latency store",
+     "k": [
+      "cache",
+      "low-latency"
+     ]
+    },
+    {
+     "t": "Authentication, scopes and rate limits",
+     "k": [
+      "oauth",
+      "rate limit"
+     ]
+    },
+    {
+     "t": "Versioning, documentation and SLA",
+     "k": [
+      "version",
+      "sla"
+     ]
+    }
+   ],
+   "a": "Design resources around partner needs, such as /shipments/{id} and /shipments/{id}/events, with filtering by date and status and cursor pagination. Serve from a low-latency store, like a cache or operational database updated by streaming jobs, rather than querying the warehouse per request. Secure it with OAuth or API keys, scopes so each partner sees only their shipments, and rate limits. Version it, document it with OpenAPI, and publish an SLA for latency and availability."
+  },
+  {
+   "r": [
+    "ar",
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "data-apis",
+   "tg": [
+    "api"
+   ],
+   "q": "Why use cursor-based pagination for large or changing datasets?",
+   "p": [
+    {
+     "t": "Offset pagination slows down on deep pages",
+     "k": [
+      "offset",
+      "slow"
+     ]
+    },
+    {
+     "t": "Offsets skip or repeat rows when data changes",
+     "k": [
+      "skip",
+      "repeat"
+     ]
+    },
+    {
+     "t": "Cursor points to the last item seen",
+     "k": [
+      "cursor",
+      "last item"
+     ]
+    },
+    {
+     "t": "Stable ordering key needed",
+     "k": [
+      "stable",
+      "ordering key"
+     ]
+    }
+   ],
+   "a": "With offset pagination, deep pages get slow because the database still reads all the skipped rows. And when rows are inserted or deleted between requests, offsets skip or repeat rows. A cursor points to the last item seen, such as the last event id or timestamp plus id, so the next page starts exactly after it, which is fast and consistent. It needs a stable, unique ordering key."
+  },
+  {
+   "r": [
+    "ar"
+   ],
+   "l": "m",
+   "d": [
+    "any",
+    "log"
+   ],
+   "c": "ipaas-esb",
+   "tg": [
+    "informatica",
+    "api"
+   ],
+   "q": "When would you use an iPaaS like MuleSoft or Boomi, and when a data pipeline?",
+   "p": [
+    {
+     "t": "iPaaS for application-to-application integration",
+     "k": [
+      "application-to-application",
+      "between applications"
+     ]
+    },
+    {
+     "t": "Real-time transactions and API management",
+     "k": [
+      "real-time",
+      "api management"
+     ]
+    },
+    {
+     "t": "Prebuilt connectors to SaaS and ERP",
+     "k": [
+      "connectors",
+      "erp"
+     ]
+    },
+    {
+     "t": "Data pipelines for analytical bulk loads",
+     "k": [
+      "bulk",
+      "analytic"
+     ]
+    },
+    {
+     "t": "Cost and throughput differences",
+     "k": [
+      "cost",
+      "throughput"
+     ]
+    }
+   ],
+   "a": "An iPaaS suits application-to-application integration, such as syncing orders, customers and shipment updates between ERP, TMS, WMS and CRM in real time, with API management and prebuilt connectors to SaaS and ERP systems. Data pipelines suit analytical bulk loads: moving millions of rows into a warehouse or lake, with history, transformations and backfills. iPaaS products are usually priced and tuned for transactions, so bulk analytics through them gets expensive and slow in throughput."
+  },
+  {
+   "r": [
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "ipaas-esb",
+   "tg": [
+    "api"
+   ],
+   "q": "How do you stop an integration platform becoming point-to-point spaghetti?",
+   "p": [
+    {
+     "t": "Reusable APIs in layers",
+     "k": [
+      "reusable",
+      "layer"
+     ]
+    },
+    {
+     "t": "Canonical models for shared objects",
+     "k": [
+      "canonical",
+      "shared objects"
+     ]
+    },
+    {
+     "t": "Governance and design reviews",
+     "k": [
+      "governance",
+      "review"
+     ]
+    },
+    {
+     "t": "Catalogue of integrations and owners",
+     "k": [
+      "catalogue",
+      "owner"
+     ]
+    },
+    {
+     "t": "Monitoring and standards",
+     "k": [
+      "monitor",
+      "standard"
+     ]
+    }
+   ],
+   "a": "Build reusable APIs in layers, for example system APIs over each application, process APIs for business flows and experience APIs for consumers, so new integrations reuse existing ones. Use canonical models for shared objects like orders and shipments. Apply governance with design reviews before new integrations are built. Keep a catalogue of integrations with owners, and enforce standards for naming, error handling, logging and monitoring."
+  },
+  {
+   "r": [
+    "ar"
+   ],
+   "l": "m",
+   "d": [
+    "log"
+   ],
+   "c": "canonical-models",
+   "tg": [
+    "edi",
+    "api"
+   ],
+   "q": "What is a canonical data model, and why use one in integration?",
+   "p": [
+    {
+     "t": "Shared, system-neutral format",
+     "k": [
+      "system-neutral",
+      "shared format"
+     ]
+    },
+    {
+     "t": "Each system maps once",
+     "k": [
+      "maps once",
+      "one mapping"
+     ]
+    },
+    {
+     "t": "Point-to-point grows with the square of systems",
+     "k": [
+      "square",
+      "point-to-point"
+     ]
+    },
+    {
+     "t": "Can draw on standards such as GS1 or EDI",
+     "k": [
+      "gs1",
+      "edi"
+     ]
+    },
+    {
+     "t": "A concrete example",
+     "k": [
+      "for example",
+      "carrier"
+     ]
+    }
+   ],
+   "a": "A canonical model is a shared, system-neutral format for a business object, such as a Shipment with agreed fields, codes and units. Each system maps once to and from it, instead of to every other system. Point-to-point mappings grow roughly with the square of the number of systems, so with eight systems that's dozens of mappings. It can draw on standards such as GS1 or EDI transaction sets. For example, onboarding a new carrier means one mapping to the canonical Shipment message."
+  },
+  {
+   "r": [
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "canonical-models",
+   "tg": [
+    "governance"
+   ],
+   "q": "What are the risks of a canonical model, and how do you manage them?",
+   "p": [
+    {
+     "t": "Over-complicated universal models",
+     "k": [
+      "over-complicated",
+      "everything"
+     ]
+    },
+    {
+     "t": "Slow change through central governance",
+     "k": [
+      "slow",
+      "bottleneck"
+     ]
+    },
+    {
+     "t": "Keep it to shared core attributes",
+     "k": [
+      "core",
+      "shared"
+     ]
+    },
+    {
+     "t": "Versioning and extensions",
+     "k": [
+      "version",
+      "extension"
+     ]
+    },
+    {
+     "t": "Evolve with the teams using it",
+     "k": [
+      "teams",
+      "evolve"
+     ]
+    }
+   ],
+   "a": "The big risk is an over-complicated universal model that tries to cover everything for every system, so nobody fully uses it. Central governance can also make change slow and a bottleneck. Manage it by keeping the model to shared core attributes, allowing extensions for system-specific fields, versioning it so changes don't break consumers, and evolving it with the teams using it rather than designing it in isolation."
+  },
+  {
+   "r": [
+    "ar"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "nfrs",
+   "tg": [
+    "governance"
+   ],
+   "q": "What non-functional requirements would you define for a new analytics platform?",
+   "p": [
+    {
+     "t": "Freshness",
+     "k": [
+      "freshness",
+      "by 7"
+     ]
+    },
+    {
+     "t": "Query performance and concurrency",
+     "k": [
+      "concurrent",
+      "seconds"
+     ]
+    },
+    {
+     "t": "Scalability and growth",
+     "k": [
+      "growth",
+      "scal"
+     ]
+    },
+    {
+     "t": "Availability, RPO and RTO",
+     "k": [
+      "availability",
+      "rpo"
+     ]
+    },
+    {
+     "t": "Security, compliance and cost",
+     "k": [
+      "security",
+      "cost"
+     ]
+    }
+   ],
+   "a": "Freshness: for example, sales data available by 7 am IST. Query performance: 95% of dashboard queries within 3 seconds at 200 concurrent users. Scalability: handling current volumes plus 50% growth a year. Availability during business hours, plus recovery targets, RPO and RTO. Security and compliance: encryption, access audit and data residency. And maintainability and cost limits. Each is measurable, agreed with stakeholders and tested before go-live."
+  },
+  {
+   "r": [
+    "ar"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "nfrs",
+   "tg": [
+    "governance"
+   ],
+   "q": "How do non-functional requirements change an architecture? Give an example.",
+   "p": [
+    {
+     "t": "NFRs drive design choices",
+     "k": [
+      "drive",
+      "design choice"
+     ]
+    },
+    {
+     "t": "Freshness drives batch or streaming",
+     "k": [
+      "streaming",
+      "batch"
+     ]
+    },
+    {
+     "t": "Concurrency drives serving layers",
+     "k": [
+      "concurren",
+      "aggregate",
+      "cache"
+     ]
+    },
+    {
+     "t": "RPO and RTO drive replication",
+     "k": [
+      "replication",
+      "rto"
+     ]
+    },
+    {
+     "t": "Trace and test each NFR",
+     "k": [
+      "trace",
+      "test"
+     ]
+    }
+   ],
+   "a": "NFRs drive most design choices. A freshness target of 5 minutes instead of next morning moves you from batch to streaming. High concurrency on dashboards drives an aggregate layer, caching or a real-time OLAP store. An RPO of minutes with an RTO of one hour drives cross-region replication rather than nightly backups. So I trace each NFR to the design elements that meet it and test it, for example with load tests before go-live."
+  },
+  {
+   "r": [
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "finops",
+   "tg": [
+    "aws",
+    "snowflake"
+   ],
+   "q": "How would you set up a FinOps practice for a data platform?",
+   "p": [
+    {
+     "t": "Tag and allocate every cost",
+     "k": [
+      "tag",
+      "allocat"
+     ]
+    },
+    {
+     "t": "Showback or chargeback to teams",
+     "k": [
+      "showback",
+      "chargeback"
+     ]
+    },
+    {
+     "t": "Optimise: right-size, remove waste, commitments",
+     "k": [
+      "right-size",
+      "commit"
+     ]
+    },
+    {
+     "t": "Budgets, alerts and forecasts",
+     "k": [
+      "budget",
+      "forecast"
+     ]
+    },
+    {
+     "t": "Unit costs and regular reviews",
+     "k": [
+      "unit cost",
+      "review"
+     ]
+    }
+   ],
+   "a": "Inform first: tag every resource and allocate every cost to a team, product or pipeline, then publish showback reports, or chargeback where the organisation wants teams to pay. Optimise: right-size compute, remove waste like idle clusters and unused tables, and buy commitments or reserved capacity for steady usage. Operate: budgets, alerts and forecasts per team. Track unit costs, like cost per 1,000 events or per dashboard, and hold regular reviews with engineering and finance together."
+  },
+  {
+   "r": [
+    "ar",
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "finops",
+   "tg": [
+    "snowflake",
+    "databricks"
+   ],
+   "q": "What are unit costs, and why do they matter more than the total bill?",
+   "p": [
+    {
+     "t": "Cost per unit of business output",
+     "k": [
+      "per unit",
+      "cost per"
+     ]
+    },
+    {
+     "t": "Examples like cost per order or per 1,000 events",
+     "k": [
+      "per order",
+      "1,000 events"
+     ]
+    },
+    {
+     "t": "Total bill grows with the business",
+     "k": [
+      "grows",
+      "business"
+     ]
+    },
+    {
+     "t": "Shows efficiency trends",
+     "k": [
+      "efficien",
+      "trend"
+     ]
+    },
+    {
+     "t": "Supports pricing and investment decisions",
+     "k": [
+      "pricing",
+      "decision"
+     ]
+    }
+   ],
+   "a": "A unit cost is the cost per unit of business output, such as data platform cost per order processed, per 1,000 events or per active dashboard user. The total bill naturally grows with the business, so it can't tell you whether you're getting more efficient. Unit costs show efficiency trends: if cost per order falls while volume grows, spending is healthy. They also support pricing and investment decisions, like whether a new real-time feature is worth its cost."
+  },
+  {
+   "r": [
+    "ar",
+    "de"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "adrs",
+   "tg": [
+    "governance"
+   ],
+   "q": "What goes into an architecture decision record?",
+   "p": [
+    {
+     "t": "Title and status",
+     "k": [
+      "title",
+      "status"
+     ]
+    },
+    {
+     "t": "Context and constraints",
+     "k": [
+      "context",
+      "constraint"
+     ]
+    },
+    {
+     "t": "Options considered",
+     "k": [
+      "options",
+      "alternatives"
+     ]
+    },
+    {
+     "t": "The decision itself",
+     "k": [
+      "decision itself",
+      "plainly"
+     ]
+    },
+    {
+     "t": "Consequences, good and bad",
+     "k": [
+      "consequence",
+      "migration work"
+     ]
+    }
+   ],
+   "a": "A title naming the decision, and a status such as proposed, accepted or superseded. The context: the problem and constraints at the time. The options considered, with their trade-offs. The decision itself, stated plainly. And the consequences, good and bad, such as new skills needed or migration work. It's short, numbered, and kept in Git or a shared space."
+  },
+  {
+   "r": [
+    "ar"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "adrs",
+   "tg": [
+    "governance"
+   ],
+   "q": "How would you introduce ADRs on a project, and what value do they add?",
+   "p": [
+    {
+     "t": "Write one per significant decision",
+     "k": [
+      "significant",
+      "one per"
+     ]
+    },
+    {
+     "t": "Short template kept with the code",
+     "k": [
+      "template",
+      "git"
+     ]
+    },
+    {
+     "t": "Review as part of the process",
+     "k": [
+      "review",
+      "pull request"
+     ]
+    },
+    {
+     "t": "Supersede rather than edit",
+     "k": [
+      "supersede",
+      "never edited"
+     ]
+    },
+    {
+     "t": "Value: shared memory and fewer reopened debates",
+     "k": [
+      "reopen",
+      "new team members"
+     ]
+    }
+   ],
+   "a": "I'd agree to write one per significant decision, such as table format, orchestration tool or security model, using a short template kept in Git next to the code. ADRs are reviewed in a pull request like code, so the team discusses them. Once accepted they're never edited; a new ADR supersedes an old one. The value is a shared memory of why things are the way they are, which avoids reopening settled debates and helps new team members understand the design quickly."
+  },
+  {
+   "r": [
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "migrations",
+   "tg": [
+    "snowflake",
+    "informatica"
+   ],
+   "q": "How would you plan the migration of an on-premises Teradata warehouse to the cloud?",
+   "p": [
+    {
+     "t": "Discovery and inventory with usage",
+     "k": [
+      "inventory",
+      "usage"
+     ]
+    },
+    {
+     "t": "Retire unused objects",
+     "k": [
+      "retire",
+      "unused"
+     ]
+    },
+    {
+     "t": "Strategy per workload: rehost, replatform, refactor",
+     "k": [
+      "replatform",
+      "refactor"
+     ]
+    },
+    {
+     "t": "Automated code conversion",
+     "k": [
+      "conversion",
+      "automated"
+     ]
+    },
+    {
+     "t": "Waves, parallel runs and reconciliation",
+     "k": [
+      "wave",
+      "reconcil"
+     ]
+    },
+    {
+     "t": "Cutover and decommissioning",
+     "k": [
+      "cutover",
+      "decommission"
+     ]
+    }
+   ],
+   "a": "Start with discovery: an inventory of tables, ETL jobs, reports, dependencies and usage. Retire unused objects, often a large share. Choose a strategy per workload: rehost what's simple, replatform most SQL to the cloud warehouse, and refactor messy ETL into ELT with dbt. Use automated conversion tools for SQL and ETL code. Migrate in waves by domain, with parallel runs and automated reconciliation of row counts and report totals. Then plan the cutover, communication to users, and decommissioning of the old system."
+  },
+  {
+   "r": [
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "migrations",
+   "tg": [
+    "snowflake"
+   ],
+   "q": "What are the biggest risks in a data platform migration, and how do you reduce them?",
+   "p": [
+    {
+     "t": "Hidden dependencies",
+     "k": [
+      "hidden dependenc",
+      "lineage"
+     ]
+    },
+    {
+     "t": "Data mismatches after migration",
+     "k": [
+      "mismatch",
+      "reconcil"
+     ]
+    },
+    {
+     "t": "Performance surprises",
+     "k": [
+      "performance",
+      "load test"
+     ]
+    },
+    {
+     "t": "Users not adopting the new platform",
+     "k": [
+      "adopt",
+      "training"
+     ]
+    },
+    {
+     "t": "Scope creep and long parallel running",
+     "k": [
+      "scope",
+      "parallel"
+     ]
+    }
+   ],
+   "a": "Hidden dependencies, like an Excel macro or partner extract reading a table, so use query logs and lineage to find every consumer. Data mismatches, because SQL dialects handle dates, NULLs and rounding differently, so automate reconciliation at each wave. Performance surprises, so load test realistic workloads early. Users not adopting the new platform, so involve them, provide training and switch off old access on a date. And scope creep with costly parallel running, so fix scope per wave and time-box the parallel period."
+  },
+  {
+   "r": [
+    "ar",
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any",
+    "fin"
+   ],
+   "c": "dr-ha",
+   "tg": [
+    "aws"
+   ],
+   "q": "Explain RPO and RTO, and how they shape a disaster recovery design.",
+   "p": [
+    {
+     "t": "RPO: acceptable data loss in time",
+     "k": [
+      "rpo",
+      "data loss"
+     ]
+    },
+    {
+     "t": "RTO: acceptable recovery time",
+     "k": [
+      "rto",
+      "recovery time"
+     ]
+    },
+    {
+     "t": "Tighter targets cost more",
+     "k": [
+      "cost more",
+      "tighter"
+     ]
+    },
+    {
+     "t": "Tier datasets by criticality",
+     "k": [
+      "tier",
+      "critical"
+     ]
+    },
+    {
+     "t": "Map targets to replication, backups or rebuilds",
+     "k": [
+      "replication",
+      "rebuild"
+     ]
+    }
+   ],
+   "a": "RPO, the recovery point objective, is how much data loss is acceptable, measured in time, such as 5 minutes. RTO, the recovery time objective, is the acceptable recovery time before service resumes, such as 1 hour. Tighter targets cost more, so I'd tier datasets by how critical they are. A payments ledger might need cross-region replication for a small RPO, while a marketing mart can rely on daily backups or a rebuild from the lake with an RTO of a day."
+  },
+  {
+   "r": [
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "dr-ha",
+   "tg": [
+    "aws",
+    "azure"
+   ],
+   "q": "How do you make sure a disaster recovery plan actually works?",
+   "p": [
+    {
+     "t": "Documented runbooks",
+     "k": [
+      "runbook",
+      "owners"
+     ]
+    },
+    {
+     "t": "Regular failover tests",
+     "k": [
+      "failover",
+      "test"
+     ]
+    },
+    {
+     "t": "Rebuild with infrastructure as code",
+     "k": [
+      "infrastructure as code",
+      "terraform"
+     ]
+    },
+    {
+     "t": "Protect backups from corruption and ransomware",
+     "k": [
+      "immutable",
+      "ransomware"
+     ]
+    },
+    {
+     "t": "Measure actual RPO and RTO in tests",
+     "k": [
+      "measure",
+      "actual"
+     ]
+    }
+   ],
+   "a": "Write documented runbooks with clear steps and owners, and run regular failover tests, at least yearly for critical systems, because untested plans usually fail. Use infrastructure as code such as Terraform so the environment can be rebuilt in another region. Keep immutable backups in a separate account, to protect against corruption and ransomware. During tests, measure the actual RPO and RTO achieved, compare them with the targets, and fix the gaps."
+  },
+  {
+   "r": [
+    "ar"
+   ],
+   "l": "m",
+   "d": [
+    "log",
+    "any"
+   ],
+   "c": "solution-design-docs",
+   "tg": [
+    "governance"
+   ],
+   "q": "What sections would you include in a solution design document?",
+   "p": [
+    {
+     "t": "Context and requirements",
+     "k": [
+      "context",
+      "requirements"
+     ]
+    },
+    {
+     "t": "Target architecture and data flows",
+     "k": [
+      "architecture",
+      "data flow"
+     ]
+    },
+    {
+     "t": "Integrations and interfaces",
+     "k": [
+      "integration",
+      "interface"
+     ]
+    },
+    {
+     "t": "Design decisions and alternatives",
+     "k": [
+      "decision",
+      "alternatives"
+     ]
+    },
+    {
+     "t": "Security, operations, risks and open questions",
+     "k": [
+      "security",
+      "risk"
+     ]
+    }
+   ],
+   "a": "Business context and requirements, functional and non-functional. The target architecture with diagrams and data flows. Integrations and interfaces, with formats, frequency and error handling. Key design decisions with the alternatives considered, often linked to ADRs. Then security and access, operations and support, risks with mitigations, and open questions. Each section should be traceable back to a requirement."
+  },
+  {
+   "r": [
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "log",
+    "any"
+   ],
+   "c": "solution-design-docs",
+   "tg": [
+    "governance"
+   ],
+   "q": "How do you write a SOW that avoids scope disputes later?",
+   "p": [
+    {
+     "t": "Specific in-scope list",
+     "k": [
+      "in scope",
+      "specific"
+     ]
+    },
+    {
+     "t": "Explicit out-of-scope items",
+     "k": [
+      "out of scope",
+      "disputes"
+     ]
+    },
+    {
+     "t": "Assumptions and client dependencies",
+     "k": [
+      "assumption",
+      "dependenc"
+     ]
+    },
+    {
+     "t": "Deliverables with acceptance criteria",
+     "k": [
+      "acceptance criteria",
+      "deliverable"
+     ]
+    },
+    {
+     "t": "Change control process",
+     "k": [
+      "change control",
+      "approved"
+     ]
+    }
+   ],
+   "a": "List in scope items specifically, such as six named interfaces and ten carriers, not \"carrier integration\". State out of scope items explicitly, since that's where most disputes arise. Write down assumptions and client dependencies, like test partners available by week 3, so delays have a clear cause. Define each deliverable with acceptance criteria, such as two weeks of error-free parallel runs. And include a change control process for anything new, with how it's estimated and approved."
+  }
+ ],
+ "searchChecks": [
+  [
+   "data catalogue",
+   "data-catalog"
+  ],
+  [
+   "row level security",
+   "access-control"
+  ],
+  [
+   "dpdp act",
+   "privacy-regulation"
+  ],
+  [
+   "retention policy",
+   "retention-archival"
+  ],
+  [
+   "data quality framework",
+   "enterprise-dq"
+  ],
+  [
+   "integration patterns",
+   "integration-patterns"
+  ],
+  [
+   "event driven architecture",
+   "event-driven"
+  ],
+  [
+   "data api design",
+   "data-apis"
+  ],
+  [
+   "mulesoft ipaas",
+   "ipaas-esb"
+  ],
+  [
+   "canonical data model",
+   "canonical-models"
+  ],
+  [
+   "non functional requirements",
+   "nfrs"
+  ],
+  [
+   "finops",
+   "finops"
+  ],
+  [
+   "architecture decision record",
+   "adrs"
+  ],
+  [
+   "teradata migration",
+   "migrations"
+  ],
+  [
+   "rpo rto",
+   "dr-ha"
+  ],
+  [
+   "statement of work",
+   "solution-design-docs"
+  ]
+ ]
+}

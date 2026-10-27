@@ -1,0 +1,1907 @@
+{
+ "batch": 8,
+ "name": "Machine learning core",
+ "concepts": [
+  {
+   "id": "probability-bayes",
+   "t": "ds",
+   "title": "Probability and Bayes' theorem",
+   "mod": "Maths and statistics foundations",
+   "lv": "F",
+   "kw": "probability bayes theorem conditional probability prior posterior likelihood base rate independence false positive rate naive bayes",
+   "s": "Probability quantifies uncertainty, and Bayes' theorem updates a belief when new evidence arrives, combining a prior with the likelihood of the evidence.",
+   "d": "Conditional probability P(A|B) is the probability of A given that B happened. Two events are independent if knowing one doesn't change the other. Bayes' theorem says P(A|B) = P(B|A) x P(A) / P(B): the posterior equals the likelihood times the prior, divided by the overall probability of the evidence. Its most useful lesson is the base rate: when an event is rare, even an accurate test produces mostly false alarms. Naive Bayes classifiers apply the theorem assuming features are independent given the class, which works surprisingly well for text.",
+   "e": "1% of transactions are fraud. A rule flags 90% of fraud and 5% of genuine transactions. Of flagged transactions, only 0.9 / (0.9 + 4.95) = about 15% are actually fraud, because genuine transactions are so much more common.",
+   "c": "A test is 99% accurate for a disease that affects 1 in 1,000 people. If you test positive, is it likely you have it?",
+   "i": "Expect conditional probability puzzles, a Bayes calculation like the fraud example, and the base rate fallacy.",
+   "r": [
+    "precision-recall",
+    "hypothesis-testing",
+    "logistic-regression"
+   ]
+  },
+  {
+   "id": "linear-algebra-ml",
+   "t": "ds",
+   "title": "Linear algebra for machine learning",
+   "mod": "Maths and statistics foundations",
+   "lv": "F",
+   "kw": "linear algebra vectors matrices matrix multiplication dot product transpose eigenvalues eigenvectors norm embeddings features numpy",
+   "s": "Machine learning represents data as vectors and matrices, so a few linear algebra ideas explain how most models compute.",
+   "d": "A data row with n features is a vector, and a dataset is a matrix with one row per example. A linear model's prediction is the dot product of the feature vector and the weight vector, and predicting for a whole dataset is one matrix multiplication. The dot product also measures similarity, which is the basis of cosine similarity for embeddings. Norms measure vector length, used in distances and in L1 and L2 regularisation. Eigenvectors of the covariance matrix give the directions of greatest variance, which is what PCA finds. NumPy and GPUs make these operations fast.",
+   "e": "A house with features [area 1,200, bedrooms 3, age 10] and weights [0.05, 4, -0.5] gives a price of 1,200 x 0.05 + 3 x 4 + 10 x -0.5 = 67 lakh, which is the dot product of the two vectors.",
+   "c": "Why can a linear model score a million rows with a single matrix multiplication?",
+   "i": "Expect basics such as dot products, matrix shapes, and how these relate to models, PCA and embeddings.",
+   "r": [
+    "linear-regression",
+    "pca",
+    "gradient-descent"
+   ]
+  },
+  {
+   "id": "loss-mle",
+   "t": "ds",
+   "title": "Loss functions and maximum likelihood",
+   "mod": "Maths and statistics foundations",
+   "lv": "I",
+   "kw": "loss function cost function mse mean squared error cross entropy log loss mae huber maximum likelihood estimation mle objective",
+   "s": "A loss function measures how wrong a model's predictions are, and training means finding parameters that minimise it. Many common losses come from maximum likelihood.",
+   "d": "Mean squared error (MSE) penalises large errors heavily and suits regression with roughly normal errors. Mean absolute error (MAE) is more robust to outliers, and Huber loss blends the two. Cross-entropy, or log loss, is used for classification and punishes confident wrong probabilities severely. Maximum likelihood estimation chooses parameters that make the observed data most probable: assuming normal errors gives MSE, and assuming a Bernoulli outcome gives cross-entropy. The loss you train on should match what the business cares about, or at least be closely related.",
+   "e": "A model predicts a 0.99 probability of no fraud for a transaction that is fraud. Log loss for that prediction is -ln(0.01), about 4.6, far more than the 0.69 for a hesitant 0.5 guess.",
+   "c": "Why does log loss punish confident wrong predictions so heavily?",
+   "i": "Expect to compare MSE, MAE and log loss, and to explain the link between a loss function and maximum likelihood.",
+   "r": [
+    "gradient-descent",
+    "linear-regression",
+    "logistic-regression"
+   ]
+  },
+  {
+   "id": "gradient-descent",
+   "t": "ds",
+   "title": "Gradient descent",
+   "mod": "Maths and statistics foundations",
+   "lv": "I",
+   "kw": "gradient descent learning rate step size learning rate schedule stochastic gradient descent sgd mini batch momentum adam convergence local minimum optimisation epochs",
+   "s": "Gradient descent trains models by repeatedly nudging the parameters in the direction that reduces the loss most quickly.",
+   "d": "The gradient is the vector of partial derivatives of the loss with respect to each parameter, pointing uphill; each step moves parameters a small amount against it. The learning rate sets the step size: too large and training diverges or oscillates, too small and it crawls. Batch gradient descent uses all data for each step, stochastic gradient descent (SGD) uses one example, and mini-batch uses small batches, the usual choice. Momentum and adaptive optimisers like Adam speed up and stabilise training. Feature scaling helps it converge, and an epoch is one full pass through the data.",
+   "e": "Training a logistic regression with learning rate 1.0 makes the loss jump around and grow; dropping it to 0.05 makes the loss fall smoothly and level off after about 30 epochs.",
+   "c": "What happens if the learning rate is far too large?",
+   "i": "Expect to explain gradient descent intuitively, the role of the learning rate, and SGD versus mini-batch.",
+   "r": [
+    "loss-mle",
+    "linear-regression",
+    "logistic-regression"
+   ]
+  },
+  {
+   "id": "supervised-unsupervised",
+   "t": "ds",
+   "title": "Supervised vs unsupervised learning",
+   "mod": "Machine learning fundamentals",
+   "lv": "F",
+   "kw": "supervised unsupervised labels labelled target classification regression clustering dimensionality reduction semi supervised reinforcement",
+   "s": "Supervised learning learns from labelled examples to predict a target, while unsupervised learning finds structure in data without labels.",
+   "d": "Supervised problems have a known target: classification predicts a category, such as fraud or not, and regression predicts a number, such as delivery time. You need historical examples with the right answer. Unsupervised learning has no target: clustering groups similar items, dimensionality reduction compresses features, and anomaly detection finds unusual points. Semi-supervised learning uses a few labels with many unlabelled examples, and reinforcement learning learns from rewards by taking actions. The business question and whether labels exist decide which you use.",
+   "e": "Predicting whether a customer will churn next month is supervised classification, using past customers labelled churned or not. Grouping customers by behaviour without any label is unsupervised clustering.",
+   "c": "Is predicting next week's sales a classification or regression problem?",
+   "i": "Expect to classify example problems as supervised or unsupervised, classification or regression, and to say what data each needs.",
+   "r": [
+    "clustering",
+    "linear-regression",
+    "overfitting"
+   ]
+  },
+  {
+   "id": "linear-regression",
+   "t": "ds",
+   "title": "Linear regression",
+   "mod": "Machine learning fundamentals",
+   "lv": "F",
+   "kw": "linear regression ordinary least squares ols coefficients intercept r squared residuals multicollinearity assumptions ridge lasso regularisation",
+   "s": "Linear regression predicts a number as a weighted sum of features, and its coefficients show how the prediction changes with each feature.",
+   "d": "Ordinary least squares finds the coefficients that minimise squared errors. Each coefficient is the expected change in the target for a one-unit change in that feature, holding the others fixed. R-squared is the share of variance explained. The assumptions are a linear relationship, independent errors with constant variance, and little multicollinearity, which makes coefficients unstable. Check residual plots for patterns. Ridge (L2) and lasso (L1) regularisation shrink coefficients to reduce overfitting, and lasso can set some to zero. Coefficients describe association, not causation, unless the design supports it.",
+   "e": "A delivery time model gives 0.8 minutes per km and 6 minutes for rain: a 10 km delivery in rain is predicted to take 8 + 6 = 14 minutes more than a nearby dry one, plus the intercept.",
+   "c": "What does a coefficient of 0.8 on distance mean in a delivery-time regression?",
+   "i": "Expect to interpret coefficients and R-squared, list the assumptions, and explain regularisation.",
+   "r": [
+    "logistic-regression",
+    "bias-variance",
+    "loss-mle"
+   ]
+  },
+  {
+   "id": "logistic-regression",
+   "t": "ds",
+   "title": "Logistic regression",
+   "mod": "Machine learning fundamentals",
+   "lv": "F",
+   "kw": "logistic regression classification sigmoid log odds odds ratio probability threshold binary classifier coefficients regularisation",
+   "s": "Logistic regression predicts the probability of a yes or no outcome, and is a strong, interpretable baseline for classification.",
+   "d": "It computes a weighted sum of features, the log-odds, and passes it through the sigmoid function to get a probability between 0 and 1. Training minimises log loss. Each coefficient changes the log-odds; exponentiating it gives an odds ratio, for example 1.5 means 50% higher odds per unit. A threshold, 0.5 by default, turns probabilities into decisions, and it should be chosen from business costs, not left at the default. It needs scaled features for regularisation and can't capture non-linear effects or interactions unless you engineer them.",
+   "e": "A churn model's coefficient for \"late deliveries in the last month\" is 0.4, so each extra late delivery multiplies the odds of churning by e^0.4, about 1.5.",
+   "c": "Why might you choose a threshold of 0.2 rather than 0.5 for a fraud model?",
+   "i": "Expect the sigmoid and log-odds, interpreting coefficients, choosing a threshold, and comparing it with tree models.",
+   "r": [
+    "linear-regression",
+    "precision-recall",
+    "probability-bayes"
+   ]
+  },
+  {
+   "id": "hyperparameter-tuning",
+   "t": "ds",
+   "title": "Hyperparameter tuning",
+   "mod": "Machine learning fundamentals",
+   "lv": "I",
+   "kw": "hyperparameter tuning grid search random search bayesian optimisation optuna learning rate max depth regularisation validation set early stopping",
+   "s": "Hyperparameters are settings chosen before training, like tree depth or learning rate. Tuning searches for values that perform best on validation data.",
+   "d": "Parameters, such as weights, are learned from data; hyperparameters, such as max depth, number of trees, learning rate and regularisation strength, are set by you. Grid search tries every combination and gets expensive quickly. Random search samples combinations and usually finds good values faster, since only a few hyperparameters matter much. Bayesian optimisation, as in Optuna, uses past results to pick promising values. Always evaluate on validation folds, never the test set, which stays untouched for the final estimate. Early stopping tunes the number of boosting rounds or epochs automatically.",
+   "e": "Random search over 40 combinations of learning rate, max depth and min child weight finds a LightGBM model with validation AUC 0.861, while a 300-combination grid search reaches 0.863 at seven times the cost.",
+   "c": "Why is random search often more efficient than grid search?",
+   "i": "Expect the difference between parameters and hyperparameters, search strategies, and how to avoid overfitting the validation set.",
+   "r": [
+    "cross-validation",
+    "gradient-boosting",
+    "overfitting"
+   ]
+  },
+  {
+   "id": "decision-trees",
+   "t": "ds",
+   "title": "Decision trees",
+   "mod": "Models",
+   "lv": "F",
+   "kw": "decision tree splits gini impurity entropy information gain max depth pruning leaf nodes overfitting interpretable rules cart",
+   "s": "A decision tree predicts by asking a sequence of yes or no questions about the features, which makes it easy to explain but prone to overfitting.",
+   "d": "At each node the tree chooses the feature and split point that best separate the target, using Gini impurity or entropy for classification and variance reduction for regression. It keeps splitting until a stopping rule is met. Deep trees memorise the training data, so limit max depth, require a minimum number of samples per leaf, or prune. Trees handle non-linear relationships and interactions, need no feature scaling, and are robust to outliers in features. Single trees are unstable, since small data changes can change the whole tree, which is why ensembles like random forests and gradient boosting are used.",
+   "e": "A shallow tree for delivery delays splits first on distance above 12 km, then on rain, then on peak hour. A depth-3 version becomes a simple rule set operations can use directly.",
+   "c": "Why doesn't a decision tree need feature scaling?",
+   "i": "Expect how splits are chosen, why trees overfit, and how they compare with linear models.",
+   "r": [
+    "random-forests",
+    "gradient-boosting",
+    "overfitting"
+   ]
+  },
+  {
+   "id": "random-forests",
+   "t": "ds",
+   "title": "Random forests and bagging",
+   "mod": "Models",
+   "lv": "I",
+   "kw": "random forest bagging bootstrap aggregation ensemble decision trees feature subsampling out of bag variance reduction feature importance",
+   "s": "A random forest averages many decision trees, each trained on a random sample of rows and features, to get a stable, accurate model with little tuning.",
+   "d": "Bagging, or bootstrap aggregation, trains each tree on a bootstrap sample drawn with replacement and averages their predictions, which reduces variance. Random forests add randomness by considering only a random subset of features at each split, so the trees differ more and their average is better. Rows left out of each bootstrap sample give an out-of-bag estimate of accuracy for free. Forests work well with default settings, resist overfitting as trees are added, and give feature importances. Gradient boosting often scores higher with tuning, while forests are a strong, robust baseline.",
+   "e": "A single tree predicting churn scores AUC 0.71 and changes a lot between runs. A 300-tree random forest scores 0.82 and barely changes when retrained.",
+   "c": "Why does averaging many deep trees reduce overfitting?",
+   "i": "Expect bagging versus boosting, why feature subsampling helps, out-of-bag error, and feature importance caveats.",
+   "r": [
+    "decision-trees",
+    "gradient-boosting",
+    "bias-variance"
+   ]
+  },
+  {
+   "id": "knn-distance",
+   "t": "ds",
+   "title": "k-nearest neighbours and distance metrics",
+   "mod": "Models",
+   "lv": "F",
+   "kw": "k nearest neighbours knn distance metrics euclidean manhattan cosine similarity feature scaling curse of dimensionality lazy learning",
+   "s": "k-nearest neighbours predicts from the k most similar examples in the training data, so its results depend on how you measure distance.",
+   "d": "For a new point, kNN finds the k nearest training points and takes a majority vote for classification or an average for regression. There's no training step, but prediction must search the data, which is slow for large datasets without index structures. Euclidean distance is straight-line distance, Manhattan distance sums absolute differences, and cosine similarity compares direction, which suits text and embeddings. Features must be scaled, or large-valued features dominate the distance. In high dimensions distances become similar to each other, the curse of dimensionality, so kNN works best with few features or good embeddings.",
+   "e": "Without scaling, a kNN model on customers uses income in rupees (values in lakhs) and age (values under 100), so income alone decides who is \"near\". Standardising both fixes it.",
+   "c": "Why must you scale features before using kNN?",
+   "i": "Expect how kNN works, choosing k, distance metrics and the curse of dimensionality.",
+   "r": [
+    "clustering",
+    "feature-engineering",
+    "pca"
+   ]
+  },
+  {
+   "id": "clustering",
+   "t": "ds",
+   "title": "Clustering: k-means and DBSCAN",
+   "mod": "Models",
+   "lv": "I",
+   "kw": "clustering k-means dbscan hierarchical clustering elbow method silhouette score centroids density noise points segmentation unsupervised",
+   "s": "Clustering groups similar data points without labels. k-means finds a chosen number of round clusters, while DBSCAN finds dense regions of any shape and marks outliers.",
+   "d": "k-means picks k centroids, assigns each point to its nearest centroid, moves each centroid to the mean of its points, and repeats until stable. It needs k in advance, chosen with the elbow method or silhouette score, plus scaled features, and it assumes roughly round, similar-sized clusters. DBSCAN groups points that have enough neighbours within a radius, so it finds clusters of any shape and labels sparse points as noise, but struggles when densities vary. Hierarchical clustering builds a tree of merges. Always check that clusters are stable and make business sense.",
+   "e": "DBSCAN on delivery drop-off coordinates finds dense clusters around apartment complexes and tech parks and labels scattered rural points as noise, which k-means would force into a cluster.",
+   "c": "When would you choose DBSCAN over k-means?",
+   "i": "Expect how k-means works, choosing k, scaling, DBSCAN's strengths, and how to evaluate clusters.",
+   "r": [
+    "segmentation",
+    "knn-distance",
+    "supervised-unsupervised"
+   ]
+  },
+  {
+   "id": "pca",
+   "t": "ds",
+   "title": "Dimensionality reduction with PCA",
+   "mod": "Models",
+   "lv": "I",
+   "kw": "pca principal component analysis dimensionality reduction explained variance components eigenvectors feature scaling t-sne umap visualisation",
+   "s": "Principal component analysis (PCA) compresses many correlated features into a few components that keep as much of the variation as possible.",
+   "d": "PCA finds new axes, the principal components, which are combinations of the original features. The first points in the direction of greatest variance, the second captures the most remaining variance at a right angle to the first, and so on. Keeping the top components that explain, say, 90% of the variance reduces dimensions while losing little information. Standardise features first, or large-scale features dominate. PCA speeds up models, reduces noise and helps visualise data in two dimensions, but components are harder to interpret. t-SNE and UMAP are better for visual clusters but not for modelling features.",
+   "e": "200 correlated sensor readings from warehouse conveyors reduce to 12 principal components explaining 92% of the variance, which makes the anomaly model faster and less noisy.",
+   "c": "Why must features be standardised before PCA?",
+   "i": "Expect what PCA does, explained variance, when to use it, and its trade-offs in interpretability.",
+   "r": [
+    "linear-algebra-ml",
+    "clustering",
+    "feature-engineering"
+   ]
+  },
+  {
+   "id": "anomaly-detection",
+   "t": "ds",
+   "title": "Anomaly detection",
+   "mod": "Models",
+   "lv": "I",
+   "kw": "anomaly detection outliers isolation forest isolation trees z-score seasonal decomposition autoencoder unsupervised fraud monitoring threshold false alarms",
+   "s": "Anomaly detection finds unusual data points or behaviour, such as fraud, sensor faults or metric spikes, often without many labelled examples.",
+   "d": "Simple statistical methods work well: z-scores or IQR rules for single metrics, and comparing a time series with its seasonal expectation, such as the same hour last week. For many features, isolation forests isolate anomalies with fewer random splits, and density or distance methods flag points far from their neighbours. Autoencoders flag inputs they can't reconstruct well. The hard part is the threshold: too sensitive creates false alarms people ignore, too loose misses real issues. Use any labels you have to evaluate precision, and feed confirmed cases back into the model.",
+   "e": "An isolation forest on payment features flags 0.3% of transactions. Reviewing a sample shows a third are fraud rings using many new cards on one device, which become a new rule.",
+   "c": "Why are seasonal baselines better than a fixed threshold for a metric like hourly orders?",
+   "i": "Expect methods for univariate and multivariate anomalies, handling seasonality, and choosing thresholds.",
+   "r": [
+    "outliers",
+    "data-observability",
+    "precision-recall"
+   ]
+  },
+  {
+   "id": "recommenders",
+   "t": "ds",
+   "title": "Recommender systems",
+   "mod": "Models",
+   "lv": "A",
+   "kw": "recommender systems collaborative filtering user based collaborative filtering matrix factorisation implicit feedback content based two tower retrieval ranking cold start embeddings ndcg",
+   "s": "Recommender systems predict which items a user will engage with. Large systems split this into retrieving candidates and then ranking them.",
+   "d": "Collaborative filtering learns from the user-item interaction matrix; matrix factorisation represents users and items as embedding vectors whose dot product predicts interest. Most real data is implicit feedback such as views, clicks and purchases rather than ratings. Content-based models use item features and help with the cold-start problem. At scale, a retrieval stage, for example a two-tower model with nearest-neighbour search, narrows millions of items to hundreds, and a ranking model scores them with rich features. Evaluate offline with recall@k and NDCG, then online with A/B tests, and watch diversity and popularity bias.",
+   "e": "A two-tower model retrieves 500 candidate products per user from 2 million, and a gradient-boosted ranker orders them using price, recency and the user's category affinity.",
+   "c": "Why do large recommender systems separate retrieval from ranking?",
+   "i": "Senior data science interviews ask you to design a recommender end to end: data, candidate generation, ranking, cold start and evaluation.",
+   "r": [
+    "personalisation",
+    "knn-distance",
+    "gradient-boosting"
+   ]
+  }
+ ],
+ "questions": [
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "fin",
+    "any"
+   ],
+   "c": "probability-bayes",
+   "tg": [
+    "statistics"
+   ],
+   "q": "1% of transactions are fraud. A rule catches 90% of fraud but also flags 5% of genuine transactions. What share of flagged transactions are fraud?",
+   "p": [
+    {
+     "t": "Apply Bayes' theorem",
+     "k": [
+      "bayes",
+      "out of 100"
+     ]
+    },
+    {
+     "t": "True positives: 0.9 of the 1%",
+     "k": [
+      "0.9",
+      "true positive"
+     ]
+    },
+    {
+     "t": "False positives: 5% of the 99%",
+     "k": [
+      "4.95",
+      "false positive"
+     ]
+    },
+    {
+     "t": "Answer is about 15%",
+     "k": [
+      "15%",
+      "about 15"
+     ]
+    },
+    {
+     "t": "Base rate drives the result",
+     "k": [
+      "base rate",
+      "rare"
+     ]
+    }
+   ],
+   "a": "Use Bayes' theorem. Out of 100 transactions, 1 is fraud and the rule catches 0.9 of it: the true positives. Of the 99 genuine ones, 5% are flagged: 4.95 false positives. So the share of flagged transactions that are fraud is 0.9 / (0.9 + 4.95), about 15%. The base rate drives the result: because fraud is rare, even a good rule produces mostly false alarms."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "probability-bayes",
+   "tg": [
+    "statistics"
+   ],
+   "q": "Explain the prior, likelihood and posterior in Bayes' theorem.",
+   "p": [
+    {
+     "t": "Prior is the belief before evidence",
+     "k": [
+      "prior",
+      "before"
+     ]
+    },
+    {
+     "t": "Likelihood is how probable the evidence is under the hypothesis",
+     "k": [
+      "likelihood",
+      "evidence"
+     ]
+    },
+    {
+     "t": "Posterior is the updated belief",
+     "k": [
+      "posterior",
+      "updated"
+     ]
+    },
+    {
+     "t": "Posterior is proportional to likelihood times prior",
+     "k": [
+      "times",
+      "proportional"
+     ]
+    },
+    {
+     "t": "A short example",
+     "k": [
+      "for example",
+      "fraud"
+     ]
+    }
+   ],
+   "a": "The prior is the belief before seeing the evidence, such as 1% of transactions being fraud. The likelihood is how probable the evidence is if the hypothesis is true, such as the chance a fraud transaction triggers the rule. The posterior is the updated belief after seeing the evidence. Bayes' theorem says the posterior is proportional to likelihood times prior, divided by the overall probability of the evidence. For example, a flag raises the fraud probability from 1% to about 15%."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "linear-algebra-ml",
+   "tg": [
+    "machine learning",
+    "python"
+   ],
+   "q": "How is a linear model's prediction a dot product, and why does that matter?",
+   "p": [
+    {
+     "t": "Prediction is weights dot features",
+     "k": [
+      "dot product",
+      "weights"
+     ]
+    },
+    {
+     "t": "Whole dataset as a matrix multiplication",
+     "k": [
+      "matrix multiplication",
+      "matrix"
+     ]
+    },
+    {
+     "t": "Fast with vectorised libraries or GPUs",
+     "k": [
+      "numpy",
+      "gpu",
+      "fast"
+     ]
+    },
+    {
+     "t": "Dot product also measures similarity",
+     "k": [
+      "similarity",
+      "cosine"
+     ]
+    }
+   ],
+   "a": "A linear model's prediction is the dot product of the feature vector with the weights vector, plus an intercept: each feature times its weight, summed. Stack all rows into a matrix and predicting for the whole dataset is one matrix multiplication, which NumPy or a GPU computes very fast. The same dot product also measures similarity between vectors, which is the basis of cosine similarity for embeddings and recommendations."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "linear-algebra-ml",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "What are eigenvectors and eigenvalues, and where do they appear in machine learning?",
+   "p": [
+    {
+     "t": "An eigenvector keeps its direction under the matrix",
+     "k": [
+      "direction",
+      "eigenvector"
+     ]
+    },
+    {
+     "t": "The eigenvalue is the scaling factor",
+     "k": [
+      "eigenvalue",
+      "scal"
+     ]
+    },
+    {
+     "t": "PCA uses eigenvectors of the covariance matrix",
+     "k": [
+      "pca",
+      "covariance"
+     ]
+    },
+    {
+     "t": "Largest eigenvalues mean most variance",
+     "k": [
+      "most variance",
+      "largest"
+     ]
+    }
+   ],
+   "a": "An eigenvector of a matrix is a vector whose direction doesn't change when the matrix is applied; it's only stretched or shrunk, and the eigenvalue is that scaling factor. In machine learning they appear in PCA: the eigenvectors of the covariance matrix are the principal components, and the ones with the largest eigenvalues capture the most variance in the data. They also appear in spectral clustering and in analysing how optimisation behaves."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "loss-mle",
+   "tg": [
+    "machine learning",
+    "statistics"
+   ],
+   "q": "When would you use MSE, MAE or log loss?",
+   "p": [
+    {
+     "t": "MSE for regression, penalises large errors",
+     "k": [
+      "mse",
+      "large errors"
+     ]
+    },
+    {
+     "t": "MAE is robust to outliers",
+     "k": [
+      "mae",
+      "outliers"
+     ]
+    },
+    {
+     "t": "Log loss for probabilistic classification",
+     "k": [
+      "log loss",
+      "classification"
+     ]
+    },
+    {
+     "t": "Match the loss to the business cost",
+     "k": [
+      "business",
+      "cost"
+     ]
+    },
+    {
+     "t": "Huber as a compromise",
+     "k": [
+      "huber",
+      "compromise"
+     ]
+    }
+   ],
+   "a": "MSE is the standard for regression; squaring penalises large errors heavily, which suits cases where big misses are very costly. MAE is more robust to outliers and predicts the median rather than the mean. Log loss is for classification with probabilities, and punishes confident wrong predictions. Huber loss is a compromise between MSE and MAE. Ideally the loss matches the business cost, for example if under-forecasting stock costs more than over-forecasting."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "loss-mle",
+   "tg": [
+    "statistics",
+    "machine learning"
+   ],
+   "q": "What is maximum likelihood estimation, and how does it relate to common loss functions?",
+   "p": [
+    {
+     "t": "Choose parameters that make the observed data most probable",
+     "k": [
+      "most probable",
+      "likelihood"
+     ]
+    },
+    {
+     "t": "Maximise log-likelihood, or minimise negative log-likelihood",
+     "k": [
+      "log-likelihood",
+      "negative log"
+     ]
+    },
+    {
+     "t": "Normal errors give MSE",
+     "k": [
+      "normal",
+      "mse"
+     ]
+    },
+    {
+     "t": "Bernoulli outcomes give cross-entropy",
+     "k": [
+      "bernoulli",
+      "cross-entropy"
+     ]
+    }
+   ],
+   "a": "Maximum likelihood estimation chooses the parameters that make the observed data most probable under the model. In practice we maximise the log-likelihood, or equivalently minimise the negative log-likelihood, since sums are easier than products. If you assume normal errors around a prediction, the negative log-likelihood is MSE up to constants, so least squares is MLE. If you assume a Bernoulli outcome with predicted probability p, you get cross-entropy, the log loss used in logistic regression."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "gradient-descent",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "Explain gradient descent and the role of the learning rate.",
+   "p": [
+    {
+     "t": "The gradient points uphill on the loss",
+     "k": [
+      "gradient",
+      "uphill",
+      "steepest"
+     ]
+    },
+    {
+     "t": "Step against the gradient repeatedly",
+     "k": [
+      "opposite",
+      "against",
+      "step"
+     ]
+    },
+    {
+     "t": "Learning rate sets the step size",
+     "k": [
+      "learning rate",
+      "step size"
+     ]
+    },
+    {
+     "t": "Too large diverges",
+     "k": [
+      "too large",
+      "diverge",
+      "overshoot"
+     ]
+    },
+    {
+     "t": "Too small is slow",
+     "k": [
+      "too small",
+      "slow"
+     ]
+    }
+   ],
+   "a": "The gradient of the loss with respect to the parameters points uphill, in the direction of steepest increase. Gradient descent repeatedly takes a step in the opposite direction, so the loss decreases. The learning rate sets the step size: if it's too large, steps overshoot the minimum and training can diverge, and if it's too small, training is very slow. In practice you tune it, and schedules or optimisers like Adam adjust it during training."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "gradient-descent",
+   "tg": [
+    "machine learning",
+    "pytorch"
+   ],
+   "q": "What's the difference between batch, stochastic and mini-batch gradient descent?",
+   "p": [
+    {
+     "t": "Batch uses all data per step",
+     "k": [
+      "batch",
+      "all the data"
+     ]
+    },
+    {
+     "t": "Stochastic uses one example per step",
+     "k": [
+      "stochastic",
+      "one example"
+     ]
+    },
+    {
+     "t": "Mini-batch uses small groups",
+     "k": [
+      "mini-batch",
+      "32",
+      "small batches"
+     ]
+    },
+    {
+     "t": "Trade-off between noise and cost per step",
+     "k": [
+      "noisy",
+      "cost per step",
+      "expensive"
+     ]
+    },
+    {
+     "t": "Mini-batch suits GPUs and is the default",
+     "k": [
+      "gpu",
+      "default"
+     ]
+    }
+   ],
+   "a": "Batch gradient descent computes the gradient on all the data for every step: accurate but expensive per step and slow on large datasets. Stochastic gradient descent uses one example per step: cheap but very noisy. Mini-batch uses small batches, such as 32 to 512 examples, balancing noise and cost per step, and it uses GPUs efficiently, so it's the default for most training, especially neural networks."
+  },
+  {
+   "r": [
+    "ds",
+    "da"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "supervised-unsupervised",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "Classify these as supervised or unsupervised: predicting churn, grouping customers, forecasting sales, flagging unusual transactions.",
+   "p": [
+    {
+     "t": "Churn prediction is supervised classification",
+     "k": [
+      "churn",
+      "classification"
+     ]
+    },
+    {
+     "t": "Grouping customers is unsupervised clustering",
+     "k": [
+      "grouping",
+      "clustering"
+     ]
+    },
+    {
+     "t": "Forecasting sales is supervised regression",
+     "k": [
+      "forecasting",
+      "regression"
+     ]
+    },
+    {
+     "t": "Unusual transactions is usually unsupervised anomaly detection",
+     "k": [
+      "anomaly detection",
+      "unusual"
+     ]
+    },
+    {
+     "t": "Depends on whether labels exist",
+     "k": [
+      "labels",
+      "labelled"
+     ]
+    }
+   ],
+   "a": "Predicting churn is supervised classification, using past customers labelled churned or not. Grouping customers is unsupervised clustering, with no target. Forecasting sales is supervised regression on history, predicting a number. Flagging unusual transactions is usually unsupervised anomaly detection, but if you have labelled fraud cases it becomes supervised classification, so it depends on whether labels exist."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "supervised-unsupervised",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "You have millions of transactions but only 2,000 labelled as fraud or not. How would you approach modelling?",
+   "p": [
+    {
+     "t": "Start with a supervised model on the labels",
+     "k": [
+      "supervised",
+      "labelled"
+     ]
+    },
+    {
+     "t": "Use unsupervised anomaly scores as features",
+     "k": [
+      "anomaly",
+      "unsupervised"
+     ]
+    },
+    {
+     "t": "Semi-supervised or active learning",
+     "k": [
+      "semi-supervised",
+      "active learning"
+     ]
+    },
+    {
+     "t": "Get more labels through review",
+     "k": [
+      "review",
+      "more labels"
+     ]
+    },
+    {
+     "t": "Validate carefully given few labels",
+     "k": [
+      "cross-validation",
+      "few labels"
+     ]
+    }
+   ],
+   "a": "I'd start with a simple supervised model on the 2,000 labelled examples to see how much signal there is. Then use unsupervised anomaly scores, for example from an isolation forest on all transactions, as extra features. Semi-supervised learning or active learning helps: send the cases the model is least sure about for review, which gets more labels where they help most. With few labels I'd validate carefully with stratified cross-validation."
+  },
+  {
+   "r": [
+    "ds",
+    "da"
+   ],
+   "l": "j",
+   "d": [
+    "any",
+    "log"
+   ],
+   "c": "linear-regression",
+   "tg": [
+    "statistics",
+    "machine learning"
+   ],
+   "q": "How do you interpret coefficients and R-squared in a linear regression?",
+   "p": [
+    {
+     "t": "A coefficient is the change per unit holding others fixed",
+     "k": [
+      "per unit",
+      "holding"
+     ]
+    },
+    {
+     "t": "Sign and size of the effect",
+     "k": [
+      "sign",
+      "positive",
+      "negative"
+     ]
+    },
+    {
+     "t": "R-squared is the share of variance explained",
+     "k": [
+      "r-squared",
+      "variance explained"
+     ]
+    },
+    {
+     "t": "High R-squared doesn't mean causal or good predictions",
+     "k": [
+      "doesn't mean",
+      "causal"
+     ]
+    },
+    {
+     "t": "A concrete example",
+     "k": [
+      "for example",
+      "per km"
+     ]
+    }
+   ],
+   "a": "A coefficient is the expected change in the target for a one-unit increase in that feature, holding the other features fixed. For example, 0.8 on distance means 0.8 extra minutes per km. Its sign shows whether the effect is positive or negative. R-squared is the share of variance in the target the model explains, from 0 to 1. A high R-squared doesn't mean the relationships are causal, and it doesn't guarantee good predictions on new data."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "linear-regression",
+   "tg": [
+    "statistics",
+    "machine learning"
+   ],
+   "q": "What are the assumptions of linear regression, and what do you do when they're violated?",
+   "p": [
+    {
+     "t": "Linear relationship",
+     "k": [
+      "linear relationship",
+      "transform"
+     ]
+    },
+    {
+     "t": "Independent errors",
+     "k": [
+      "independent",
+      "autocorrelation"
+     ]
+    },
+    {
+     "t": "Constant variance of errors",
+     "k": [
+      "constant variance",
+      "heteroscedastic"
+     ]
+    },
+    {
+     "t": "Low multicollinearity",
+     "k": [
+      "multicollinearity",
+      "vif"
+     ]
+    },
+    {
+     "t": "Check residual plots",
+     "k": [
+      "residual",
+      "plots"
+     ]
+    }
+   ],
+   "a": "A linear relationship between features and target; if not, transform features, such as using a log, or add terms. Independent errors; time series often have autocorrelation, which needs other models. Constant variance of errors; if errors grow with the prediction (heteroscedastic), use a log target or robust standard errors. Low multicollinearity, checked with VIF, otherwise coefficients become unstable, so drop or combine features or use ridge. I check all of this with residual plots."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "logistic-regression",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "How does logistic regression turn features into a probability?",
+   "p": [
+    {
+     "t": "Weighted sum gives the log-odds",
+     "k": [
+      "weighted sum",
+      "log-odds"
+     ]
+    },
+    {
+     "t": "Sigmoid maps it to 0 to 1",
+     "k": [
+      "sigmoid",
+      "between 0 and 1"
+     ]
+    },
+    {
+     "t": "Trained by minimising log loss",
+     "k": [
+      "log loss",
+      "minimising"
+     ]
+    },
+    {
+     "t": "Coefficient exponentiated is an odds ratio",
+     "k": [
+      "odds ratio",
+      "exponent"
+     ]
+    },
+    {
+     "t": "Threshold turns it into a decision",
+     "k": [
+      "threshold",
+      "decision"
+     ]
+    }
+   ],
+   "a": "It computes a weighted sum of the features plus an intercept, which is the log-odds of the outcome. The sigmoid function maps that to a probability between 0 and 1. The weights are trained by minimising log loss. Exponentiating a coefficient gives an odds ratio, for example 1.5 means 50% higher odds per unit increase. A threshold then turns the probability into a decision."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "fin",
+    "any"
+   ],
+   "c": "logistic-regression",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "How would you choose the classification threshold for a fraud model?",
+   "p": [
+    {
+     "t": "The default 0.5 is rarely right",
+     "k": [
+      "0.5",
+      "default"
+     ]
+    },
+    {
+     "t": "Weigh the costs of false positives and negatives",
+     "k": [
+      "cost",
+      "false positive",
+      "false negative"
+     ]
+    },
+    {
+     "t": "Use precision-recall trade-offs",
+     "k": [
+      "precision",
+      "recall"
+     ]
+    },
+    {
+     "t": "Consider review capacity",
+     "k": [
+      "capacity",
+      "review team"
+     ]
+    },
+    {
+     "t": "Choose on validation data and monitor",
+     "k": [
+      "validation",
+      "monitor"
+     ]
+    }
+   ],
+   "a": "The default 0.5 is rarely right, especially with rare classes. I'd weigh the costs: a missed fraud (false negative) might cost Rs 5,000, while blocking a genuine customer (false positive) costs a lost sale and goodwill. Plot precision and recall across thresholds and pick the one minimising expected cost, also considering the review team's capacity if flagged cases are checked by people. Choose it on validation data and monitor it, since the best threshold shifts as fraud patterns change."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "hyperparameter-tuning",
+   "tg": [
+    "machine learning",
+    "xgboost"
+   ],
+   "q": "Compare grid search, random search and Bayesian optimisation.",
+   "p": [
+    {
+     "t": "Grid search tries every combination",
+     "k": [
+      "grid",
+      "every combination"
+     ]
+    },
+    {
+     "t": "Random search samples and is often more efficient",
+     "k": [
+      "random search",
+      "efficient"
+     ]
+    },
+    {
+     "t": "Few hyperparameters matter most",
+     "k": [
+      "matter",
+      "few"
+     ]
+    },
+    {
+     "t": "Bayesian optimisation learns from past trials",
+     "k": [
+      "bayesian",
+      "past trials",
+      "optuna"
+     ]
+    },
+    {
+     "t": "Evaluate on validation folds, not the test set",
+     "k": [
+      "validation",
+      "test set"
+     ]
+    }
+   ],
+   "a": "Grid search tries every combination of chosen values, which is thorough but grows exponentially with more hyperparameters. Random search samples combinations and is often more efficient, because only a few hyperparameters matter much and random sampling explores more values of each. Bayesian optimisation, as in Optuna, learns from past trials to choose promising values next, so it needs fewer trials. Whatever the method, evaluate on validation folds and keep the test set for the final estimate."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "hyperparameter-tuning",
+   "tg": [
+    "machine learning",
+    "lightgbm"
+   ],
+   "q": "What's the difference between parameters and hyperparameters? Give examples for a gradient boosting model.",
+   "p": [
+    {
+     "t": "Parameters are learned from data",
+     "k": [
+      "learned",
+      "parameters"
+     ]
+    },
+    {
+     "t": "Hyperparameters are set before training",
+     "k": [
+      "hyperparameter",
+      "before training"
+     ]
+    },
+    {
+     "t": "Boosting examples: learning rate, depth, trees",
+     "k": [
+      "learning rate",
+      "depth",
+      "number of trees"
+     ]
+    },
+    {
+     "t": "Regularisation hyperparameters",
+     "k": [
+      "regularis",
+      "min_child",
+      "subsample"
+     ]
+    },
+    {
+     "t": "Early stopping picks the number of rounds",
+     "k": [
+      "early stopping",
+      "stops improving"
+     ]
+    }
+   ],
+   "a": "Parameters are learned from data during training, such as the split thresholds and leaf values in each tree. Hyperparameters are set before training and control how learning happens. For gradient boosting: the learning rate, max depth, and number of trees, plus regularisation hyperparameters like min_child_weight, subsample and L2 penalty. Early stopping picks the number of rounds automatically by stopping when validation loss stops improving."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "decision-trees",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "How does a decision tree decide where to split?",
+   "p": [
+    {
+     "t": "Tries candidate features and thresholds",
+     "k": [
+      "candidate",
+      "threshold"
+     ]
+    },
+    {
+     "t": "Measures impurity with Gini or entropy",
+     "k": [
+      "gini",
+      "entropy"
+     ]
+    },
+    {
+     "t": "Chooses the largest reduction in impurity",
+     "k": [
+      "reduction",
+      "information gain"
+     ]
+    },
+    {
+     "t": "Variance reduction for regression",
+     "k": [
+      "variance",
+      "regression"
+     ]
+    },
+    {
+     "t": "Repeats until a stopping rule",
+     "k": [
+      "stopping",
+      "max depth"
+     ]
+    }
+   ],
+   "a": "At each node it tries candidate features and thresholds, and measures how pure the resulting child nodes are, using Gini impurity or entropy for classification. It picks the split with the largest reduction in impurity, also called information gain. For regression trees it uses variance reduction instead. It repeats this on each child until a stopping rule is met, such as max depth or a minimum number of samples per leaf."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "decision-trees",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "Why do decision trees overfit, and how do you control it?",
+   "p": [
+    {
+     "t": "Deep trees memorise the training data",
+     "k": [
+      "memoris",
+      "deep"
+     ]
+    },
+    {
+     "t": "Limit max depth",
+     "k": [
+      "max depth",
+      "limiting"
+     ]
+    },
+    {
+     "t": "Minimum samples per leaf",
+     "k": [
+      "min samples",
+      "per leaf"
+     ]
+    },
+    {
+     "t": "Pruning weak branches",
+     "k": [
+      "prun",
+      "branches"
+     ]
+    },
+    {
+     "t": "Use ensembles",
+     "k": [
+      "ensemble",
+      "random forest"
+     ]
+    }
+   ],
+   "a": "A tree can keep splitting until every leaf is pure, so a deep tree memorises the training data, including noise, and generalises badly. Control it by limiting max depth, requiring min samples per leaf so leaves aren't based on a handful of rows, and pruning branches that don't improve validation performance. In practice ensembles such as a random forest or gradient boosting fix it better by combining many trees."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "random-forests",
+   "tg": [
+    "machine learning",
+    "scikit-learn"
+   ],
+   "q": "How does a random forest work, and why is it better than a single tree?",
+   "p": [
+    {
+     "t": "Many trees on bootstrap samples",
+     "k": [
+      "bootstrap",
+      "many trees"
+     ]
+    },
+    {
+     "t": "Random subset of features at each split",
+     "k": [
+      "random subset",
+      "features at each split"
+     ]
+    },
+    {
+     "t": "Averaging or voting reduces variance",
+     "k": [
+      "average",
+      "variance"
+     ]
+    },
+    {
+     "t": "Trees are decorrelated",
+     "k": [
+      "decorrelat",
+      "differ"
+     ]
+    },
+    {
+     "t": "Out-of-bag error estimate",
+     "k": [
+      "out-of-bag",
+      "without a separate"
+     ]
+    }
+   ],
+   "a": "It trains many trees, each on a bootstrap sample of the rows drawn with replacement, and each split considers only a random subset of features. That makes the trees decorrelated, so they differ from each other. Averaging their predictions, or voting for classification, reduces variance a lot compared with a single deep tree, which is unstable and overfits. As a bonus, rows not in each bootstrap sample give an out-of-bag error estimate without a separate validation set."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "random-forests",
+   "tg": [
+    "machine learning",
+    "xgboost"
+   ],
+   "q": "Compare bagging (random forests) with boosting (gradient boosting).",
+   "p": [
+    {
+     "t": "Bagging trains trees independently in parallel",
+     "k": [
+      "independent",
+      "parallel"
+     ]
+    },
+    {
+     "t": "Boosting trains trees sequentially on errors",
+     "k": [
+      "sequential",
+      "errors"
+     ]
+    },
+    {
+     "t": "Bagging reduces variance; boosting reduces bias",
+     "k": [
+      "variance",
+      "bias"
+     ]
+    },
+    {
+     "t": "Boosting usually more accurate but needs tuning",
+     "k": [
+      "tuning",
+      "more accurate"
+     ]
+    },
+    {
+     "t": "Forests are robust with defaults",
+     "k": [
+      "defaults",
+      "robust"
+     ]
+    }
+   ],
+   "a": "Bagging trains deep trees independently and in parallel on bootstrap samples and averages them, which mainly reduces variance. Boosting trains shallow trees sequentially, each one fitting the errors of the ensemble so far, which mainly reduces bias. Boosting is usually more accurate on tabular data but needs tuning of learning rate, depth and rounds, and can overfit. Random forests are robust with defaults and hard to overfit by adding trees, so they're a good baseline."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "knn-distance",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "How does k-nearest neighbours work, and how do you choose k?",
+   "p": [
+    {
+     "t": "Find the k closest training points",
+     "k": [
+      "closest",
+      "nearest"
+     ]
+    },
+    {
+     "t": "Vote or average their labels",
+     "k": [
+      "vote",
+      "average"
+     ]
+    },
+    {
+     "t": "Small k is noisy, large k is too smooth",
+     "k": [
+      "small k",
+      "large k"
+     ]
+    },
+    {
+     "t": "Choose k by cross-validation",
+     "k": [
+      "cross-validation",
+      "odd values"
+     ]
+    },
+    {
+     "t": "Scale features first",
+     "k": [
+      "scale",
+      "standardis"
+     ]
+    }
+   ],
+   "a": "For a new point, kNN finds the k closest training points by a distance metric and takes a majority vote for classification or an average for regression. A small k is noisy and overfits, while a large k is too smooth and blurs real boundaries. I choose k by cross-validation, often trying odd values to avoid ties. Features must be scaled first, for example standardised, or large-valued features dominate the distance."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "knn-distance",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "When would you use Euclidean, Manhattan or cosine distance?",
+   "p": [
+    {
+     "t": "Euclidean: straight-line distance for scaled numeric features",
+     "k": [
+      "euclidean",
+      "straight-line"
+     ]
+    },
+    {
+     "t": "Manhattan: sum of absolute differences, robust in high dimensions",
+     "k": [
+      "manhattan",
+      "absolute"
+     ]
+    },
+    {
+     "t": "Cosine: direction, for text and embeddings",
+     "k": [
+      "cosine",
+      "embedding"
+     ]
+    },
+    {
+     "t": "Curse of dimensionality",
+     "k": [
+      "curse of dimensionality",
+      "high dimensions"
+     ]
+    }
+   ],
+   "a": "Euclidean is straight-line distance and suits scaled numeric features in a low number of dimensions. Manhattan sums absolute differences, is less dominated by one large difference, and often behaves better in high dimensions or grid-like spaces. Cosine compares direction rather than magnitude, so it suits text vectors and embeddings, where document length shouldn't matter. In high dimensions all distances look similar, the curse of dimensionality, so reducing dimensions or using good embeddings helps."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any",
+    "ecom"
+   ],
+   "c": "clustering",
+   "tg": [
+    "machine learning",
+    "scikit-learn"
+   ],
+   "q": "How does k-means work, and how do you choose the number of clusters?",
+   "p": [
+    {
+     "t": "Initialise k centroids",
+     "k": [
+      "centroid",
+      "initialis"
+     ]
+    },
+    {
+     "t": "Assign points to the nearest centroid",
+     "k": [
+      "nearest",
+      "assign"
+     ]
+    },
+    {
+     "t": "Move centroids to the mean and repeat",
+     "k": [
+      "mean",
+      "repeat"
+     ]
+    },
+    {
+     "t": "Elbow method or silhouette score",
+     "k": [
+      "elbow",
+      "silhouette"
+     ]
+    },
+    {
+     "t": "Business usefulness and stability",
+     "k": [
+      "business",
+      "stable"
+     ]
+    }
+   ],
+   "a": "k-means initialises k centroids, often with k-means++, assigns each point to its nearest centroid, moves each centroid to the mean of its assigned points, and repeats until assignments stop changing. To choose k, I use the elbow method, plotting within-cluster distance against k and looking for the bend, and the silhouette score, which measures how well separated clusters are. Finally I check the clusters are stable across runs and useful for the business, such as distinct, actionable customer groups."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any",
+    "log"
+   ],
+   "c": "clustering",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "When would you choose DBSCAN over k-means?",
+   "p": [
+    {
+     "t": "Clusters of irregular shape",
+     "k": [
+      "shape",
+      "irregular"
+     ]
+    },
+    {
+     "t": "Don't know the number of clusters",
+     "k": [
+      "number of clusters",
+      "don't need k"
+     ]
+    },
+    {
+     "t": "Noise points or outliers",
+     "k": [
+      "noise",
+      "outlier"
+     ]
+    },
+    {
+     "t": "Weakness: varying densities",
+     "k": [
+      "densit",
+      "weakness"
+     ]
+    },
+    {
+     "t": "Parameters eps and min_samples",
+     "k": [
+      "eps",
+      "min_samples"
+     ]
+    }
+   ],
+   "a": "DBSCAN suits clusters of irregular shape, like delivery hotspots along roads, which k-means splits into round blobs. You don't need k in advance, as it finds the number of clusters from density. It labels sparse points as noise, so outliers don't distort clusters. Its weakness is clusters with very different densities, and it needs its parameters eps, the radius, and min_samples tuned, which can be tricky."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "pca",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "Explain PCA and how you'd choose how many components to keep.",
+   "p": [
+    {
+     "t": "Finds directions of greatest variance",
+     "k": [
+      "greatest variance",
+      "direction"
+     ]
+    },
+    {
+     "t": "Components are uncorrelated combinations of features",
+     "k": [
+      "combination",
+      "uncorrelated",
+      "right angle"
+     ]
+    },
+    {
+     "t": "Standardise features first",
+     "k": [
+      "standardis",
+      "scale"
+     ]
+    },
+    {
+     "t": "Choose by cumulative explained variance",
+     "k": [
+      "explained variance",
+      "cumulative"
+     ]
+    },
+    {
+     "t": "Or by downstream performance",
+     "k": [
+      "downstream",
+      "validation"
+     ]
+    }
+   ],
+   "a": "PCA finds the directions of greatest variance in the data. Each principal component is a combination of the original features, uncorrelated with the others, at right angles. You standardise features first so large-scale ones don't dominate. To choose how many to keep, look at the cumulative explained variance and keep enough to reach something like 90 to 95%, or choose by downstream performance of the model on validation data."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "pca",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "What are the drawbacks of PCA?",
+   "p": [
+    {
+     "t": "Components are hard to interpret",
+     "k": [
+      "interpret",
+      "mixtures"
+     ]
+    },
+    {
+     "t": "Only captures linear structure",
+     "k": [
+      "linear structure",
+      "curved"
+     ]
+    },
+    {
+     "t": "Sensitive to scaling and outliers",
+     "k": [
+      "scaling",
+      "outliers"
+     ]
+    },
+    {
+     "t": "Variance isn't always what matters for prediction",
+     "k": [
+      "variance",
+      "target"
+     ]
+    },
+    {
+     "t": "Must fit on training data only",
+     "k": [
+      "training data",
+      "leakage"
+     ]
+    }
+   ],
+   "a": "Components are mixtures of many features, so they're hard to interpret or explain to stakeholders. It only captures linear structure, so curved relationships need other methods. It's sensitive to scaling and outliers, which can dominate the components. High variance isn't always what matters for predicting the target, so useful low-variance signal can be dropped. And it must be fitted on training data only, to avoid leakage into the test set."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any",
+    "fin"
+   ],
+   "c": "anomaly-detection",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "How would you detect anomalies in hourly order volume?",
+   "p": [
+    {
+     "t": "Account for seasonality: hour of day and day of week",
+     "k": [
+      "seasonal",
+      "hour",
+      "day of week"
+     ]
+    },
+    {
+     "t": "Compare with a forecast or baseline",
+     "k": [
+      "forecast",
+      "baseline",
+      "expected"
+     ]
+    },
+    {
+     "t": "Flag large deviations from the expected value",
+     "k": [
+      "deviation",
+      "residual"
+     ]
+    },
+    {
+     "t": "Tune thresholds to limit false alarms",
+     "k": [
+      "threshold",
+      "false alarm"
+     ]
+    },
+    {
+     "t": "Handle holidays and known events",
+     "k": [
+      "holiday",
+      "event"
+     ]
+    }
+   ],
+   "a": "Order volume is strongly seasonal by hour of day and day of week, so a fixed threshold won't work. I'd build an expected value, from a forecast or a baseline such as the same hour over recent weeks, and flag large deviations of the residual, for example beyond three robust standard deviations. Tune thresholds to limit false alarms, perhaps requiring two consecutive anomalous hours. And handle holidays and known events like sales, so they aren't flagged every time."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "fin"
+   ],
+   "c": "anomaly-detection",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "How does an isolation forest detect anomalies?",
+   "p": [
+    {
+     "t": "Random splits on random features",
+     "k": [
+      "random split",
+      "random feature"
+     ]
+    },
+    {
+     "t": "Anomalies are isolated in fewer splits",
+     "k": [
+      "fewer splits",
+      "isolated"
+     ]
+    },
+    {
+     "t": "Path length gives the anomaly score",
+     "k": [
+      "path length",
+      "score"
+     ]
+    },
+    {
+     "t": "No labels needed",
+     "k": [
+      "no labels",
+      "unsupervised"
+     ]
+    },
+    {
+     "t": "Contamination sets the threshold",
+     "k": [
+      "contamination",
+      "threshold"
+     ]
+    }
+   ],
+   "a": "It builds many trees using random splits on random features. Anomalies are few and different, so they get isolated in fewer splits than normal points, which sit in dense regions. The average path length to isolate a point across trees gives its anomaly score; shorter means more anomalous. It needs no labels, so it's unsupervised and scales well. The contamination parameter, the expected share of anomalies, sets the threshold, which I'd tune with any labelled cases."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "s",
+   "d": [
+    "ecom"
+   ],
+   "c": "recommenders",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "Design a product recommendation system for a large e-commerce site.",
+   "p": [
+    {
+     "t": "Implicit feedback data",
+     "k": [
+      "implicit",
+      "clicks",
+      "purchases"
+     ]
+    },
+    {
+     "t": "Candidate retrieval",
+     "k": [
+      "retrieval",
+      "candidates"
+     ]
+    },
+    {
+     "t": "Ranking model with rich features",
+     "k": [
+      "ranking",
+      "features"
+     ]
+    },
+    {
+     "t": "Cold start handling",
+     "k": [
+      "cold start",
+      "popularity"
+     ]
+    },
+    {
+     "t": "Offline and online evaluation",
+     "k": [
+      "offline",
+      "a/b test",
+      "ndcg"
+     ]
+    }
+   ],
+   "a": "Data: implicit feedback such as views, add-to-carts and purchases, plus product attributes and context. Stage one is candidate retrieval: a two-tower embedding model or item-to-item co-occurrence narrows millions of products to a few hundred candidates using approximate nearest-neighbour search. Stage two is a ranking model, such as gradient boosting, with rich features: price, user category affinity, recency and popularity. Business rules filter out-of-stock items and add diversity. Cold start uses popularity and content features. Evaluate offline with recall@k and NDCG, then online with an A/B test on conversion and revenue."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "ecom"
+   ],
+   "c": "recommenders",
+   "tg": [
+    "machine learning"
+   ],
+   "q": "What is matrix factorisation in collaborative filtering?",
+   "p": [
+    {
+     "t": "User-item interaction matrix",
+     "k": [
+      "user-item",
+      "interaction matrix"
+     ]
+    },
+    {
+     "t": "Users and items as embedding vectors",
+     "k": [
+      "embedding",
+      "vector"
+     ]
+    },
+    {
+     "t": "Dot product predicts preference",
+     "k": [
+      "dot product",
+      "predict"
+     ]
+    },
+    {
+     "t": "Learns from the sparse observed entries",
+     "k": [
+      "sparse",
+      "observed"
+     ]
+    },
+    {
+     "t": "Implicit feedback variants",
+     "k": [
+      "implicit",
+      "als"
+     ]
+    }
+   ],
+   "a": "Collaborative filtering starts with the user-item interaction matrix, which is huge and sparse. Matrix factorisation represents each user and each item as a short embedding vector, so their dot product predicts how much the user will like the item. The vectors are learned from the sparse observed entries by minimising prediction error with regularisation. For implicit feedback like clicks, variants such as weighted ALS treat unobserved items as weak negatives."
+  }
+ ],
+ "searchChecks": [
+  [
+   "bayes theorem",
+   "probability-bayes"
+  ],
+  [
+   "dot product matrix",
+   "linear-algebra-ml"
+  ],
+  [
+   "log loss mse",
+   "loss-mle"
+  ],
+  [
+   "learning rate",
+   "gradient-descent"
+  ],
+  [
+   "supervised unsupervised",
+   "supervised-unsupervised"
+  ],
+  [
+   "linear regression coefficients",
+   "linear-regression"
+  ],
+  [
+   "logistic regression",
+   "logistic-regression"
+  ],
+  [
+   "grid search",
+   "hyperparameter-tuning"
+  ],
+  [
+   "decision tree gini",
+   "decision-trees"
+  ],
+  [
+   "random forest",
+   "random-forests"
+  ],
+  [
+   "knn",
+   "knn-distance"
+  ],
+  [
+   "k-means dbscan",
+   "clustering"
+  ],
+  [
+   "pca",
+   "pca"
+  ],
+  [
+   "isolation forest",
+   "anomaly-detection"
+  ],
+  [
+   "collaborative filtering",
+   "recommenders"
+  ]
+ ]
+}

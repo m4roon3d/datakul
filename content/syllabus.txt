@@ -1,0 +1,282 @@
+# Datakul syllabus source.
+# "## track | module" starts a module. Each topic line: id | title | level (F/I/A) | prerequisite ids (comma) | pack
+# Packs: core, logistics, fintech, ecom, tool, career. Topics whose id matches an existing library entry are marked as existing automatically.
+
+## de | Foundations
+de-lifecycle | The data engineering lifecycle | F | | core
+shell-for-data | Linux and shell for data engineers | F | | core
+git-for-data | Git and version control for pipelines | F | | core
+python-for-de | Python for data engineering | F | | core
+sql-for-engineers | SQL for engineers: DDL, DML and transactions | F | | core
+encodings-timezones | Data types, encodings and time zones | F | python-for-de | core
+apis-json | APIs and JSON for data ingestion | F | python-for-de | core
+
+## de | Ingestion
+batch-stream | Batch vs streaming | F | de-lifecycle | core
+etl-elt | ETL vs ELT | F | de-lifecycle | core
+cdc | Change data capture (CDC) | I | etl-elt | core
+incremental-loads | Incremental loads and watermarks | I | etl-elt | core
+api-ingestion | API ingestion: pagination, rate limits and retries | I | apis-json | core
+file-ingestion | File ingestion: SFTP, landing zones and manifests | F | etl-elt | core
+schema-evolution | Schema evolution and drift | I | file-formats | core
+backfills | Backfills and reprocessing history | I | incremental-loads | core
+idempotency | Idempotent pipelines | I | incremental-loads | core
+
+## de | Storage and file formats
+object-storage | Object storage: S3, ADLS and GCS | F | de-lifecycle | core
+file-formats | Parquet, Avro and ORC | F | object-storage | core
+partitioning | Partitioning | I | file-formats | core
+small-files | Compression, file sizing and the small-files problem | I | partitioning | core
+table-formats | Open table formats: Delta, Iceberg and Hudi | I | file-formats | core
+clustering-zorder | Clustering, Z-ordering and data skipping | A | partitioning | core
+
+## de | Distributed processing
+distributed-basics | Distributed computing fundamentals | F | python-for-de | core
+spark-architecture | Spark architecture: driver, executors and lazy evaluation | I | distributed-basics | core
+pyspark-api | PySpark DataFrame API | I | spark-architecture | core
+spark-shuffle | Spark shuffles and skew | I | spark-architecture | core
+spark-joins | Spark join strategies: broadcast and sort-merge | I | spark-shuffle | core
+spark-tuning | Spark memory, AQE and performance tuning | A | spark-joins | core
+caching | Caching and persistence | I | spark-architecture | core
+query-engines | Query engines and reading query plans | I | sql-for-engineers | core
+
+## de | Streaming
+kafka-basics | Kafka fundamentals: topics, partitions and consumer groups | I | batch-stream | core
+delivery-semantics | Delivery semantics: at-least-once and exactly-once | I | kafka-basics | core
+event-time | Event time, watermarks and late data | I | kafka-basics | core
+stream-processing | Stream processing with Flink and Spark Structured Streaming | A | event-time | core
+stateful-streaming | Stateful streaming and windowed aggregations | A | stream-processing | core
+schema-registry | Schema registry and Avro contracts | I | kafka-basics | core
+
+## de | Orchestration and operations
+orchestration | Orchestration and DAGs | F | de-lifecycle | core
+airflow-deep | Airflow in depth: sensors, XCom, catchup and pools | I | orchestration | core
+dbt-basics | dbt fundamentals: models, refs, tests and docs | I | etl-elt | core
+cicd-data | CI/CD for data pipelines | I | git-for-data | core
+iac-terraform | Infrastructure as code with Terraform | A | cicd-data | core
+docker-data | Containers for data workloads | I | shell-for-data | core
+pipeline-monitoring | Monitoring, logging and alerting for pipelines | I | orchestration | core
+data-observability | Data observability: freshness, volume, schema and lineage | I | pipeline-monitoring | core
+
+## de | Quality and reliability
+data-quality | Data quality checks | F | etl-elt | core
+data-contracts | Data contracts | I | data-quality | core
+testing-pipelines | Testing data pipelines | I | data-quality | core
+pii-handling | Handling PII: masking, tokenisation and encryption | I | data-quality | core
+cost-optimisation | Cost optimisation in cloud data platforms | A | partitioning | core
+data-slas | SLAs and SLOs for data | I | pipeline-monitoring | core
+
+## de | Platforms and tools
+snowflake | Snowflake essentials | I | sql-for-engineers | tool
+databricks | Databricks essentials | I | spark-architecture | tool
+bigquery | BigQuery essentials | I | sql-for-engineers | tool
+adf | Azure Data Factory essentials | I | orchestration | tool
+aws-glue-emr | AWS Glue and EMR essentials | I | spark-architecture | tool
+informatica | Informatica PowerCenter and IDMC essentials | I | etl-elt | tool
+
+## da | SQL foundations
+sql-basics | SELECT, filtering and sorting | F | | core
+group-by-having | Aggregations, GROUP BY and HAVING | F | sql-basics | core
+sql-joins | SQL joins | F | sql-basics | core
+ctes-subqueries | Subqueries and CTEs | F | sql-joins | core
+null-handling | NULL handling in SQL | F | sql-basics | core
+case-pivot | CASE expressions and pivoting | F | group-by-having | core
+sql-dates | Date and time functions | F | sql-basics | core
+sql-strings | String functions and text cleaning | F | sql-basics | core
+
+## da | Advanced SQL
+window-functions | Window functions | I | group-by-having | core
+running-totals | Running totals and moving averages | I | window-functions | core
+gaps-islands | Gaps and islands | A | window-functions | core
+recursive-ctes | Recursive CTEs and hierarchies | A | ctes-subqueries | core
+set-operations | Set operations: UNION, INTERSECT and EXCEPT | F | sql-basics | core
+sql-performance | Query performance for analysts | I | query-engines | core
+
+## da | Statistics for analysts
+descriptive-stats | Descriptive statistics | F | | core
+distributions | Distributions: normal, skewed and long-tailed | F | descriptive-stats | core
+sampling-bias | Sampling and sampling bias | F | distributions | core
+confidence-intervals | Confidence intervals | I | sampling-bias | core
+hypothesis-testing | Hypothesis testing and p-values | I | confidence-intervals | core
+correlation-causation | Correlation vs causation | F | descriptive-stats | core
+outliers | Detecting and handling outliers | F | distributions | core
+
+## da | Metrics and business analysis
+kpi-metrics | KPIs and metric design | F | | core
+funnels | Funnel analysis | I | kpi-metrics | core
+cohort | Cohort analysis | I | kpi-metrics | core
+retention-churn | Retention and churn metrics | I | cohort | core
+unit-economics | Unit economics: CAC, LTV, AOV and margin | I | kpi-metrics | core
+metric-rca | Root-cause analysis of metric changes | A | kpi-metrics | core
+segmentation | Customer segmentation and RFM | I | group-by-having | core
+
+## da | Experimentation
+ab-testing | A/B testing | I | hypothesis-testing | core
+power-sample-size | Statistical power and sample size | I | ab-testing | core
+peeking-multiple-tests | Peeking and multiple testing | A | ab-testing | core
+quasi-experiments | Quasi-experiments and difference-in-differences | A | ab-testing | core
+
+## da | Visualisation and storytelling
+dashboards | Dashboard design | F | kpi-metrics | core
+chart-choice | Choosing the right chart | F | | core
+data-storytelling | Data storytelling and executive summaries | I | chart-choice | core
+power-bi | Power BI essentials: data model and DAX | I | dashboards | tool
+tableau | Tableau essentials | I | dashboards | tool
+excel-analysts | Excel for analysts: pivots and lookups | F | | tool
+
+## da | Python for analysis
+pandas-basics | pandas fundamentals | F | python-for-de | core
+pandas-cleaning | Data cleaning with pandas | F | pandas-basics | core
+eda | Exploratory data analysis | I | pandas-cleaning | core
+notebooks | Notebook workflow and reproducibility | F | pandas-basics | core
+
+## ds | Maths and statistics foundations
+probability-bayes | Probability and Bayes' theorem | F | descriptive-stats | core
+linear-algebra-ml | Linear algebra for machine learning | F | | core
+loss-mle | Loss functions and maximum likelihood | I | probability-bayes | core
+gradient-descent | Gradient descent | I | loss-mle | core
+
+## ds | Machine learning fundamentals
+supervised-unsupervised | Supervised vs unsupervised learning | F | | core
+linear-regression | Linear regression | F | supervised-unsupervised | core
+logistic-regression | Logistic regression | F | linear-regression | core
+bias-variance | Bias–variance trade-off | F | linear-regression | core
+overfitting | Overfitting and regularisation | I | bias-variance | core
+cross-validation | Train/test split and cross-validation | F | overfitting | core
+data-leakage | Data leakage | I | cross-validation | core
+hyperparameter-tuning | Hyperparameter tuning | I | cross-validation | core
+
+## ds | Models
+decision-trees | Decision trees | F | supervised-unsupervised | core
+random-forests | Random forests and bagging | I | decision-trees | core
+gradient-boosting | Gradient boosting | I | random-forests | core
+knn-distance | k-nearest neighbours and distance metrics | F | supervised-unsupervised | core
+clustering | Clustering: k-means and DBSCAN | I | knn-distance | core
+pca | Dimensionality reduction with PCA | I | linear-algebra-ml | core
+anomaly-detection | Anomaly detection | I | clustering | core
+recommenders | Recommender systems | A | clustering | core
+
+## ds | Model evaluation
+precision-recall | Precision, recall and F1 | F | logistic-regression | core
+roc-calibration | ROC-AUC and probability calibration | I | precision-recall | core
+regression-metrics | Regression metrics: MAE, RMSE and MAPE | F | linear-regression | core
+class-imbalance | Handling class imbalance | I | precision-recall | core
+interpretability | Model interpretability: feature importance and SHAP | I | gradient-boosting | core
+model-fairness | Fairness and bias in models | A | interpretability | core
+
+## ds | Features and data preparation
+feature-engineering | Feature engineering | I | eda | core
+categorical-encoding | Encoding categorical variables | F | feature-engineering | core
+feature-scaling | Feature scaling and normalisation | F | feature-engineering | core
+missing-data | Missing data and imputation | I | feature-engineering | core
+feature-stores | Feature stores | A | feature-engineering | core
+
+## ds | Time series
+forecasting | Time series forecasting | I | regression-metrics | core
+stationarity | Stationarity, trend and seasonality | I | forecasting | core
+arima-ets | ARIMA and exponential smoothing | A | stationarity | core
+backtesting | Forecast evaluation and backtesting | I | forecasting | core
+forecasting-scale | Forecasting thousands of series | A | backtesting | core
+
+## ds | Deep learning, NLP and LLMs
+neural-networks | Neural network basics | I | gradient-descent | core
+embeddings | Embeddings | I | neural-networks | core
+transformers | Transformers and attention | A | embeddings | core
+llm-fundamentals | LLM fundamentals: tokens, context and sampling | I | transformers | core
+rag | Retrieval-augmented generation (RAG) | I | llm-fundamentals | core
+prompting-data | Prompting LLMs for data tasks | F | llm-fundamentals | core
+llm-evaluation | Evaluating LLM outputs | A | rag | core
+
+## ds | MLOps
+model-deployment | Model deployment: batch and online | I | cross-validation | core
+model-monitoring | Model monitoring and drift | I | model-deployment | core
+experiment-tracking | Experiment tracking with MLflow | I | hyperparameter-tuning | core
+ml-pipelines | ML pipelines and retraining | A | model-monitoring | core
+causal-uplift | Causal inference and uplift modelling | A | quasi-experiments | core
+
+## ar | Data modelling
+normalization | Normalisation vs denormalisation | F | sql-basics | core
+model-layers | Conceptual, logical and physical models | F | normalization | core
+star-schema | Star schema and dimensional modelling | F | model-layers | core
+scd | Slowly changing dimensions (SCD) | I | star-schema | core
+data-vault | Data Vault 2.0 | A | star-schema | core
+wide-tables | One big table and wide-table modelling | I | star-schema | core
+semantic-layer | Semantic and metrics layers | I | kpi-metrics | core
+mdm | Master data management | A | model-layers | core
+
+## ar | Platform architecture
+lakehouse | Data lake, warehouse and lakehouse | I | table-formats | core
+medallion | Medallion architecture | I | lakehouse | core
+lambda-kappa | Lambda vs Kappa architecture | A | stream-processing | core
+modern-data-stack | Modern data stack reference architecture | F | etl-elt | core
+cloud-platforms | Cloud data platforms compared: AWS, Azure and GCP | I | modern-data-stack | core
+storage-compute | Separating storage and compute | I | lakehouse | core
+realtime-analytics | Real-time analytics architecture | A | stream-processing | core
+reverse-etl | Reverse ETL and operational analytics | I | modern-data-stack | core
+
+## ar | Governance and security
+governance | Data governance and lineage | I | data-quality | core
+data-mesh | Data mesh | A | governance | core
+data-catalog | Data catalogues and metadata | I | governance | core
+access-control | Access control: RBAC, ABAC, row and column security | I | governance | core
+privacy-regulation | Privacy regulation: India's DPDP Act and GDPR | I | pii-handling | core
+retention-archival | Data retention and archival | I | governance | core
+enterprise-dq | Enterprise data quality frameworks | A | data-contracts | core
+
+## ar | Integration architecture
+integration-patterns | Integration patterns: batch, API, events and files | F | etl-elt | core
+event-driven | Event-driven architecture | I | kafka-basics | core
+data-apis | Designing APIs for data products | I | integration-patterns | core
+ipaas-esb | Enterprise integration: ESB and iPaaS | I | integration-patterns | core
+canonical-models | Canonical data models | I | integration-patterns | core
+
+## ar | Design and delivery
+nfrs | Non-functional requirements for data platforms | I | modern-data-stack | core
+finops | Cost architecture and FinOps | A | cost-optimisation | core
+adrs | Architecture decision records | F | | core
+migrations | Legacy-to-cloud migration strategies | A | cloud-platforms | core
+dr-ha | High availability and disaster recovery | A | nfrs | core
+solution-design-docs | Writing solution designs and SOWs | I | nfrs | core
+
+## de | Domain pack: logistics and supply chain
+sc-landscape | Supply chain systems: ERP, OMS, WMS and TMS | F | | logistics
+tms-data-model | TMS data model: shipments, loads, legs and stops | I | sc-landscape | logistics
+load-building | Load building and consolidation | I | tms-data-model | logistics
+edi-carriers | Carrier connectivity and EDI (204, 990, 214, 210) | I | integration-patterns | logistics
+shipment-visibility | Shipment visibility and tracking events | I | edi-carriers | logistics
+freight-rating | Freight rating and tariffs | I | tms-data-model | logistics
+freight-settlement | Freight audit and settlement | A | freight-rating | logistics
+warehouse-data | Warehouse operations data: receiving, picking, slotting | I | sc-landscape | logistics
+inventory-analytics | Inventory and replenishment analytics | I | warehouse-data | logistics
+logistics-kpis | Logistics KPIs: OTIF, cost per shipment and dwell time | F | kpi-metrics | logistics
+route-optimisation | Route optimisation and last-mile delivery | A | logistics-kpis | logistics
+capacity-planning | Demand and capacity planning | A | forecasting | logistics
+control-tower | Supply chain control tower analytics | A | shipment-visibility | logistics
+
+## de | Domain pack: fintech and UPI payments
+upi-lifecycle | UPI architecture and transaction lifecycle | F | | fintech
+payment-reconciliation | Payment reconciliation | I | upi-lifecycle | fintech
+settlement | Settlement cycles and merchant payouts | I | payment-reconciliation | fintech
+ledger-design | Ledger design and double-entry accounting | I | upi-lifecycle | fintech
+payment-success-metrics | Payment success rate and failure analysis | I | kpi-metrics | fintech
+refunds-chargebacks | Refunds, chargebacks and disputes | I | settlement | fintech
+fraud-signals | Fraud detection signals and rules | A | anomaly-detection | fintech
+kyc-compliance | KYC and compliance data | I | pii-handling | fintech
+credit-scoring | Credit risk scoring basics | A | logistic-regression | fintech
+
+## da | Domain pack: e-commerce and D2C
+ecom-data-model | E-commerce data model: catalogue, carts and orders | F | star-schema | ecom
+clickstream | Clickstream and event tracking | I | ecom-data-model | ecom
+attribution | Marketing attribution | A | clickstream | ecom
+pricing-promotions | Pricing and promotions analytics | I | unit-economics | ecom
+returns-analytics | Returns analytics | I | ecom-data-model | ecom
+seller-analytics | Marketplace seller analytics | I | ecom-data-model | ecom
+personalisation | Personalisation and product recommendations | A | recommenders | ecom
+availability | Inventory availability and stock-outs | I | inventory-analytics | ecom
+
+## ar | Career: interviews and portfolio
+de-system-design | Data system design interviews | A | modern-data-stack | career
+sql-interview-strategy | SQL interview strategy | I | window-functions | career
+analytics-case | Analytics case interviews | I | metric-rca | career
+behavioural-star | Behavioural interviews with the STAR method | F | | career
+portfolio | Building a data portfolio | F | | career

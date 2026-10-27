@@ -1,0 +1,9 @@
+node_modules/
+__pycache__/
+*.pyc
+tests/out/
+.wrangler/
+worker/.wrangler/
+.dev.vars
+*.log
+.DS_Store

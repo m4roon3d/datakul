@@ -1,0 +1,2160 @@
+{
+ "batch": 1,
+ "name": "Engineering foundations",
+ "concepts": [
+  {
+   "id": "de-lifecycle",
+   "t": "de",
+   "title": "The data engineering lifecycle",
+   "mod": "Foundations",
+   "lv": "F",
+   "kw": "lifecycle stages generation ingestion storage transformation serving undercurrents dataops data engineer role end to end",
+   "s": "Data engineering gets data from where it's created to where it's useful, reliably. The lifecycle has five stages: generation, ingestion, storage, transformation and serving.",
+   "d": "Source systems generate data. Ingestion moves it, in batches or as streams. Storage keeps it in a lake or warehouse. Transformation cleans, joins and models it. Serving delivers it to dashboards, ML models and other applications. Underneath every stage sit the same concerns: security, data management, orchestration, DataOps and solid software engineering. Most incidents happen at the boundaries between stages, so contracts, checks and monitoring at each hand-off matter as much as the code.",
+   "e": "An order placed in the app (generation) is captured by CDC (ingestion), lands in S3 (storage), is modelled into fct_orders by dbt (transformation) and appears on the daily GMV dashboard (serving).",
+   "c": "A dashboard shows yesterday's revenue as zero. Which stages of the lifecycle would you check, and in what order?",
+   "i": "Interviewers use this to see whether you think end to end. Walk through a pipeline you built stage by stage and say what you monitored at each hand-off.",
+   "r": [
+    "etl-elt",
+    "batch-stream",
+    "orchestration"
+   ]
+  },
+  {
+   "id": "shell-for-data",
+   "t": "de",
+   "title": "Linux and shell for data engineers",
+   "mod": "Foundations",
+   "lv": "F",
+   "kw": "linux bash shell command line terminal grep awk sed cut pipe cron ps top df du chmod script wc head tail",
+   "s": "Most pipelines run on Linux servers and containers, so data engineers use the shell every day to inspect files, move data, check processes and automate small jobs.",
+   "d": "The core tools are ls, head and tail, wc -l for row counts, grep to search, cut and awk for columns, and sort with uniq -c for quick counts, all chained with pipes. ps and top show running processes, df -h and du -sh show disk usage, and chmod sets permissions. Start every script with set -euo pipefail so it stops on the first error instead of carrying on with bad data. cron can schedule small jobs, but production pipelines belong in an orchestrator with retries and alerts.",
+   "e": "zcat orders_2026-10-26.csv.gz | tail -n +2 | cut -d, -f5 | sort | uniq -c counts orders by status in a compressed file without loading it anywhere.",
+   "c": "Why should a shell script that loads files start with set -euo pipefail?",
+   "i": "Expect quick practical questions: count the lines in a 20 GB file, find what is filling a disk, or follow a log while a job runs.",
+   "r": [
+    "python-for-de",
+    "file-ingestion",
+    "git-for-data"
+   ]
+  },
+  {
+   "id": "git-for-data",
+   "t": "de",
+   "title": "Git and version control for pipelines",
+   "mod": "Foundations",
+   "lv": "F",
+   "kw": "git github gitlab version control branch merge pull request commit rebase conflict rollback revert code review",
+   "s": "Git records every change to pipeline code, SQL models and configuration, so teams can review changes, roll back mistakes and know exactly what is running in production.",
+   "d": "Work on short-lived feature branches, open a pull request, get a review, and let CI run tests before merging to main. Keep commits small with clear messages. Keep secrets out of the repository with .gitignore and a secrets manager, and never commit data files. Tag releases so a production run can be traced to the exact code version. For SQL-heavy teams, keeping dbt models in Git brings the same review workflow that stored procedures never had.",
+   "e": "A change to the revenue model goes through a pull request where CI runs dbt tests on sample data. The reviewer spots a missing status filter before it reaches the finance dashboard.",
+   "c": "A bad change to a transformation reached production an hour ago. How does Git help you recover, and what do you do first?",
+   "i": "You'll be asked about branching, code review, and how you handled a merge conflict or rolled back a bad release.",
+   "r": [
+    "orchestration",
+    "data-quality",
+    "shell-for-data"
+   ]
+  },
+  {
+   "id": "python-for-de",
+   "t": "de",
+   "title": "Python for data engineering",
+   "mod": "Foundations",
+   "lv": "F",
+   "kw": "python generator yield iterator script pytest virtualenv venv pip logging typing memory standard library coding",
+   "s": "Python is the main language for data engineering glue: calling APIs, parsing files, orchestrating jobs, writing Spark code and testing pipelines.",
+   "d": "Know the standard library well: csv, json, datetime, pathlib, logging, itertools and collections. Process large files as streams with generators instead of loading everything into memory. Use virtual environments and pinned dependencies so jobs behave the same everywhere. Write small, typed functions that pytest can test, and log instead of printing. For heavy data, push the work to an engine such as SQL or Spark rather than looping over rows in Python.",
+   "e": "A generator reads a 5 GB JSON-lines file one line at a time, validates each record and yields good rows in batches of 10,000 to the warehouse loader, using only a few MB of memory.",
+   "c": "Why does reading a large file with a generator use far less memory than reading it into a list?",
+   "i": "Expect live coding: parse and clean records, deduplicate events, or merge intervals. Clear structure and edge cases count for more than clever tricks.",
+   "r": [
+    "apis-json",
+    "shell-for-data",
+    "idempotency"
+   ]
+  },
+  {
+   "id": "sql-for-engineers",
+   "t": "de",
+   "title": "SQL for engineers: DDL, DML and transactions",
+   "mod": "Foundations",
+   "lv": "F",
+   "kw": "ddl dml create alter insert update delete merge upsert transaction commit rollback acid isolation view materialized constraint primary key",
+   "s": "Beyond SELECT, data engineers write DDL to define tables, DML to change data, and transactions so that a group of changes applies completely or not at all.",
+   "d": "DDL covers CREATE TABLE with the right types, primary keys, NOT NULL constraints and defaults, ALTER for schema changes, and views and materialised views. DML covers INSERT, UPDATE, DELETE and MERGE for upserts. A transaction wraps statements between BEGIN and COMMIT, and ROLLBACK undoes them, which gives ACID guarantees. Isolation levels decide what other sessions can see while a transaction runs. In warehouses, prefer set-based statements such as CREATE TABLE AS or INSERT OVERWRITE over row-by-row updates.",
+   "e": "A nightly load runs DELETE for the day's partition and INSERT of the fresh rows inside one transaction, so dashboards never see a half-loaded day.",
+   "c": "What can go wrong if a delete-then-insert load isn't wrapped in a transaction?",
+   "i": "Interviewers ask about MERGE, ACID, isolation levels, and when you'd use a view versus a materialised view.",
+   "r": [
+    "idempotency",
+    "sql-joins",
+    "cdc"
+   ]
+  },
+  {
+   "id": "encodings-timezones",
+   "t": "de",
+   "title": "Data types, encodings and time zones",
+   "mod": "Foundations",
+   "lv": "F",
+   "kw": "utf-8 utf8 encoding unicode latin-1 cp1252 mojibake timezone time zone utc ist timestamp epoch decimal float data type date format",
+   "s": "Many data bugs come from three places: the wrong data type, the wrong text encoding, and timestamps without a clear time zone.",
+   "d": "Store money as DECIMAL, never FLOAT, to avoid rounding errors. Keep text in UTF-8 end to end; files from older systems may arrive as Latin-1 or Windows-1252 and must be converted, or names and the ₹ symbol come out garbled. Store timestamps in UTC with the zone recorded, and convert to IST only for display. Watch for daylight-saving shifts in other countries, epoch seconds versus milliseconds, and ambiguous dates such as 03/04/2026.",
+   "e": "A partner's CSV arrives in Windows-1252 and \"₹\" shows up as \"â‚¹\". Decoding it as cp1252 at ingestion and writing UTF-8 fixes it for every downstream table.",
+   "c": "An order placed at 2:00 am IST on 27 October lands under which date in a UTC-based daily report, and why?",
+   "i": "Good interview stories come from these bugs: how you found a time zone or encoding problem, and what you changed so it couldn't happen again.",
+   "r": [
+    "file-ingestion",
+    "python-for-de",
+    "data-quality"
+   ]
+  },
+  {
+   "id": "apis-json",
+   "t": "de",
+   "title": "APIs and JSON for data ingestion",
+   "mod": "Foundations",
+   "lv": "F",
+   "kw": "api rest json http status code endpoint authentication oauth token api key nested flatten explode payload request response",
+   "s": "Many sources only expose data through REST APIs that return JSON, so data engineers need to call APIs reliably and turn nested JSON into tables.",
+   "d": "REST APIs use HTTP methods and status codes: 200 for success, 401 and 403 for authentication problems, 404 for not found, 429 for too many requests, and 5xx for server errors. Authentication is usually an API key, an OAuth token or a signed request. JSON is nested, so objects and arrays have to be flattened into columns and child tables. Keep the raw payload as well, so you can reprocess it if your parsing logic changes, and validate it against the schema you expect.",
+   "e": "A carrier tracking API returns each shipment with an array of events. You store the raw JSON in bronze, then explode the events into one row per shipment_id, event_ts and status.",
+   "c": "An API returns orders with a list of line items inside each one. How would you model that in tables?",
+   "i": "Expect questions on status codes, authentication, flattening nested JSON, and what your pipeline does when the response format changes.",
+   "r": [
+    "api-ingestion",
+    "python-for-de",
+    "file-formats"
+   ]
+  },
+  {
+   "id": "incremental-loads",
+   "t": "de",
+   "title": "Incremental loads and watermarks",
+   "mod": "Ingestion",
+   "lv": "I",
+   "kw": "incremental load watermark delta updated_at high-water mark full load full refresh merge upsert late arriving overlap",
+   "s": "An incremental load moves only the rows that are new or changed since the last run, tracked with a watermark such as the latest updated_at already loaded.",
+   "d": "Full reloads are simple but get slow and expensive as data grows. An incremental load reads rows where updated_at is greater than the stored watermark, upserts them, and saves the new watermark only after the load has committed. Re-read a small overlap window to catch rows committed late, and let an idempotent MERGE absorb the duplicates that overlap creates. Hard deletes never show up in a timestamp-based extract, so handle them with CDC or a periodic full reconciliation.",
+   "e": "Every hour the job reads orders with updated_at after 13:00 minus a 10-minute overlap, MERGEs them into the warehouse, and then stores 14:00 as the new watermark.",
+   "c": "Why save the new watermark only after the load commits, and not before?",
+   "i": "A favourite scenario: design an incremental load from a source table, then explain how you handle late updates and deleted rows.",
+   "r": [
+    "cdc",
+    "idempotency",
+    "backfills"
+   ]
+  },
+  {
+   "id": "api-ingestion",
+   "t": "de",
+   "title": "API ingestion: pagination, rate limits and retries",
+   "mod": "Ingestion",
+   "lv": "I",
+   "kw": "pagination paging cursor offset rate limit throttle 429 retry backoff exponential jitter checkpoint timeout api extraction",
+   "s": "Pulling large datasets from APIs means paging through results, staying under rate limits, and retrying failures safely.",
+   "d": "APIs return data in pages using offsets, page numbers or cursors. Cursor-based pagination is the safest when data changes during the pull. Respect rate limits by reading headers such as Retry-After and pacing requests. Retry transient errors (429, 5xx and timeouts) with exponential backoff and jitter, but don't retry client errors such as 400 or 401. Make each page's write idempotent and checkpoint progress, so a failed run resumes where it stopped instead of starting over.",
+   "e": "A job pulls 2 lakh shipment updates from a carrier API using a next_cursor field, waits when it gets a 429 with Retry-After: 30, and saves the last cursor after every page.",
+   "c": "Why is offset pagination risky when new records are being inserted while you page through?",
+   "i": "Expect a design question: ingest millions of records from a rate-limited API. Cover pagination, backoff, checkpoints and idempotent writes.",
+   "r": [
+    "apis-json",
+    "idempotency",
+    "incremental-loads"
+   ]
+  },
+  {
+   "id": "file-ingestion",
+   "t": "de",
+   "title": "File ingestion: SFTP, landing zones and manifests",
+   "mod": "Ingestion",
+   "lv": "F",
+   "kw": "file sftp ftp landing zone manifest control table csv done file trigger checksum trailer quarantine archive partial file feed",
+   "s": "Many partners still send data as files over SFTP or into cloud storage, so pipelines need a reliable way to detect, validate and load each file exactly once.",
+   "d": "Files arrive in a landing zone and are validated: file name pattern, size, row count against a trailer record, schema and checksum. Valid files move to raw storage and are recorded in a manifest table, which reruns check so nothing loads twice. Wait for a completion signal, such as a .done file or a size that has stopped changing, before reading, to avoid half-written files. Quarantine bad files instead of failing the whole batch, and alert whoever owns the feed.",
+   "e": "An ERP drops orders_20261026_001.csv and orders_20261026_001.done on SFTP. The job checks the trailer row count, loads the file, records it in file_manifest and archives it.",
+   "c": "How does a manifest table stop the same file from being loaded twice?",
+   "i": "Common in enterprise and logistics interviews: CSV and EDI feeds, partial files, duplicate files, and files that arrive late or never arrive.",
+   "r": [
+    "data-quality",
+    "idempotency",
+    "object-storage"
+   ]
+  },
+  {
+   "id": "schema-evolution",
+   "t": "de",
+   "title": "Schema evolution and drift",
+   "mod": "Ingestion",
+   "lv": "I",
+   "kw": "schema evolution drift change new column added renamed removed type change backward forward compatibility registry breaking change",
+   "s": "Source schemas change over time: columns are added, renamed or change type. Schema evolution is how a pipeline absorbs those changes without breaking or silently losing data.",
+   "d": "Additive changes, such as a new nullable column, are usually safe. Renames, type changes and removed columns are breaking changes. Avro or Protobuf with a schema registry enforce compatibility rules: backward, forward or full. Table formats such as Delta and Iceberg let you add and rename columns safely. Detect drift by comparing each incoming schema with the expected one, alert on breaking changes, and agree a change process with source teams through data contracts.",
+   "e": "The order API adds a gift_wrap field, and the bronze table gains the column automatically. When delivery_date changes from a date to free text, the check blocks the load and alerts the source team.",
+   "c": "Which is riskier for downstream users: a new column or a changed column type? Why?",
+   "i": "Interviewers ask how your pipeline reacts to a new, missing or renamed column, and how you'd prevent surprises in the first place.",
+   "r": [
+    "file-formats",
+    "data-quality",
+    "cdc"
+   ]
+  },
+  {
+   "id": "backfills",
+   "t": "de",
+   "title": "Backfills and reprocessing history",
+   "mod": "Ingestion",
+   "lv": "I",
+   "kw": "backfill reprocess rerun history historical load catchup partition replay fix bad data correction",
+   "s": "A backfill reruns a pipeline for past periods, either to load history for a new table or to correct data after a bug.",
+   "d": "Build pipelines that take a date or partition as a parameter, so any past period runs exactly like a normal run. With idempotent writes that overwrite the partition, a rerun never duplicates data. Backfill in chunks, oldest first, limit parallel runs to protect source systems and costs, and compare row counts per partition afterwards. Downstream tables need reprocessing too, and lineage tells you which ones.",
+   "e": "After a currency bug, you rerun the daily revenue job for 1 to 30 September, one partition per day and four at a time, then rebuild the monthly aggregates that depend on it.",
+   "c": "Why does a backfill go wrong if the pipeline appends rows instead of overwriting partitions?",
+   "i": "Expect \"a bug corrupted three weeks of data; how do you fix it?\" Cover scope, idempotency, run order, validation and downstream impact.",
+   "r": [
+    "idempotency",
+    "orchestration",
+    "incremental-loads"
+   ]
+  },
+  {
+   "id": "object-storage",
+   "t": "de",
+   "title": "Object storage: S3, ADLS and GCS",
+   "mod": "Storage and file formats",
+   "lv": "F",
+   "kw": "object storage s3 adls gcs blob bucket key prefix data lake storage class lifecycle iam cloud storage",
+   "s": "Object storage, such as Amazon S3, Azure Data Lake Storage and Google Cloud Storage, is cheap and highly durable storage for files of any size, and the foundation of every data lake.",
+   "d": "Data is stored as objects in buckets, under keys that look like folder paths, for example s3://raw/orders/dt=2026-10-26/part-0001.parquet. Storage is cheap, but every request has some latency, so a few large files beat millions of tiny ones. Storage classes (hot, cool and archive) and lifecycle rules keep costs down as data ages. Access is controlled with IAM roles and bucket policies, and data is encrypted at rest. Major object stores are now strongly consistent, and table formats add transactions on top.",
+   "e": "Raw carrier files land under s3://dp-raw/carrier=bluedart/dt=2026-10-26/, move to infrequent-access storage after 90 days, and to archive after a year.",
+   "c": "Why is listing and reading a million tiny files slower than reading 200 large files with the same total size?",
+   "i": "Expect questions on how you lay out keys, storage classes and cost, access control, and how a lake differs from a warehouse.",
+   "r": [
+    "file-formats",
+    "partitioning",
+    "lakehouse"
+   ]
+  },
+  {
+   "id": "small-files",
+   "t": "de",
+   "title": "Compression, file sizing and the small-files problem",
+   "mod": "Storage and file formats",
+   "lv": "I",
+   "kw": "small files compaction optimize file size compression snappy zstd gzip splittable coalesce repartition merge files",
+   "s": "How data is split into files has a big effect on speed and cost. Too many small files slow everything down, and the right compression saves storage and I/O.",
+   "d": "Aim for files of roughly 128 MB to 1 GB for analytics. Streaming jobs and over-partitioned tables create thousands of tiny files, which overwhelm metadata and file listing. Fix this by compacting (OPTIMIZE in Delta, rewrite_data_files in Iceberg), coalescing before writing, or partitioning less finely. For compression, Snappy is fast with moderate savings, while ZSTD and GZIP compress harder. A gzip CSV file can't be split for parallel reading, but Parquet compresses each column chunk separately and stays splittable.",
+   "e": "A streaming job writes 40,000 files of 50 KB a day. A nightly OPTIMIZE compacts them into about 20 files of 256 MB, and queries drop from minutes to seconds.",
+   "c": "Why can't Spark read a single 10 GB gzip CSV file in parallel?",
+   "i": "A common performance question is \"why is this table slow?\" Small files, skewed partitions and the wrong compression are the usual suspects.",
+   "r": [
+    "partitioning",
+    "file-formats",
+    "spark-shuffle"
+   ]
+  },
+  {
+   "id": "table-formats",
+   "t": "de",
+   "title": "Open table formats: Delta, Iceberg and Hudi",
+   "mod": "Storage and file formats",
+   "lv": "I",
+   "kw": "delta lake iceberg hudi table format transaction log acid time travel snapshot manifest merge schema evolution",
+   "s": "Open table formats turn folders of Parquet files into reliable tables with transactions, schema evolution and time travel.",
+   "d": "A table format keeps a metadata layer that records which files make up each version of the table: a transaction log in Delta Lake, snapshots and manifest files in Iceberg, and a timeline in Hudi. This enables ACID writes, MERGE, UPDATE and DELETE on lake data, schema evolution, partition evolution in Iceberg, and time travel to query old versions. Readers never see half-written data. Maintenance jobs compact small files and expire old snapshots to control storage.",
+   "e": "An Iceberg orders table accepts MERGE from CDC, and analysts query it as of 1 October to reproduce last month's report exactly.",
+   "c": "What does a transaction log give you that a folder of plain Parquet files doesn't?",
+   "i": "Expect comparisons of Delta, Iceberg and Hudi, and questions on how time travel and concurrent writers work.",
+   "r": [
+    "lakehouse",
+    "file-formats",
+    "small-files"
+   ]
+  },
+  {
+   "id": "clustering-zorder",
+   "t": "de",
+   "title": "Clustering, Z-ordering and data skipping",
+   "mod": "Storage and file formats",
+   "lv": "A",
+   "kw": "clustering z-order zorder liquid clustering data skipping min max statistics sort order clustering key pruning",
+   "s": "Clustering stores rows with similar values in the same files, so query engines can skip files that can't contain the rows a query needs.",
+   "d": "Engines keep minimum and maximum statistics for each file or block. When data is sorted or clustered by a column you filter on, most files can be skipped. Partitioning suits low-cardinality columns such as date. For high-cardinality columns such as customer_id, use clustering keys in Snowflake, Z-ordering or liquid clustering in Databricks, or sort orders in Iceberg. Z-ordering interleaves several columns so filters on any of them benefit. Clustering costs compute to maintain, so use it on large, frequently filtered tables.",
+   "e": "A 2-billion-row shipments table Z-ordered by carrier_id and origin_pin lets a query for carrier 17 from PIN 560001 read 3% of the files instead of all of them.",
+   "c": "Why isn't partitioning by customer_id a good substitute for clustering by customer_id?",
+   "i": "Senior interviews ask how you'd speed up a huge table filtered by several columns, and when to choose partitioning versus clustering.",
+   "r": [
+    "partitioning",
+    "small-files",
+    "table-formats"
+   ]
+  }
+ ],
+ "questions": [
+  {
+   "r": [
+    "de"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "de-lifecycle",
+   "tg": [
+    "sql",
+    "python"
+   ],
+   "q": "Walk me through the lifecycle of data in a pipeline you've worked on.",
+   "p": [
+    {
+     "t": "Name the stages: source, ingestion, storage, transformation, serving",
+     "k": [
+      "ingest",
+      "ingestion",
+      "extract"
+     ]
+    },
+    {
+     "t": "Where the data is stored and in what form",
+     "k": [
+      "storage",
+      "lake",
+      "warehouse",
+      "s3",
+      "bronze"
+     ]
+    },
+    {
+     "t": "How it's transformed and modelled",
+     "k": [
+      "transform",
+      "model",
+      "dbt",
+      "clean"
+     ]
+    },
+    {
+     "t": "Who consumes it and how",
+     "k": [
+      "dashboard",
+      "serving",
+      "consumer",
+      "report",
+      "ml model"
+     ]
+    },
+    {
+     "t": "How each hand-off is monitored",
+     "k": [
+      "monitor",
+      "alert",
+      "check",
+      "quality"
+     ]
+    }
+   ],
+   "a": "Orders are created in the app database. We ingest them every hour with CDC into S3 as raw JSON, which is our bronze layer in the lake. dbt then cleans and models them into fct_orders in the warehouse. The finance dashboard and a demand forecasting model consume that table. At each hand-off we have checks: row counts after ingestion, dbt tests after transformation, and a freshness alert if the dashboard table is more than two hours old."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "de-lifecycle",
+   "tg": [
+    "sql"
+   ],
+   "q": "A dashboard shows zero revenue for yesterday. How do you find out where the pipeline broke?",
+   "p": [
+    {
+     "t": "Start at the dashboard and work backwards through the stages",
+     "k": [
+      "backward",
+      "upstream",
+      "work back",
+      "trace"
+     ]
+    },
+    {
+     "t": "Check orchestration: did jobs run and succeed?",
+     "k": [
+      "job",
+      "dag",
+      "airflow",
+      "orchestrat",
+      "schedule"
+     ]
+    },
+    {
+     "t": "Compare row counts at each layer",
+     "k": [
+      "row count",
+      "count",
+      "volume"
+     ]
+    },
+    {
+     "t": "Check the source and ingestion for missing files or data",
+     "k": [
+      "source",
+      "ingestion",
+      "file",
+      "extract"
+     ]
+    },
+    {
+     "t": "Fix, backfill and add a check so it alerts next time",
+     "k": [
+      "backfill",
+      "rerun",
+      "alert",
+      "test"
+     ]
+    }
+   ],
+   "a": "I'd work backwards from the dashboard. First, is the dashboard table empty or is it a filter or caching issue? Then check the orchestrator: did yesterday's DAG run, and did any job fail or skip? Next, compare row counts layer by layer, from the dashboard table to the transformed model to raw, to find where the data disappears. If raw is empty, look at the source and ingestion, for example a missing file or an expired API token. Once fixed, I'd rerun or backfill the day and add a volume check that alerts when a day has zero rows."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "shell-for-data",
+   "tg": [
+    "python"
+   ],
+   "q": "How would you quickly count the rows and check the columns of a 20 GB CSV file on a Linux server?",
+   "p": [
+    {
+     "t": "Use wc -l for the row count",
+     "k": [
+      "wc",
+      "wc -l"
+     ]
+    },
+    {
+     "t": "Look at the header and a sample with head",
+     "k": [
+      "head",
+      "sample"
+     ]
+    },
+    {
+     "t": "Stream with pipes instead of opening it in an editor",
+     "k": [
+      "pipe",
+      "stream",
+      "without loading",
+      "zcat"
+     ]
+    },
+    {
+     "t": "Use cut, awk or sort | uniq -c for column checks",
+     "k": [
+      "cut",
+      "awk",
+      "uniq",
+      "sort"
+     ]
+    }
+   ],
+   "a": "I'd never open it in an editor. wc -l gives the number of lines, minus one for the header. head -5 shows the header and a few sample rows so I can check the delimiter and columns. To profile one column I'd stream it through pipes: cut -d, -f5 piped into sort | uniq -c to count values, or awk to check for rows with the wrong number of fields. If the file is gzipped, zcat streams it the same way without unpacking it to disk."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "shell-for-data",
+   "tg": [
+    "python"
+   ],
+   "q": "A load script kept running after one of its commands failed and loaded bad data. How do you prevent that?",
+   "p": [
+    {
+     "t": "Use set -e so the script stops on errors",
+     "k": [
+      "set -e",
+      "set -euo",
+      "errexit",
+      "exit on error"
+     ]
+    },
+    {
+     "t": "pipefail so failures inside pipes are caught",
+     "k": [
+      "pipefail",
+      "pipe"
+     ]
+    },
+    {
+     "t": "set -u to catch unset variables",
+     "k": [
+      "set -u",
+      "unset variable",
+      "nounset"
+     ]
+    },
+    {
+     "t": "Check exit codes and alert",
+     "k": [
+      "exit code",
+      "exit status",
+      "alert",
+      "$?"
+     ]
+    }
+   ],
+   "a": "Bash keeps going after a failed command by default. I start scripts with set -euo pipefail. The -e flag makes the script exit on any error, pipefail makes a pipeline fail if any command in the pipe fails rather than only the last one, and -u stops on unset variables, which catches typos like an empty path variable. I'd also check exit codes of critical steps explicitly and make the orchestrator alert on a non-zero exit."
+  },
+  {
+   "r": [
+    "de",
+    "da"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "git-for-data",
+   "tg": [
+    "dbt",
+    "sql"
+   ],
+   "q": "How do you use Git when changing a data pipeline or a dbt model?",
+   "p": [
+    {
+     "t": "Create a feature branch",
+     "k": [
+      "branch",
+      "feature branch",
+      "branching"
+     ]
+    },
+    {
+     "t": "Open a pull request for review",
+     "k": [
+      "pull request",
+      "pr",
+      "review"
+     ]
+    },
+    {
+     "t": "CI runs tests before merging",
+     "k": [
+      "ci",
+      "test",
+      "pipeline"
+     ]
+    },
+    {
+     "t": "Small commits with clear messages",
+     "k": [
+      "commit",
+      "message"
+     ]
+    },
+    {
+     "t": "Keep secrets and data out of the repository",
+     "k": [
+      "secret",
+      "gitignore",
+      "credential",
+      "password"
+     ]
+    }
+   ],
+   "a": "I create a feature branch from main, make small commits with clear messages, and open a pull request. A teammate reviews the change, and CI runs tests, for example dbt build and dbt test on a sample, before it can merge. Credentials stay in a secrets manager and .gitignore keeps local config and data files out of the repository. After merging, the deploy uses the tagged version so we know exactly what code is running."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "git-for-data",
+   "tg": [
+    "dbt"
+   ],
+   "q": "A bad change to a transformation reached production an hour ago. What do you do?",
+   "p": [
+    {
+     "t": "Stop the damage: pause the job or revert the commit",
+     "k": [
+      "revert",
+      "rollback",
+      "roll back",
+      "pause"
+     ]
+    },
+    {
+     "t": "Use Git history to find the change",
+     "k": [
+      "git log",
+      "history",
+      "diff",
+      "commit"
+     ]
+    },
+    {
+     "t": "Redeploy the last good version",
+     "k": [
+      "redeploy",
+      "previous version",
+      "last good",
+      "tag"
+     ]
+    },
+    {
+     "t": "Repair the affected data with a rerun or backfill",
+     "k": [
+      "backfill",
+      "rerun",
+      "reprocess"
+     ]
+    },
+    {
+     "t": "Add a test so it can't recur",
+     "k": [
+      "test",
+      "check"
+     ]
+    }
+   ],
+   "a": "First I stop the damage: pause the job and use git log and git diff to find the commit. I revert it with git revert, which keeps history clean, and redeploy the last good tagged version. Then I rerun or backfill the partitions that were written with the bad logic, and tell the people who use those tables. Finally I add a test that would have caught it, so the same mistake fails CI next time."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "python-for-de",
+   "tg": [
+    "python"
+   ],
+   "q": "How would you process a 10 GB JSON-lines file in Python on a machine with 4 GB of RAM?",
+   "p": [
+    {
+     "t": "Stream it line by line instead of loading everything",
+     "k": [
+      "line by line",
+      "stream",
+      "iterate",
+      "for line in"
+     ]
+    },
+    {
+     "t": "Use a generator to yield records",
+     "k": [
+      "generator",
+      "yield"
+     ]
+    },
+    {
+     "t": "Write output in batches or chunks",
+     "k": [
+      "batch",
+      "chunk"
+     ]
+    },
+    {
+     "t": "Handle bad records without stopping the job",
+     "k": [
+      "bad record",
+      "invalid",
+      "error",
+      "skip",
+      "dead letter"
+     ]
+    }
+   ],
+   "a": "I'd never call read() or json.load on the whole file. I'd open it and iterate line by line, parsing each line with json.loads inside a generator that yields clean records. Records are written out in batches of, say, 10,000 so memory stays flat. Lines that fail to parse or validate go to an error file with the line number instead of crashing the job, and I log counts of good and bad records at the end."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "python-for-de",
+   "tg": [
+    "python"
+   ],
+   "q": "What makes Python pipeline code production-ready?",
+   "p": [
+    {
+     "t": "Tests with pytest",
+     "k": [
+      "pytest",
+      "unit test",
+      "test"
+     ]
+    },
+    {
+     "t": "Logging instead of print",
+     "k": [
+      "logging",
+      "log"
+     ]
+    },
+    {
+     "t": "Pinned dependencies and virtual environments",
+     "k": [
+      "virtual environment",
+      "venv",
+      "requirements",
+      "pinned",
+      "poetry",
+      "dependenc"
+     ]
+    },
+    {
+     "t": "Config and secrets outside the code",
+     "k": [
+      "config",
+      "secret",
+      "environment variable"
+     ]
+    },
+    {
+     "t": "Retries and clear error handling",
+     "k": [
+      "retry",
+      "retries",
+      "exception",
+      "error handling"
+     ]
+    }
+   ],
+   "a": "Production code has pytest tests for the transformation functions, uses the logging module with useful context instead of print, and runs in a virtual environment with pinned dependencies so it behaves the same everywhere. Configuration and secrets come from environment variables or a secrets manager, not the code. External calls have retries with backoff, and exceptions are caught at the right level with clear error messages so the orchestrator can alert."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "sql-for-engineers",
+   "tg": [
+    "sql"
+   ],
+   "q": "What does ACID mean, and why does it matter for data pipelines?",
+   "p": [
+    {
+     "t": "Atomicity: all or nothing",
+     "k": [
+      "atomic",
+      "all or nothing"
+     ]
+    },
+    {
+     "t": "Consistency: constraints hold",
+     "k": [
+      "consisten",
+      "constraint",
+      "valid state"
+     ]
+    },
+    {
+     "t": "Isolation: concurrent transactions don't interfere",
+     "k": [
+      "isolation",
+      "concurrent"
+     ]
+    },
+    {
+     "t": "Durability: committed data survives failures",
+     "k": [
+      "durab",
+      "survive",
+      "persist"
+     ]
+    },
+    {
+     "t": "Pipelines don't leave half-loaded data",
+     "k": [
+      "half",
+      "partial",
+      "rollback"
+     ]
+    }
+   ],
+   "a": "ACID stands for atomicity, consistency, isolation and durability. Atomicity means a transaction applies completely or not at all. Consistency means constraints still hold afterwards. Isolation means concurrent transactions don't see each other's half-finished work, and durability means committed data survives a crash. For pipelines, it means a failed load rolls back instead of leaving a partial, half-loaded table that dashboards would read."
+  },
+  {
+   "r": [
+    "de",
+    "da"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "sql-for-engineers",
+   "tg": [
+    "sql",
+    "snowflake"
+   ],
+   "q": "When would you use a view, a materialised view or a table for a transformed dataset?",
+   "p": [
+    {
+     "t": "A view stores only the query and runs it each time",
+     "k": [
+      "view",
+      "query each time",
+      "every time",
+      "always fresh"
+     ]
+    },
+    {
+     "t": "A materialised view stores results and refreshes",
+     "k": [
+      "materialized",
+      "materialised",
+      "refresh",
+      "precomputed"
+     ]
+    },
+    {
+     "t": "A table gives full control and is built by the pipeline",
+     "k": [
+      "table",
+      "pipeline",
+      "ctas"
+     ]
+    },
+    {
+     "t": "The choice depends on cost, freshness and query speed",
+     "k": [
+      "cost",
+      "fresh",
+      "speed",
+      "performance",
+      "latency"
+     ]
+    }
+   ],
+   "a": "A view stores only the query, so it's always fresh but runs the logic every time it's queried, which is fine for light logic. A materialised view stores precomputed results and the database refreshes them, which speeds up heavy aggregations, but refreshes cost compute and some databases limit what they can contain. A table built by the pipeline, for example with CTAS or dbt, gives full control over when and how it's built. I choose based on query speed, freshness needs and cost."
+  },
+  {
+   "r": [
+    "de",
+    "da"
+   ],
+   "l": "j",
+   "d": [
+    "any",
+    "fin"
+   ],
+   "c": "encodings-timezones",
+   "tg": [
+    "sql",
+    "python"
+   ],
+   "q": "Why should money be stored as DECIMAL rather than FLOAT?",
+   "p": [
+    {
+     "t": "Float can't represent many decimals exactly",
+     "k": [
+      "exact",
+      "binary",
+      "represent",
+      "precision"
+     ]
+    },
+    {
+     "t": "Rounding errors add up in sums",
+     "k": [
+      "rounding",
+      "error",
+      "sum"
+     ]
+    },
+    {
+     "t": "DECIMAL stores exact digits with fixed scale",
+     "k": [
+      "decimal",
+      "numeric",
+      "fixed"
+     ]
+    },
+    {
+     "t": "Matters for reconciliation and finance",
+     "k": [
+      "reconcil",
+      "finance",
+      "accounting",
+      "paise"
+     ]
+    }
+   ],
+   "a": "FLOAT is binary floating point, so values like 0.1 can't be represented exactly. Each value carries a tiny rounding error, and over millions of rows the sum drifts by visible amounts. DECIMAL or NUMERIC stores exact digits with a fixed scale, such as two places for paise. For payments, reconciliation and finance reports, totals must match to the paisa, so money always goes in DECIMAL."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any",
+    "log"
+   ],
+   "c": "encodings-timezones",
+   "tg": [
+    "python",
+    "sql"
+   ],
+   "q": "Your daily report counts some IST orders under the wrong date. What's going on, and how do you fix it?",
+   "p": [
+    {
+     "t": "Timestamps are stored in UTC but grouped without converting",
+     "k": [
+      "utc",
+      "gmt",
+      "universal time"
+     ]
+    },
+    {
+     "t": "IST is UTC plus 5:30, so early-morning orders shift a day",
+     "k": [
+      "ist",
+      "5:30",
+      "offset",
+      "previous day"
+     ]
+    },
+    {
+     "t": "Convert to the business time zone before taking the date",
+     "k": [
+      "convert",
+      "time zone",
+      "timezone",
+      "at time zone"
+     ]
+    },
+    {
+     "t": "Store timestamps with the zone and document it",
+     "k": [
+      "store",
+      "zone",
+      "document",
+      "standard"
+     ]
+    }
+   ],
+   "a": "The timestamps are stored in UTC, which is right, but the report takes the date directly from the UTC value. IST is UTC plus 5:30, so an order at 2:00 am IST on the 27th is 8:30 pm UTC on the 26th and lands on the previous day. The fix is to convert to the business time zone, Asia/Kolkata, before taking the date, for example with AT TIME ZONE in SQL. I'd keep storing UTC with the zone recorded, and document the reporting time zone as a standard."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "apis-json",
+   "tg": [
+    "api",
+    "python"
+   ],
+   "q": "How would you load nested JSON from an API into relational tables?",
+   "p": [
+    {
+     "t": "Keep the raw payload",
+     "k": [
+      "raw",
+      "bronze",
+      "payload"
+     ]
+    },
+    {
+     "t": "Flatten nested objects into columns",
+     "k": [
+      "flatten",
+      "column",
+      "json_normalize"
+     ]
+    },
+    {
+     "t": "Explode arrays into child tables with a parent key",
+     "k": [
+      "explode",
+      "child",
+      "array",
+      "parent",
+      "foreign key"
+     ]
+    },
+    {
+     "t": "Validate the schema and handle missing fields",
+     "k": [
+      "schema",
+      "validat",
+      "missing",
+      "null"
+     ]
+    }
+   ],
+   "a": "I'd land the raw payload first, in a bronze table or files, so I can reprocess it. Then I flatten nested objects into columns, for example customer.city becomes customer_city. Arrays like line items become a child table, exploded to one row per item and carrying the parent order_id as a key. I validate against the expected schema, treat missing fields as nulls where that's allowed, and alert when required fields are missing."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any",
+    "log"
+   ],
+   "c": "apis-json",
+   "tg": [
+    "api",
+    "python"
+   ],
+   "q": "Which HTTP status codes matter when pulling data from an API, and how should the pipeline react to each?",
+   "p": [
+    {
+     "t": "2xx success: process the data",
+     "k": [
+      "200",
+      "2xx",
+      "success"
+     ]
+    },
+    {
+     "t": "401 or 403: authentication problem, alert instead of retrying",
+     "k": [
+      "401",
+      "403",
+      "auth",
+      "token"
+     ]
+    },
+    {
+     "t": "429: rate limited, wait and retry",
+     "k": [
+      "429",
+      "rate limit"
+     ]
+    },
+    {
+     "t": "5xx: server error, retry with backoff",
+     "k": [
+      "500",
+      "5xx",
+      "server error",
+      "backoff"
+     ]
+    },
+    {
+     "t": "404 or 400: request problem, log and investigate",
+     "k": [
+      "404",
+      "400",
+      "bad request",
+      "not found"
+     ]
+    }
+   ],
+   "a": "A 200 means success, so I process the page. A 401 or 403 is an authentication or permission problem, maybe an expired token, so retrying won't help: refresh the token once, then alert. A 429 means we're rate limited, so wait as long as the Retry-After header says and retry. 500, 502 and 503 are server errors and usually temporary, so retry with exponential backoff. A 400 or 404 means our request is wrong or the resource doesn't exist, so log it and investigate rather than retry."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any",
+    "ecom",
+    "fin"
+   ],
+   "c": "incremental-loads",
+   "tg": [
+    "sql",
+    "airflow"
+   ],
+   "q": "Design an incremental load from an orders table that has an updated_at column.",
+   "p": [
+    {
+     "t": "Read rows newer than the stored watermark",
+     "k": [
+      "watermark",
+      "updated_at",
+      "high water"
+     ]
+    },
+    {
+     "t": "Upsert with MERGE so reruns are safe",
+     "k": [
+      "merge",
+      "upsert",
+      "idempotent"
+     ]
+    },
+    {
+     "t": "Save the watermark only after a successful load",
+     "k": [
+      "after",
+      "commit",
+      "success"
+     ]
+    },
+    {
+     "t": "Overlap window for late commits",
+     "k": [
+      "overlap",
+      "late",
+      "lookback"
+     ]
+    },
+    {
+     "t": "Handle deletes separately",
+     "k": [
+      "delete",
+      "cdc",
+      "reconcil"
+     ]
+    }
+   ],
+   "a": "I keep a watermark per table, the latest updated_at already loaded. Each run reads rows with updated_at greater than the watermark minus a small overlap window of a few minutes, to catch late commits. Rows are upserted with MERGE on order_id, which makes reruns and overlap duplicates harmless. The new watermark is saved only after the load commits successfully. Deletes don't show up in this extract, so I'd use CDC or a periodic reconciliation of keys to catch them."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "incremental-loads",
+   "tg": [
+    "sql"
+   ],
+   "q": "Your incremental load uses updated_at, but the source team says some updates don't change updated_at. What do you do?",
+   "p": [
+    {
+     "t": "Timestamp-based extraction will miss those changes",
+     "k": [
+      "miss",
+      "unreliable",
+      "not updated"
+     ]
+    },
+    {
+     "t": "Use log-based CDC instead",
+     "k": [
+      "cdc",
+      "binlog",
+      "log-based",
+      "debezium"
+     ]
+    },
+    {
+     "t": "Or compare hashes of rows",
+     "k": [
+      "hash",
+      "checksum",
+      "compare"
+     ]
+    },
+    {
+     "t": "Periodic full reconciliation as a safety net",
+     "k": [
+      "full",
+      "reconcil",
+      "periodic"
+     ]
+    },
+    {
+     "t": "Agree a data contract with the source team",
+     "k": [
+      "contract",
+      "source team",
+      "agree"
+     ]
+    }
+   ],
+   "a": "Then updated_at is unreliable and timestamp extraction will miss those changes. The best fix is log-based CDC, for example Debezium reading the binlog, which captures every change regardless of the column. If that's not possible, I'd compare a hash of each row against the previous load to find changed rows, at least for smaller tables, and run a periodic full reconciliation as a safety net. Longer term, I'd agree a data contract with the source team so updated_at is always maintained."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any",
+    "log"
+   ],
+   "c": "api-ingestion",
+   "tg": [
+    "api",
+    "python"
+   ],
+   "q": "How would you ingest 5 million records from a rate-limited REST API every night?",
+   "p": [
+    {
+     "t": "Paginate, preferably with cursors",
+     "k": [
+      "paginat",
+      "cursor",
+      "page"
+     ]
+    },
+    {
+     "t": "Respect rate limits and Retry-After",
+     "k": [
+      "rate limit",
+      "retry-after",
+      "throttl",
+      "429"
+     ]
+    },
+    {
+     "t": "Retry transient errors with exponential backoff",
+     "k": [
+      "backoff",
+      "retry",
+      "retries"
+     ]
+    },
+    {
+     "t": "Checkpoint progress so a failure resumes",
+     "k": [
+      "checkpoint",
+      "resume",
+      "progress"
+     ]
+    },
+    {
+     "t": "Idempotent writes for each page",
+     "k": [
+      "idempotent",
+      "merge",
+      "upsert"
+     ]
+    }
+   ],
+   "a": "I'd page through the results, preferably with cursor-based pagination. The client throttles itself to stay under the rate limit and honours Retry-After when it gets a 429. Transient failures, such as timeouts and 5xx errors, get retries with exponential backoff and jitter. After each page I checkpoint the cursor, so a failed run resumes from there instead of restarting. Each page is written idempotently with MERGE on the record key, so replaying a page never creates duplicates."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "api-ingestion",
+   "tg": [
+    "api",
+    "python"
+   ],
+   "q": "Why do retries use exponential backoff with jitter?",
+   "p": [
+    {
+     "t": "Backoff gives the server time to recover",
+     "k": [
+      "recover",
+      "overload",
+      "breathing room"
+     ]
+    },
+    {
+     "t": "Wait time grows each attempt",
+     "k": [
+      "exponential",
+      "double",
+      "grow",
+      "increase"
+     ]
+    },
+    {
+     "t": "Jitter spreads retries out so clients don't all retry at once",
+     "k": [
+      "jitter",
+      "random"
+     ]
+    },
+    {
+     "t": "Avoids a thundering herd",
+     "k": [
+      "thundering herd",
+      "at once",
+      "same time",
+      "stampede"
+     ]
+    },
+    {
+     "t": "Cap retries and give up with an alert",
+     "k": [
+      "max",
+      "cap",
+      "limit",
+      "give up",
+      "alert"
+     ]
+    }
+   ],
+   "a": "If many clients retry immediately after a failure, they hit an overloaded server again at the same time and keep it down. Exponential backoff makes the wait grow with each attempt, say 1, 2, 4 and 8 seconds, which gives the server time to recover. Jitter adds randomness to each wait so clients don't retry in lockstep, which avoids a thundering herd. I also cap the number of retries and then give up with an alert instead of retrying forever."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "j",
+   "d": [
+    "any",
+    "log"
+   ],
+   "c": "file-ingestion",
+   "tg": [
+    "python",
+    "aws"
+   ],
+   "q": "How do you make sure a daily partner file is loaded exactly once?",
+   "p": [
+    {
+     "t": "Record loaded files in a manifest or control table",
+     "k": [
+      "manifest",
+      "control table",
+      "audit table",
+      "log table"
+     ]
+    },
+    {
+     "t": "Skip files already recorded when the job reruns",
+     "k": [
+      "skip",
+      "already loaded",
+      "rerun"
+     ]
+    },
+    {
+     "t": "Use the file name or a checksum as the identity",
+     "k": [
+      "checksum",
+      "hash",
+      "file name",
+      "md5"
+     ]
+    },
+    {
+     "t": "Make the load itself idempotent",
+     "k": [
+      "idempotent",
+      "overwrite",
+      "merge"
+     ]
+    }
+   ],
+   "a": "Every file that loads successfully is recorded in a manifest table with its name, checksum, row count and load time. When the job runs, it skips files that are already in the manifest, so reruns are safe. Using a checksum as well as the name also catches the same content resent under a new name. The load itself is idempotent, for example overwriting that file's partition or using MERGE, so even a failure between loading and recording can't create duplicates."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "log",
+    "any"
+   ],
+   "c": "file-ingestion",
+   "tg": [
+    "edi",
+    "python"
+   ],
+   "q": "A partner sometimes sends incomplete files, and sometimes doesn't send a file at all. How do you handle both?",
+   "p": [
+    {
+     "t": "Wait for a completion signal before reading",
+     "k": [
+      "done file",
+      "trigger",
+      "complete",
+      "signal",
+      "stable size"
+     ]
+    },
+    {
+     "t": "Validate row counts against a trailer or control total",
+     "k": [
+      "trailer",
+      "row count",
+      "control total",
+      "footer"
+     ]
+    },
+    {
+     "t": "Quarantine bad files and alert the owner",
+     "k": [
+      "quarantine",
+      "reject",
+      "alert",
+      "notify"
+     ]
+    },
+    {
+     "t": "Alert when an expected file hasn't arrived by a deadline",
+     "k": [
+      "missing",
+      "deadline",
+      "sla",
+      "not arrived",
+      "late"
+     ]
+    }
+   ],
+   "a": "To avoid half-written files, the job waits for a .done trigger file or for the file size to stop changing before reading. Then it checks the row count against the trailer record or control total the partner sends. Files that fail move to a quarantine folder and the partner contact is alerted, without blocking other feeds. For missing files, each feed has an expected arrival time, and if nothing has arrived by that deadline, the monitoring alerts us before anyone sees an empty report."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "schema-evolution",
+   "tg": [
+    "kafka",
+    "delta"
+   ],
+   "q": "Your source adds a column, renames one, and changes another's type. How should your pipeline react to each?",
+   "p": [
+    {
+     "t": "A new column is additive: add it or evolve the schema automatically",
+     "k": [
+      "new column",
+      "additive",
+      "add",
+      "evolve"
+     ]
+    },
+    {
+     "t": "A rename looks like a dropped column plus a new one, so it breaks consumers",
+     "k": [
+      "rename",
+      "drop",
+      "break"
+     ]
+    },
+    {
+     "t": "A type change is breaking: block the load and alert",
+     "k": [
+      "type",
+      "block",
+      "fail",
+      "alert"
+     ]
+    },
+    {
+     "t": "Detect drift by comparing with the expected schema",
+     "k": [
+      "drift",
+      "compare",
+      "expected schema",
+      "detect"
+     ]
+    },
+    {
+     "t": "Agree changes with the source through a contract",
+     "k": [
+      "contract",
+      "source team",
+      "agree",
+      "registry"
+     ]
+    }
+   ],
+   "a": "A new column is an additive change, so the pipeline can evolve the schema and add it to the raw table automatically. A rename looks like a dropped column plus a new one, so downstream queries break silently; I'd map it explicitly and tell consumers. A type change is a breaking change, so the load should stop and alert rather than write bad values. All of this relies on detecting drift by comparing each incoming schema with the expected one. Longer term, a data contract or schema registry with compatibility rules prevents surprise changes."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "schema-evolution",
+   "tg": [
+    "kafka"
+   ],
+   "q": "What do backward and forward compatibility mean in a schema registry?",
+   "p": [
+    {
+     "t": "Backward: new readers can read old data",
+     "k": [
+      "backward",
+      "new consumer",
+      "new reader",
+      "old data"
+     ]
+    },
+    {
+     "t": "Forward: old readers can read new data",
+     "k": [
+      "forward",
+      "old consumer",
+      "old reader",
+      "new data"
+     ]
+    },
+    {
+     "t": "Full: both directions",
+     "k": [
+      "full compatib",
+      "both direction",
+      "full"
+     ]
+    },
+    {
+     "t": "Adding optional fields with defaults is the safe change",
+     "k": [
+      "default",
+      "optional"
+     ]
+    }
+   ],
+   "a": "Backward compatible means consumers using the new schema can still read data written with the old one, so you upgrade consumers first. Forward compatible means consumers on the old schema can read data written with the new one, so producers can upgrade first. Full compatibility means both. In practice the safe change is adding an optional field with a default value; removing required fields or changing types breaks compatibility, and the registry rejects them."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "backfills",
+   "tg": [
+    "airflow",
+    "spark"
+   ],
+   "q": "A bug corrupted three weeks of data in a daily table. How do you fix it?",
+   "p": [
+    {
+     "t": "Fix and deploy the code first",
+     "k": [
+      "fix",
+      "deploy",
+      "bug"
+     ]
+    },
+    {
+     "t": "Rerun the affected dates as a backfill, partition by partition",
+     "k": [
+      "backfill",
+      "rerun",
+      "partition"
+     ]
+    },
+    {
+     "t": "Writes must be idempotent, overwriting partitions",
+     "k": [
+      "idempotent",
+      "overwrite"
+     ]
+    },
+    {
+     "t": "Limit parallelism to protect sources and cost",
+     "k": [
+      "parallel",
+      "chunk",
+      "concurrency",
+      "cost"
+     ]
+    },
+    {
+     "t": "Rebuild downstream tables and validate",
+     "k": [
+      "downstream",
+      "lineage",
+      "validat",
+      "count"
+     ]
+    }
+   ],
+   "a": "First I fix the bug and deploy, so new runs are correct. Then I identify the exact date range and backfill it partition by partition, which is safe because the job overwrites each day's partition, so reruns are idempotent. I run a few days in parallel at most, to avoid overloading the source and running up costs. Lineage tells me which downstream tables depend on it, and I rebuild those too. Finally I validate row counts and totals per day against the source, and let consumers know."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "backfills",
+   "tg": [
+    "airflow"
+   ],
+   "q": "What makes a pipeline easy to backfill?",
+   "p": [
+    {
+     "t": "Parameterised by date or partition",
+     "k": [
+      "parameter",
+      "date",
+      "partition",
+      "logical date",
+      "execution date"
+     ]
+    },
+    {
+     "t": "Idempotent writes",
+     "k": [
+      "idempotent",
+      "overwrite"
+     ]
+    },
+    {
+     "t": "No hidden dependence on the current time",
+     "k": [
+      "now",
+      "current time",
+      "today",
+      "hardcoded"
+     ]
+    },
+    {
+     "t": "The orchestrator can rerun ranges",
+     "k": [
+      "airflow",
+      "orchestrat",
+      "range",
+      "catchup"
+     ]
+    }
+   ],
+   "a": "The job takes the date or partition as a parameter, such as Airflow's logical date, instead of using today or the current time inside the code. Its writes are idempotent, overwriting that date's partition, so a rerun replaces data instead of duplicating it. With those two properties, the orchestrator can rerun any range with a backfill command, and the result is the same as if the job had run on those days."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "object-storage",
+   "tg": [
+    "aws",
+    "azure",
+    "gcp"
+   ],
+   "q": "How would you organise a data lake's folders in S3 or ADLS?",
+   "p": [
+    {
+     "t": "Separate zones or layers, such as raw, curated and serving",
+     "k": [
+      "raw",
+      "bronze",
+      "curated",
+      "zone",
+      "layer"
+     ]
+    },
+    {
+     "t": "Partition paths by date such as dt=",
+     "k": [
+      "dt=",
+      "date",
+      "partition"
+     ]
+    },
+    {
+     "t": "Consistent naming per source and dataset",
+     "k": [
+      "source",
+      "dataset",
+      "naming",
+      "convention"
+     ]
+    },
+    {
+     "t": "Access control and encryption per zone",
+     "k": [
+      "access",
+      "iam",
+      "permission",
+      "encrypt"
+     ]
+    },
+    {
+     "t": "Lifecycle rules for older data",
+     "k": [
+      "lifecycle",
+      "archive",
+      "storage class",
+      "glacier",
+      "cool"
+     ]
+    }
+   ],
+   "a": "I'd separate zones: raw or bronze for data exactly as received, curated or silver for cleaned data, and a serving or gold zone. Inside each, paths follow a naming convention by source and dataset, then date partitions, for example raw/erp/orders/dt=2026-10-26/. Access is controlled per zone with IAM roles, so few people can read raw data with PII, and everything is encrypted. Lifecycle rules move old raw data to cheaper storage classes and then archive."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "object-storage",
+   "tg": [
+    "aws"
+   ],
+   "q": "Why does reading a million tiny files from object storage perform badly?",
+   "p": [
+    {
+     "t": "Each file costs a request and listing call",
+     "k": [
+      "request",
+      "list",
+      "listing",
+      "call",
+      "api call"
+     ]
+    },
+    {
+     "t": "Per-request latency dominates over data size",
+     "k": [
+      "latency",
+      "overhead"
+     ]
+    },
+    {
+     "t": "Engines create too many tasks",
+     "k": [
+      "task",
+      "split",
+      "scheduler"
+     ]
+    },
+    {
+     "t": "Compact into fewer large files",
+     "k": [
+      "compact",
+      "merge",
+      "larger files",
+      "optimize"
+     ]
+    }
+   ],
+   "a": "Object storage charges a request and some latency for every file, plus listing calls to find them. With a million tiny files, that per-request overhead dominates over the actual data size. Query engines also create a task per file or split, overwhelming the scheduler. The fix is to compact them into fewer large files, around 128 MB to 1 GB, and to write fewer, bigger files in the first place."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "small-files",
+   "tg": [
+    "spark",
+    "delta"
+   ],
+   "q": "Your streaming job writes thousands of small files every hour and queries are getting slow. What do you do?",
+   "p": [
+    {
+     "t": "Explain why small files hurt: metadata, listing and tasks",
+     "k": [
+      "metadata",
+      "list",
+      "task",
+      "overhead"
+     ]
+    },
+    {
+     "t": "Compact them, for example OPTIMIZE or rewrite_data_files",
+     "k": [
+      "compact",
+      "optimize",
+      "rewrite"
+     ]
+    },
+    {
+     "t": "Write fewer files with coalesce or longer triggers",
+     "k": [
+      "coalesce",
+      "repartition",
+      "trigger",
+      "batch interval"
+     ]
+    },
+    {
+     "t": "Avoid over-partitioning",
+     "k": [
+      "partition",
+      "over-partition"
+     ]
+    },
+    {
+     "t": "Target file sizes of roughly 128 MB to 1 GB",
+     "k": [
+      "128",
+      "256",
+      "1 gb",
+      "target size",
+      "file size"
+     ]
+    }
+   ],
+   "a": "Small files hurt because every file adds metadata, listing calls and a task for the engine, so overhead dominates. In the short term I'd schedule compaction, for example OPTIMIZE on a Delta table or rewrite_data_files on Iceberg, targeting files of about 256 MB. To prevent it, I'd write fewer files: a longer trigger interval, coalesce before writing, and check we aren't over-partitioning by something like hour plus customer."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "small-files",
+   "tg": [
+    "spark",
+    "parquet"
+   ],
+   "q": "Snappy, ZSTD or GZIP: how do you choose a compression codec?",
+   "p": [
+    {
+     "t": "Snappy is fast with moderate compression",
+     "k": [
+      "snappy",
+      "fast"
+     ]
+    },
+    {
+     "t": "ZSTD or GZIP compress more but cost more CPU",
+     "k": [
+      "zstd",
+      "gzip",
+      "cpu",
+      "smaller"
+     ]
+    },
+    {
+     "t": "Gzip text files aren't splittable",
+     "k": [
+      "splittable",
+      "split",
+      "parallel"
+     ]
+    },
+    {
+     "t": "Parquet compresses per column chunk and stays splittable",
+     "k": [
+      "parquet",
+      "column",
+      "chunk"
+     ]
+    }
+   ],
+   "a": "Snappy is fast to compress and decompress with moderate savings, so it's the usual default for hot data. ZSTD and GZIP give smaller files but cost more CPU; ZSTD gives a good balance for colder data. One trap: a single gzip CSV file isn't splittable, so Spark reads it with one task. Parquet compresses each column chunk separately, so a Parquet file stays splittable whichever codec you choose."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "table-formats",
+   "tg": [
+    "delta",
+    "iceberg"
+   ],
+   "q": "What problems do Delta Lake and Iceberg solve compared with plain Parquet files in a lake?",
+   "p": [
+    {
+     "t": "ACID transactions so readers never see partial writes",
+     "k": [
+      "acid",
+      "transaction",
+      "atomic",
+      "partial"
+     ]
+    },
+    {
+     "t": "UPDATE, DELETE and MERGE on lake data",
+     "k": [
+      "merge",
+      "update",
+      "delete",
+      "upsert"
+     ]
+    },
+    {
+     "t": "Schema evolution",
+     "k": [
+      "schema evolution",
+      "schema"
+     ]
+    },
+    {
+     "t": "Time travel to old versions",
+     "k": [
+      "time travel",
+      "version",
+      "snapshot"
+     ]
+    },
+    {
+     "t": "A metadata layer: transaction log or manifests",
+     "k": [
+      "log",
+      "manifest",
+      "metadata"
+     ]
+    }
+   ],
+   "a": "Plain Parquet files have no transactions, so a reader can see a half-written folder, and changing a few rows means rewriting files yourself. Delta Lake and Iceberg add a metadata layer, a transaction log in Delta and snapshots with manifests in Iceberg, that records which files belong to each version. That gives ACID transactions, MERGE, UPDATE and DELETE on lake data, schema evolution, and time travel to query an older version of the table."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "table-formats",
+   "tg": [
+    "delta",
+    "iceberg"
+   ],
+   "q": "How would you choose between Delta Lake and Iceberg for a new platform?",
+   "p": [
+    {
+     "t": "Engine and platform support, such as Databricks, Snowflake or Trino",
+     "k": [
+      "engine",
+      "databricks",
+      "snowflake",
+      "trino",
+      "platform"
+     ]
+    },
+    {
+     "t": "Iceberg's partition evolution and hidden partitioning",
+     "k": [
+      "partition evolution",
+      "hidden partition"
+     ]
+    },
+    {
+     "t": "Delta's deep integration with Spark and Databricks",
+     "k": [
+      "spark",
+      "databricks",
+      "integration"
+     ]
+    },
+    {
+     "t": "Avoid lock-in with an open catalog",
+     "k": [
+      "catalog",
+      "lock-in",
+      "open"
+     ]
+    },
+    {
+     "t": "Both cover the core: ACID, time travel, schema evolution",
+     "k": [
+      "acid",
+      "time travel",
+      "schema"
+     ]
+    }
+   ],
+   "a": "Both cover the core: ACID writes, time travel and schema evolution. The decision usually comes down to engines and platform. If the team is mostly on Databricks and Spark, Delta has the deepest integration. If several engines need to read and write the same tables, such as Snowflake, Trino and Spark, Iceberg's broad engine support and open catalog help avoid lock-in. Iceberg also has partition evolution and hidden partitioning, which makes changing a partition scheme easier."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "any",
+    "log"
+   ],
+   "c": "clustering-zorder",
+   "tg": [
+    "databricks",
+    "snowflake"
+   ],
+   "q": "A huge shipments table is filtered by carrier, origin and date. How would you lay it out for fast queries?",
+   "p": [
+    {
+     "t": "Partition by a low-cardinality column such as date",
+     "k": [
+      "partition",
+      "date",
+      "low cardinality"
+     ]
+    },
+    {
+     "t": "Cluster or Z-order by the high-cardinality filter columns",
+     "k": [
+      "cluster",
+      "z-order",
+      "zorder",
+      "liquid",
+      "sort"
+     ]
+    },
+    {
+     "t": "Rely on file statistics for data skipping",
+     "k": [
+      "min max",
+      "statistic",
+      "skip",
+      "pruning"
+     ]
+    },
+    {
+     "t": "Check query plans for files scanned",
+     "k": [
+      "files scanned",
+      "query plan",
+      "explain",
+      "profile"
+     ]
+    },
+    {
+     "t": "Weigh maintenance cost",
+     "k": [
+      "cost",
+      "maintenance",
+      "recluster",
+      "optimize"
+     ]
+    }
+   ],
+   "a": "I'd partition by ship date, because it's low cardinality and almost every query filters on it. Within partitions I'd cluster or Z-order by carrier_id and origin_pin, so rows for the same carrier and origin sit in the same files. The engine then uses min and max statistics per file to skip files that can't match. I'd confirm it works by checking files scanned in the query profile, and weigh the maintenance cost of reclustering against the query savings."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "clustering-zorder",
+   "tg": [
+    "databricks",
+    "snowflake"
+   ],
+   "q": "Why not just partition a table by customer_id?",
+   "p": [
+    {
+     "t": "High cardinality creates too many partitions",
+     "k": [
+      "cardinality",
+      "too many",
+      "million"
+     ]
+    },
+    {
+     "t": "Leads to many tiny files",
+     "k": [
+      "small files",
+      "tiny",
+      "files"
+     ]
+    },
+    {
+     "t": "Metadata and listing overhead grow",
+     "k": [
+      "metadata",
+      "list"
+     ]
+    },
+    {
+     "t": "Clustering or Z-ordering gives skipping without that cost",
+     "k": [
+      "cluster",
+      "z-order",
+      "zorder",
+      "skip"
+     ]
+    }
+   ],
+   "a": "customer_id has very high cardinality, millions of values, so partitioning by it creates millions of partitions, each holding a few tiny files. That explodes metadata and listing overhead and makes most queries slower, not faster. Clustering or Z-ordering by customer_id gets the data skipping benefit, because similar ids end up in the same files, without creating a partition per customer."
+  }
+ ],
+ "searchChecks": [
+  [
+   "what is a watermark in incremental loading",
+   "incremental-loads"
+  ],
+  [
+   "how to handle api rate limits",
+   "api-ingestion"
+  ],
+  [
+   "delta lake vs iceberg",
+   "table-formats"
+  ],
+  [
+   "too many small files",
+   "small-files"
+  ],
+  [
+   "sftp files manifest",
+   "file-ingestion"
+  ],
+  [
+   "z-order",
+   "clustering-zorder"
+  ],
+  [
+   "utc ist timezone bug",
+   "encodings-timezones"
+  ],
+  [
+   "how to backfill data",
+   "backfills"
+  ],
+  [
+   "git branching",
+   "git-for-data"
+  ],
+  [
+   "acid transactions",
+   "sql-for-engineers"
+  ]
+ ]
+}

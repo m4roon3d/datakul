@@ -1,0 +1,2317 @@
+{
+ "batch": 5,
+ "name": "Pipelines in production",
+ "concepts": [
+  {
+   "id": "airflow-deep",
+   "t": "de",
+   "title": "Airflow in depth: sensors, XCom, catchup and pools",
+   "mod": "Orchestration and operations",
+   "lv": "I",
+   "kw": "airflow dag operator task sensor xcom catchup backfill pool retries sla scheduler logical date execution date deferrable taskflow",
+   "s": "Beyond basic DAGs, Airflow has features for waiting on external events, passing small values between tasks, limiting concurrency and rerunning history.",
+   "d": "Operators define what each task does. Sensors wait for a condition such as a file arriving or another DAG finishing, and deferrable sensors wait without holding a worker slot. XCom passes small values, like a file path or a row count, between tasks; large data belongs in storage, not XCom. Each run's logical date tells it which data interval it covers, so with catchup enabled Airflow schedules every missed interval, and a backfill reruns any past range. Pools and max_active_runs limit concurrency to protect databases and APIs. Retries, timeouts, SLAs and callbacks handle failure and alerting.",
+   "e": "A daily DAG waits with a deferrable S3 sensor for the partner file, loads it, pushes the row count through XCom to a validation task, and runs in a pool limited to 4 slots so it never overloads the source database.",
+   "c": "Why shouldn't a task pass a 500 MB DataFrame to the next task through XCom?",
+   "i": "Expect sensors, XCom limits, catchup and backfill, pools, and how you make DAGs idempotent and easy to debug.",
+   "r": [
+    "orchestration",
+    "backfills",
+    "idempotency"
+   ]
+  },
+  {
+   "id": "dbt-basics",
+   "t": "de",
+   "title": "dbt fundamentals: models, refs, tests and docs",
+   "mod": "Orchestration and operations",
+   "lv": "I",
+   "kw": "dbt data build tool models ref source tests unique not_null relationships incremental materialization snapshot jinja macros lineage docs",
+   "s": "dbt lets analysts and engineers build warehouse transformations as version-controlled SQL models, with dependencies, tests and documentation built in.",
+   "d": "Each model is a SELECT statement in a file, and dbt wraps it in the DDL to create a view, a table or an incremental table, depending on its materialisation. ref() links models, so dbt knows the dependency graph and builds them in order, and source() declares raw tables. Tests such as unique, not_null, accepted_values and relationships run as queries that return failing rows. Snapshots implement SCD Type 2, Jinja macros remove repetition, and dbt docs generates a lineage graph. dbt runs inside the warehouse, so it's the T in ELT.",
+   "e": "fct_orders.sql selects from ref('stg_orders') and ref('dim_customer'). dbt builds the staging models first, then fct_orders as an incremental table, then runs unique and not_null tests on order_id.",
+   "c": "What does ref() give you that hard-coding a table name doesn't?",
+   "i": "Expect materialisations (view, table, incremental), ref and source, tests, snapshots, and how you structure a dbt project in layers.",
+   "r": [
+    "etl-elt",
+    "data-quality",
+    "scd"
+   ]
+  },
+  {
+   "id": "cicd-data",
+   "t": "de",
+   "title": "CI/CD for data pipelines",
+   "mod": "Orchestration and operations",
+   "lv": "I",
+   "kw": "ci cd continuous integration continuous deployment github actions tests lint sqlfluff environments dev staging prod pull request slim ci deploy",
+   "s": "CI/CD automatically tests every change to pipeline code and deploys it through environments, so bad changes are caught before they reach production data.",
+   "d": "Continuous integration runs on every pull request: linting (for example SQLFluff for SQL), unit tests, and building the changed models against sample or cloned data with their tests, sometimes only the changed models and their dependants (slim CI). Continuous deployment promotes approved changes from dev to staging to production automatically, with versioned artefacts and configuration per environment. Data adds a twist: the code can be right while the data is wrong, so combine code tests with data checks. Keep each deployment small and reversible.",
+   "e": "A pull request changing fct_orders triggers GitHub Actions: SQL lint, then dbt builds the changed model and everything downstream of it in a temporary schema on a 1% sample, and runs their tests before a reviewer can merge.",
+   "c": "Why does CI build changed models against sample or cloned data instead of production?",
+   "i": "Expect how you'd set up CI/CD for dbt or Spark jobs, environments, and testing data changes safely.",
+   "r": [
+    "git-for-data",
+    "testing-pipelines",
+    "dbt-basics"
+   ]
+  },
+  {
+   "id": "iac-terraform",
+   "t": "de",
+   "title": "Infrastructure as code with Terraform",
+   "mod": "Orchestration and operations",
+   "lv": "A",
+   "kw": "infrastructure as code iac terraform plan apply state module provider cloud resources drift reproducible environments",
+   "s": "Infrastructure as code defines cloud resources such as buckets, warehouses, clusters and permissions in code, so environments are reproducible, reviewed and versioned.",
+   "d": "With Terraform you declare the resources you want in configuration files; terraform plan shows what will change, and terraform apply makes the change. Terraform records what exists in a state file, which must be stored remotely with locking so the team doesn't corrupt it. Modules package reusable patterns, such as a standard bucket with encryption and lifecycle rules. Changes made by hand in the console cause drift, which the next plan reveals. For data platforms, IaC covers storage, compute, networking, IAM roles and even warehouse objects through providers.",
+   "e": "A Terraform module creates the raw, curated and serving buckets for each environment with the same encryption, lifecycle rules and IAM roles, so staging and production can't drift apart.",
+   "c": "Why must Terraform state be stored remotely with locking?",
+   "i": "Senior data engineering roles ask how you'd manage platform infrastructure, environments and permissions as code.",
+   "r": [
+    "cicd-data",
+    "object-storage",
+    "docker-data"
+   ]
+  },
+  {
+   "id": "docker-data",
+   "t": "de",
+   "title": "Containers for data workloads",
+   "mod": "Orchestration and operations",
+   "lv": "I",
+   "kw": "docker container image dockerfile kubernetes reproducible environment dependencies registry pod container orchestration",
+   "s": "Containers package code with its exact dependencies, so a pipeline runs the same way on a laptop, in CI and in production.",
+   "d": "A Dockerfile describes the image: a base image, system packages, Python libraries and your code. Images are built in CI, versioned with tags and stored in a registry. Orchestrators run the containers, for example Airflow's KubernetesPodOperator, AWS ECS or Batch, or Kubernetes itself. Keep images small, pin dependency versions, never bake secrets into images, and run as a non-root user. Containers solve \"it works on my machine\", but they don't replace good configuration and logging.",
+   "e": "The carrier API ingestion job ships as an image tagged 1.4.2 with Python 3.11 and pinned libraries. Airflow runs it with the KubernetesPodOperator, so a library upgrade for another job can't break it.",
+   "c": "Why shouldn't API keys be copied into a Docker image?",
+   "i": "Expect why containers help data teams, Dockerfile basics, image tags, and running containers from an orchestrator.",
+   "r": [
+    "python-for-de",
+    "iac-terraform",
+    "cicd-data"
+   ]
+  },
+  {
+   "id": "pipeline-monitoring",
+   "t": "de",
+   "title": "Monitoring, logging and alerting for pipelines",
+   "mod": "Orchestration and operations",
+   "lv": "I",
+   "kw": "monitoring logging alerting metrics job failures run duration on call pagerduty slack dashboards structured logs runbook",
+   "s": "Monitoring tells you a pipeline failed, slowed down or produced odd output before your users notice, and logs tell you why.",
+   "d": "Track operational metrics for every run: success or failure, duration against its normal range, rows read and written, and resource use. Write structured logs with the run id, dataset and partition so they can be searched. Alerts should be actionable and routed to an owner: a failed critical job pages the on-call engineer, while a slow job posts to a channel. Too many noisy alerts get ignored, so tune thresholds and group related alerts. Each alert should link to a runbook that explains how to diagnose and fix it.",
+   "e": "The orders load normally takes 12 minutes. A run taking 45 minutes posts a warning in Slack, and a failed run pages the on-call engineer with a link to the runbook and the run's logs.",
+   "c": "Why alert on a job that succeeded but ran four times longer than usual?",
+   "i": "Expect what you monitor, how you avoid alert fatigue, and a story about an incident you detected and resolved.",
+   "r": [
+    "data-observability",
+    "orchestration",
+    "data-slas"
+   ]
+  },
+  {
+   "id": "data-observability",
+   "t": "de",
+   "title": "Data observability: freshness, volume, schema and lineage",
+   "mod": "Orchestration and operations",
+   "lv": "I",
+   "kw": "data observability freshness volume schema distribution lineage anomaly detection data downtime monitoring tables silent failure",
+   "s": "Data observability monitors the data itself, not just the jobs, watching freshness, volume, schema and value distributions so silent data problems get caught.",
+   "d": "A job can succeed and still produce bad data. Observability tracks each table's freshness (when it was last updated), volume (row counts against expected ranges), schema changes, and distributions (null rates, value ranges, category mixes). Anomaly detection learns normal patterns instead of relying on hand-set thresholds. Lineage shows which upstream change caused a problem and which downstream dashboards it affects. Together they reduce data downtime: the time data is missing, late or wrong.",
+   "e": "The orders table loads on time but with 30% fewer rows than any previous Monday. The volume monitor alerts, and lineage points to a filter change in the CDC connector.",
+   "c": "Why isn't \"the job succeeded\" enough to know the data is right?",
+   "i": "Expect the pillars of observability, examples of silent failures, and how lineage speeds up root cause analysis.",
+   "r": [
+    "pipeline-monitoring",
+    "data-quality",
+    "governance"
+   ]
+  },
+  {
+   "id": "data-contracts",
+   "t": "de",
+   "title": "Data contracts",
+   "mod": "Quality and reliability",
+   "lv": "I",
+   "kw": "data contracts schema ownership sla producer consumer agreement breaking change versioning quality expectations source team",
+   "s": "A data contract is an agreement between the team producing data and the teams using it, covering schema, meaning, quality and change rules, ideally enforced in code.",
+   "d": "Contracts make expectations explicit: field names and types, what each field means, allowed values, freshness and volume expectations, an owner, and how breaking changes are announced and versioned. They're enforced by validating data at the boundary, such as a schema registry for events or checks at ingestion or in the producer's CI. The aim is to move responsibility for quality upstream, so source teams know a change will break consumers before they deploy it, not after.",
+   "e": "The checkout team's order events contract says order_id is a unique string, amount is a decimal in rupees, and fields can't be removed without a new version and 30 days' notice. Their CI fails any change that violates it.",
+   "c": "What problem does a data contract solve that quality checks in the warehouse don't?",
+   "i": "Expect what goes into a contract, how you'd enforce it, and how you'd get source teams to adopt it.",
+   "r": [
+    "data-quality",
+    "schema-evolution",
+    "schema-registry"
+   ]
+  },
+  {
+   "id": "testing-pipelines",
+   "t": "de",
+   "title": "Testing data pipelines",
+   "mod": "Quality and reliability",
+   "lv": "I",
+   "kw": "unit integration pytest fixtures assertions regression great expectations soda dbt edge cases ci",
+   "s": "Pipelines need two kinds of tests: code tests that check transformation logic before deployment, and data tests that check the actual data on every run.",
+   "d": "Unit tests run transformation functions on small, hand-made inputs with known expected outputs, including edge cases such as NULLs, duplicates and empty inputs. Integration tests run a pipeline end to end on a sample in a test environment. Data tests, written in dbt, Great Expectations or Soda, assert uniqueness, not-null, referential integrity, ranges and freshness on real data in production. Regression tests compare outputs before and after a change, such as row counts and totals by day. A test that can never fail isn't useful, so add a test for every incident.",
+   "e": "A pytest unit test feeds three orders, one duplicated and one with a NULL amount, into the dedup-and-clean function and asserts that exactly two clean rows come out.",
+   "c": "What's the difference between a unit test and a data test?",
+   "i": "Expect how you test pipelines, examples of edge cases, and how tests fit into CI.",
+   "r": [
+    "data-quality",
+    "cicd-data",
+    "python-for-de"
+   ]
+  },
+  {
+   "id": "pii-handling",
+   "t": "de",
+   "title": "Handling PII: masking, tokenisation and encryption",
+   "mod": "Quality and reliability",
+   "lv": "I",
+   "kw": "pii personal data masking tokenization tokenisation encryption hashing pseudonymisation anonymisation access control aadhaar pan phone email",
+   "s": "Personal data such as names, phone numbers, emails and ID numbers must be protected throughout the pipeline with masking, tokenisation, encryption and strict access.",
+   "d": "First classify which columns hold PII and tag them in the catalog. Encrypt data at rest and in transit. Masking hides values from users who don't need them, such as showing only the last four digits of a phone number, often through dynamic masking policies in the warehouse. Tokenisation replaces values with tokens that can only be mapped back through a secure vault, and hashing with a secret salt gives consistent pseudonyms for joins without revealing the value. Keep PII out of logs, test data and analytics tables that don't need it, and delete it when its retention period ends. Government IDs such as Aadhaar need extra care.",
+   "e": "Analysts see customer phone numbers as XXXXXX4521 through a masking policy, while the support team's role sees full numbers. Join keys across systems use salted SHA-256 hashes of the phone number.",
+   "c": "Why use a salted hash rather than a plain hash of phone numbers?",
+   "i": "Expect how you'd classify, protect and control access to PII, and the difference between masking, tokenisation, hashing and encryption.",
+   "r": [
+    "governance",
+    "data-quality",
+    "object-storage"
+   ]
+  },
+  {
+   "id": "cost-optimisation",
+   "t": "de",
+   "title": "Cost optimisation in cloud data platforms",
+   "mod": "Quality and reliability",
+   "lv": "A",
+   "kw": "cost optimisation finops cloud cost warehouse credits bytes scanned autoscaling auto suspend storage tiers spot instances reduce bill",
+   "s": "Cloud data platforms bill for storage, compute and data scanned, so design choices and habits decide whether costs stay predictable or explode.",
+   "d": "Compute is usually the largest cost: right-size warehouses and clusters, auto-suspend them when idle, use autoscaling, and run fault-tolerant batch jobs on spot instances. Scan less data with partitioning, clustering and selecting only the columns you need, especially on engines that charge per byte. Avoid recomputing everything: use incremental models, materialise expensive results and cache. Move cold data to cheaper storage tiers and expire old snapshots. Make costs visible with tags per team and pipeline, budgets and alerts, and review the most expensive queries regularly.",
+   "e": "Turning on auto-suspend after 60 seconds, moving three nightly full rebuilds to incremental models and partitioning the events table cut a team's Snowflake bill by 45%.",
+   "c": "Why do incremental models usually save more money than resizing a warehouse?",
+   "i": "Senior interviews ask how you'd reduce a platform's cloud bill and how you'd make costs visible and owned.",
+   "r": [
+    "partitioning",
+    "incremental-loads",
+    "clustering-zorder"
+   ]
+  },
+  {
+   "id": "data-slas",
+   "t": "de",
+   "title": "SLAs and SLOs for data",
+   "mod": "Quality and reliability",
+   "lv": "I",
+   "kw": "sla slo sli service level agreement objective indicator freshness availability data downtime error budget reliability",
+   "s": "Data SLAs and SLOs set measurable promises for data, such as \"the sales table is updated by 7:00 am IST on 99% of days\", so reliability can be managed like any other service.",
+   "d": "A service level indicator (SLI) is what you measure, such as the time a table finished loading or the share of rows passing checks. A service level objective (SLO) is the internal target for it, and a service level agreement (SLA) is the promise made to consumers, sometimes with consequences. Agree them with consumers, tier datasets by importance, and track breaches over time. An error budget, the failures allowed in a period, helps decide when to pause feature work and fix reliability.",
+   "e": "The finance mart's SLO is \"loaded by 7:00 am IST on 99% of business days\". October had two late loads in 22 days, using up the error budget, so the team prioritised fixing the slow upstream extract.",
+   "c": "What's the difference between an SLI, an SLO and an SLA?",
+   "i": "Expect how you'd define and measure SLAs for datasets, and what you do when they're breached.",
+   "r": [
+    "pipeline-monitoring",
+    "data-observability",
+    "kpi-metrics"
+   ]
+  },
+  {
+   "id": "snowflake",
+   "t": "de",
+   "title": "Snowflake essentials",
+   "mod": "Platforms and tools",
+   "lv": "I",
+   "kw": "snowflake virtual warehouse credits micro partitions clustering time travel zero copy clone streams tasks snowpipe secure data sharing roles",
+   "s": "Snowflake is a cloud data warehouse that separates storage from compute, so many independent virtual warehouses can query the same data.",
+   "d": "Data is stored in compressed columnar micro-partitions with metadata used for pruning, and clustering keys improve pruning on large tables. Compute runs in virtual warehouses, sized from X-Small upwards and billed in credits per second while running, with auto-suspend and auto-resume. Time Travel queries or restores past versions of data, and zero-copy cloning makes instant copies for testing. Snowpipe loads files continuously, streams and tasks support incremental processing, and secure data sharing gives other accounts live access without copying. Access uses role-based access control.",
+   "e": "The data team clones the production database in seconds for a test run, with no extra storage cost until data changes, and BI users query through their own small warehouse so heavy ELT jobs don't slow dashboards.",
+   "c": "Why give BI users and ELT jobs separate virtual warehouses?",
+   "i": "Expect virtual warehouses and credits, micro-partitions and clustering, Time Travel, cloning, and cost controls.",
+   "r": [
+    "query-engines",
+    "cost-optimisation",
+    "clustering-zorder"
+   ]
+  },
+  {
+   "id": "databricks",
+   "t": "de",
+   "title": "Databricks essentials",
+   "mod": "Platforms and tools",
+   "lv": "I",
+   "kw": "databricks lakehouse spark delta lake unity catalog notebooks jobs workflows clusters photon dlt delta live tables sql warehouse dbu",
+   "s": "Databricks is a managed lakehouse platform built around Spark and Delta Lake, for data engineering, analytics and machine learning on one copy of the data.",
+   "d": "Data lives in Delta tables on your own cloud storage, and Unity Catalog governs access, lineage and discovery across workspaces. Compute comes as job clusters for pipelines, all-purpose clusters for notebooks, and SQL warehouses for BI, with Photon speeding up SQL and DataFrame work. Workflows schedule jobs, and Delta Live Tables builds declarative pipelines with built-in quality expectations. MLflow tracks experiments and models. Costs come from DBUs plus the cloud VMs, so use job clusters and auto-termination for scheduled work.",
+   "e": "A medallion pipeline runs as a Databricks Workflow on job clusters: Auto Loader ingests files into bronze Delta tables, DLT applies expectations on the way to silver, and a SQL warehouse serves gold tables to Power BI.",
+   "c": "Why run scheduled pipelines on job clusters rather than an all-purpose cluster?",
+   "i": "Expect Delta Lake, Unity Catalog, cluster types, Workflows and DLT, and how Databricks compares with Snowflake.",
+   "r": [
+    "table-formats",
+    "spark-architecture",
+    "medallion"
+   ]
+  },
+  {
+   "id": "bigquery",
+   "t": "de",
+   "title": "BigQuery essentials",
+   "mod": "Platforms and tools",
+   "lv": "I",
+   "kw": "bigquery google cloud gcp serverless slots bytes scanned on demand partitioned tables clustering nested repeated fields materialized views bi engine",
+   "s": "BigQuery is Google Cloud's serverless data warehouse: you load and query data without managing clusters, and pay by data scanned or by reserved capacity.",
+   "d": "On-demand pricing charges per byte scanned, so partitioned tables (by date or ingestion time) and clustering are the main levers for cost and speed, along with selecting only the columns you need. Capacity pricing reserves slots instead. BigQuery supports nested and repeated fields (STRUCT and ARRAY), which store one-to-many data without joins. Materialised views, BI Engine and result caching speed up dashboards. Data arrives through batch loads, the Storage Write API for streaming, or federated queries on external tables.",
+   "e": "A 5 TB events table partitioned by event_date and clustered by user_id lets a query for one week and one user scan 2 GB instead of 5 TB.",
+   "c": "Why does SELECT * cost more on BigQuery than selecting three columns, even with LIMIT 10?",
+   "i": "Expect pricing models, partitioning and clustering, nested and repeated fields, and how you control cost.",
+   "r": [
+    "query-engines",
+    "partitioning",
+    "cost-optimisation"
+   ]
+  },
+  {
+   "id": "adf",
+   "t": "de",
+   "title": "Azure Data Factory essentials",
+   "mod": "Platforms and tools",
+   "lv": "I",
+   "kw": "azure data factory adf pipelines activities copy activity linked services datasets integration runtime triggers mapping data flows self hosted",
+   "s": "Azure Data Factory is Azure's managed service for orchestrating data movement and transformation, with low-code pipelines and connectors for over 90 sources.",
+   "d": "A pipeline is a set of activities: Copy activities move data between sources and sinks, other activities run notebooks, stored procedures or data flows, and control activities add loops, conditions and lookups. Linked services hold connection details, datasets describe the data, and integration runtimes provide compute; a self-hosted integration runtime reaches on-premises sources such as SQL Server or SAP behind a firewall. Triggers start pipelines on schedules, tumbling windows or events. Parameterise pipelines and keep them in Git for CI/CD.",
+   "e": "A parameterised ADF pipeline loops over 40 SQL Server tables through a self-hosted integration runtime, copies each incrementally to ADLS as Parquet, then triggers a Databricks notebook to merge them.",
+   "c": "When do you need a self-hosted integration runtime?",
+   "i": "Expect pipelines and activities, linked services, integration runtimes, triggers, and incremental copy patterns in Azure projects.",
+   "r": [
+    "orchestration",
+    "incremental-loads",
+    "databricks"
+   ]
+  },
+  {
+   "id": "aws-glue-emr",
+   "t": "de",
+   "title": "AWS Glue and EMR essentials",
+   "mod": "Platforms and tools",
+   "lv": "I",
+   "kw": "aws glue emr data catalog crawlers glue jobs spark serverless athena lake formation step functions s3 etl dpu",
+   "s": "AWS Glue is a serverless ETL service with a central data catalog, and EMR runs managed Spark clusters for heavier or more customised workloads.",
+   "d": "The Glue Data Catalog stores table metadata for data in S3 and is used by Athena, EMR and Redshift Spectrum; crawlers can infer schemas, but explicit definitions are more reliable. Glue jobs run Spark or Python without servers to manage, billed per DPU-hour, with job bookmarks to track processed data. EMR gives full control of Spark clusters, or runs without clusters as EMR Serverless, and suits large or specialised jobs and spot instances. Step Functions or managed Airflow (MWAA) orchestrate them, and Lake Formation manages fine-grained permissions on the lake.",
+   "e": "Daily carrier files land in S3. A Glue job converts them to partitioned Parquet registered in the Glue Data Catalog, and analysts query them in Athena within minutes.",
+   "c": "When would you choose EMR over Glue for a Spark job?",
+   "i": "Expect the roles of the Glue Data Catalog, Glue jobs, EMR, Athena and Lake Formation in an AWS data lake.",
+   "r": [
+    "object-storage",
+    "query-engines",
+    "spark-architecture"
+   ]
+  },
+  {
+   "id": "informatica",
+   "t": "de",
+   "title": "Informatica PowerCenter and IDMC essentials",
+   "mod": "Platforms and tools",
+   "lv": "I",
+   "kw": "informatica powercenter idmc iics mappings transformations sessions workflows repository lookup pushdown optimization cloud data integration migration",
+   "s": "Informatica PowerCenter is a long-established enterprise ETL tool, and Informatica's Intelligent Data Management Cloud (IDMC) is its cloud successor.",
+   "d": "In PowerCenter, mappings define the data flow through transformations such as Source Qualifier, Expression, Lookup, Joiner, Aggregator, Router and Update Strategy. Sessions run mappings with connection and performance settings, and workflows sequence sessions with dependencies, all stored in a central repository. Performance tuning covers partitioning, cache sizes for lookups and aggregators, and pushdown optimisation, which pushes logic into the source or target database. IDMC's Cloud Data Integration offers similar mappings as a cloud service. Many organisations are migrating PowerCenter estates to IDMC or to ELT on cloud warehouses.",
+   "e": "A PowerCenter mapping reads SAP deliveries, looks up carrier codes with a cached Lookup, routes rejected rows to an error table with a Router, and loads the TMS staging table, while pushdown optimisation moves the aggregation into Oracle.",
+   "c": "What does pushdown optimisation do, and why does it help?",
+   "i": "Enterprise interviews ask about common transformations, lookup caching, session tuning, and how you'd migrate PowerCenter jobs to the cloud.",
+   "r": [
+    "etl-elt",
+    "incremental-loads",
+    "data-quality"
+   ]
+  }
+ ],
+ "questions": [
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "airflow-deep",
+   "tg": [
+    "airflow"
+   ],
+   "q": "How do catchup and backfill work in Airflow, and what makes a DAG safe to backfill?",
+   "p": [
+    {
+     "t": "The logical date defines each run's data interval",
+     "k": [
+      "logical date",
+      "data interval"
+     ]
+    },
+    {
+     "t": "Catchup schedules missed intervals",
+     "k": [
+      "catchup",
+      "missed interval"
+     ]
+    },
+    {
+     "t": "Backfill reruns a past range",
+     "k": [
+      "backfill command",
+      "past range"
+     ]
+    },
+    {
+     "t": "Tasks must be idempotent",
+     "k": [
+      "idempotent",
+      "overwrit"
+     ]
+    },
+    {
+     "t": "Limit concurrency",
+     "k": [
+      "max_active_runs",
+      "pool",
+      "concurrency"
+     ]
+    }
+   ],
+   "a": "Each DAG run has a logical date that defines the data interval it processes. With catchup enabled, when a DAG is turned on or resumed, Airflow schedules a run for every missed interval since the start date. A backfill command reruns any past range on demand. It's only safe if tasks use the logical date instead of the current time and write idempotently, for example overwriting their partition. I'd also limit concurrency with max_active_runs or a pool, so a backfill doesn't overload the source."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "airflow-deep",
+   "tg": [
+    "airflow"
+   ],
+   "q": "When would you use XCom, sensors and pools in Airflow?",
+   "p": [
+    {
+     "t": "XCom for small values like paths or counts",
+     "k": [
+      "xcom",
+      "file path",
+      "row count"
+     ]
+    },
+    {
+     "t": "Large data goes to storage, not XCom",
+     "k": [
+      "large data",
+      "storage"
+     ]
+    },
+    {
+     "t": "Sensors wait for an external condition",
+     "k": [
+      "sensor",
+      "wait"
+     ]
+    },
+    {
+     "t": "Deferrable sensors free worker slots",
+     "k": [
+      "deferrable",
+      "worker slot"
+     ]
+    },
+    {
+     "t": "Pools limit load on a shared resource",
+     "k": [
+      "pool",
+      "at once"
+     ]
+    }
+   ],
+   "a": "XCom passes small values between tasks, such as a file path or a row count; large data belongs in storage like S3, with only its location passed through XCom. Sensors wait for an external condition, like a file landing or another DAG finishing, and deferrable sensors wait without occupying a worker slot. Pools limit how many tasks hit a shared resource at once, for example at most four concurrent queries against a source database."
+  },
+  {
+   "r": [
+    "da",
+    "de"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "dbt-basics",
+   "tg": [
+    "dbt"
+   ],
+   "q": "What are dbt's materialisations, and when would you use each?",
+   "p": [
+    {
+     "t": "View: stores only the query",
+     "k": [
+      "view",
+      "always fresh"
+     ]
+    },
+    {
+     "t": "Table: rebuilt fully each run",
+     "k": [
+      "fully rebuilt",
+      "table is"
+     ]
+    },
+    {
+     "t": "Incremental: processes new or changed rows",
+     "k": [
+      "incremental",
+      "new or changed"
+     ]
+    },
+    {
+     "t": "Ephemeral: inlined as a CTE",
+     "k": [
+      "ephemeral",
+      "cte"
+     ]
+    },
+    {
+     "t": "Choose by size, cost and freshness",
+     "k": [
+      "large",
+      "costly",
+      "too slow"
+     ]
+    }
+   ],
+   "a": "A view stores just the query, so it's always fresh and cheap to build but runs the logic at query time; good for light staging models. A table is fully rebuilt on every run, which is simple and fast to query. Incremental models only process new or changed rows and merge them in, which suits large fact tables where a full rebuild is too slow or costly. Ephemeral models aren't built at all; dbt inlines them as a CTE in the models that use them."
+  },
+  {
+   "r": [
+    "da",
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "dbt-basics",
+   "tg": [
+    "dbt"
+   ],
+   "q": "How would you structure a dbt project and its tests?",
+   "p": [
+    {
+     "t": "Layers: staging, intermediate, marts",
+     "k": [
+      "staging",
+      "marts"
+     ]
+    },
+    {
+     "t": "Sources declared with freshness checks",
+     "k": [
+      "source",
+      "freshness"
+     ]
+    },
+    {
+     "t": "ref() for dependencies",
+     "k": [
+      "ref",
+      "dependency order"
+     ]
+    },
+    {
+     "t": "Generic tests on keys",
+     "k": [
+      "unique",
+      "not_null",
+      "relationships"
+     ]
+    },
+    {
+     "t": "Docs and CI",
+     "k": [
+      "dbt docs",
+      "ci"
+     ]
+    }
+   ],
+   "a": "In layers: staging models clean and rename each source one-to-one, intermediate models hold reusable logic, and marts expose facts and dimensions for consumers. Raw tables are declared as sources, with freshness checks. Models refer to each other with ref, so dbt builds them in dependency order. Every primary key gets unique and not_null tests, foreign keys get relationships tests, and important business rules get custom tests. Model descriptions feed dbt docs, and CI builds and tests changed models on every pull request."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "cicd-data",
+   "tg": [
+    "dbt",
+    "python"
+   ],
+   "q": "How would you set up CI/CD for a dbt or Spark pipeline repository?",
+   "p": [
+    {
+     "t": "CI on every pull request",
+     "k": [
+      "pull request",
+      "every change"
+     ]
+    },
+    {
+     "t": "Lint and unit tests",
+     "k": [
+      "lint",
+      "unit test",
+      "sqlfluff"
+     ]
+    },
+    {
+     "t": "Build changed models on sample or cloned data",
+     "k": [
+      "sample",
+      "cloned",
+      "temporary schema"
+     ]
+    },
+    {
+     "t": "Promote through environments",
+     "k": [
+      "staging",
+      "production",
+      "environment"
+     ]
+    },
+    {
+     "t": "Versioned, reversible deployments",
+     "k": [
+      "versioned",
+      "rolled back",
+      "rollback"
+     ]
+    }
+   ],
+   "a": "CI runs on every pull request: lint the SQL with SQLFluff, run unit tests on the Python, then build the changed models and their downstream models in a temporary schema against sampled or cloned data and run their tests, which is slim CI. After review and merge, CD deploys automatically through environments, from dev to staging to production, using versioned artefacts and per-environment configuration, so a release can be rolled back to the previous version."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "cicd-data",
+   "tg": [
+    "dbt"
+   ],
+   "q": "Code tests pass, but a deployment still broke production data. How do you make releases safer?",
+   "p": [
+    {
+     "t": "Compare outputs before and after (regression)",
+     "k": [
+      "regression",
+      "compare",
+      "row counts"
+     ]
+    },
+    {
+     "t": "Test on production-like data",
+     "k": [
+      "clone",
+      "production-like"
+     ]
+    },
+    {
+     "t": "Write, check, then swap (write-audit-publish)",
+     "k": [
+      "write-audit-publish",
+      "swap",
+      "blue-green"
+     ]
+    },
+    {
+     "t": "Small, reversible changes",
+     "k": [
+      "small",
+      "reversible"
+     ]
+    },
+    {
+     "t": "Watch monitoring after release",
+     "k": [
+      "monitoring",
+      "after each release"
+     ]
+    }
+   ],
+   "a": "Code can be correct while the data isn't, so I'd add data checks to the release: run the changed models on a clone of production data and compare row counts and totals with the current version as a regression check. For critical tables, use a write-audit-publish or blue-green pattern: write to a staging table, run checks, then swap it in, so bad data never reaches consumers. Keep changes small and reversible, and watch monitoring closely after each release."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "iac-terraform",
+   "tg": [
+    "aws",
+    "azure",
+    "gcp"
+   ],
+   "q": "Why manage data platform infrastructure with Terraform instead of the cloud console?",
+   "p": [
+    {
+     "t": "Reproducible environments",
+     "k": [
+      "reproducib",
+      "same code"
+     ]
+    },
+    {
+     "t": "Versioned and reviewed in Git",
+     "k": [
+      "versioned",
+      "reviewed",
+      "git"
+     ]
+    },
+    {
+     "t": "plan shows changes before apply",
+     "k": [
+      "plan",
+      "apply"
+     ]
+    },
+    {
+     "t": "Drift becomes visible",
+     "k": [
+      "drift",
+      "by hand"
+     ]
+    },
+    {
+     "t": "Reusable modules",
+     "k": [
+      "module",
+      "reuse"
+     ]
+    }
+   ],
+   "a": "Infrastructure in Terraform is reproducible: dev, staging and production are created from the same code, so they don't drift apart. Changes are versioned in Git and reviewed like application code. terraform plan shows exactly what will change before apply runs it, which avoids surprises. If someone changes something by hand in the console, the next plan reveals the drift. Modules package standard patterns, such as an encrypted bucket with lifecycle rules, for reuse."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "iac-terraform",
+   "tg": [
+    "aws"
+   ],
+   "q": "What can go wrong with Terraform state, and how do you prevent it?",
+   "p": [
+    {
+     "t": "State maps code to real resources",
+     "k": [
+      "state file",
+      "maps"
+     ]
+    },
+    {
+     "t": "Local state can be lost or out of sync",
+     "k": [
+      "laptop",
+      "lost",
+      "out of sync"
+     ]
+    },
+    {
+     "t": "Concurrent applies can corrupt it",
+     "k": [
+      "same time",
+      "corrupt"
+     ]
+    },
+    {
+     "t": "Remote backend with locking",
+     "k": [
+      "remote backend",
+      "locking"
+     ]
+    },
+    {
+     "t": "Protect sensitive values in state",
+     "k": [
+      "sensitive",
+      "encrypt"
+     ]
+    }
+   ],
+   "a": "The state file maps Terraform's configuration to the real resources it created. If it lives on someone's laptop it can be lost or out of sync, and if two people run apply at the same time they can corrupt it. Store it in a remote backend such as S3 or Terraform Cloud with locking, so only one apply runs at a time. State can contain sensitive values, so encrypt it and restrict who can read it."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "docker-data",
+   "tg": [
+    "python"
+   ],
+   "q": "How do containers help data pipelines?",
+   "p": [
+    {
+     "t": "Package exact dependencies so jobs behave the same everywhere",
+     "k": [
+      "dependencies",
+      "same on a laptop",
+      "reproducib"
+     ]
+    },
+    {
+     "t": "Isolate jobs from each other",
+     "k": [
+      "isolated",
+      "isolation"
+     ]
+    },
+    {
+     "t": "Versioned images make rollback easy",
+     "k": [
+      "tag",
+      "registry",
+      "rollback"
+     ]
+    },
+    {
+     "t": "Run from an orchestrator",
+     "k": [
+      "kubernetespodoperator",
+      "ecs",
+      "orchestrator"
+     ]
+    }
+   ],
+   "a": "A container packages the code with its exact dependencies, so the job behaves the same on a laptop, in CI and in production, which ends works-on-my-machine problems. Jobs are isolated, so one job's library upgrade can't break another. Images are versioned with tags in a registry, which makes rollbacks easy. The orchestrator runs them, for example Airflow's KubernetesPodOperator or AWS ECS."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "docker-data",
+   "tg": [
+    "python"
+   ],
+   "q": "What are good practices when building Docker images for data jobs?",
+   "p": [
+    {
+     "t": "Pin dependency versions",
+     "k": [
+      "pin",
+      "repeatable"
+     ]
+    },
+    {
+     "t": "Use a slim base image",
+     "k": [
+      "slim",
+      "small"
+     ]
+    },
+    {
+     "t": "No secrets in the image",
+     "k": [
+      "secret",
+      "credential"
+     ]
+    },
+    {
+     "t": "Run as a non-root user",
+     "k": [
+      "non-root",
+      "root user"
+     ]
+    },
+    {
+     "t": "Build and tag in CI",
+     "k": [
+      "ci",
+      "tag"
+     ]
+    }
+   ],
+   "a": "Pin dependency versions so builds are repeatable, and start from a slim base image to keep size and attack surface small. Never bake secrets or credentials into the image; inject them at runtime from a secrets manager. Run as a non-root user. Build images in CI, tag them with a version, and push them to a registry so every deployment uses a known image."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "pipeline-monitoring",
+   "tg": [
+    "airflow"
+   ],
+   "q": "What would you monitor for a set of production pipelines?",
+   "p": [
+    {
+     "t": "Success or failure of each run",
+     "k": [
+      "failure",
+      "success"
+     ]
+    },
+    {
+     "t": "Duration against the normal range",
+     "k": [
+      "duration",
+      "normal range"
+     ]
+    },
+    {
+     "t": "Rows read and written",
+     "k": [
+      "rows read",
+      "volume",
+      "row count"
+     ]
+    },
+    {
+     "t": "Freshness of output tables",
+     "k": [
+      "freshness",
+      "last updated"
+     ]
+    },
+    {
+     "t": "Resource use and cost",
+     "k": [
+      "cost",
+      "resource"
+     ]
+    }
+   ],
+   "a": "For every run: success or failure, duration compared with its normal range, and rows read and written, since sudden volume changes often signal problems. For outputs: freshness, meaning the time each important table was last updated against its expected time. I'd also track resource use and cost per pipeline. All of it goes on a dashboard, with alerts only on the things that need action."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "pipeline-monitoring",
+   "tg": [
+    "airflow"
+   ],
+   "q": "How do you avoid alert fatigue while still catching real incidents?",
+   "p": [
+    {
+     "t": "Alert only on actionable issues",
+     "k": [
+      "actionable",
+      "dashboard"
+     ]
+    },
+    {
+     "t": "Route by severity",
+     "k": [
+      "severity",
+      "page",
+      "slack"
+     ]
+    },
+    {
+     "t": "Tune thresholds or use anomaly detection",
+     "k": [
+      "threshold",
+      "anomaly"
+     ]
+    },
+    {
+     "t": "Group related alerts",
+     "k": [
+      "group",
+      "fifty"
+     ]
+    },
+    {
+     "t": "Owners and runbooks",
+     "k": [
+      "owner",
+      "runbook"
+     ]
+    }
+   ],
+   "a": "Only alert on actionable issues; everything else goes to a dashboard. Route by severity: a failed critical pipeline pages the on-call engineer, while a slow non-critical job posts to a Slack channel. Tune thresholds, or use anomaly detection based on history, so normal variation doesn't fire. Group related alerts, so one upstream failure doesn't create fifty. Every alert has an owner and a runbook explaining how to diagnose it."
+  },
+  {
+   "r": [
+    "de",
+    "da"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "data-observability",
+   "tg": [
+    "sql"
+   ],
+   "q": "What are the main signals of data observability?",
+   "p": [
+    {
+     "t": "Freshness",
+     "k": [
+      "freshness",
+      "last updated"
+     ]
+    },
+    {
+     "t": "Volume against the expected range",
+     "k": [
+      "volume",
+      "row count"
+     ]
+    },
+    {
+     "t": "Schema changes",
+     "k": [
+      "schema",
+      "columns"
+     ]
+    },
+    {
+     "t": "Value distributions",
+     "k": [
+      "distribution",
+      "null rate"
+     ]
+    },
+    {
+     "t": "Lineage upstream and downstream",
+     "k": [
+      "lineage",
+      "upstream"
+     ]
+    }
+   ],
+   "a": "Freshness, meaning when each table was last updated compared with when it should be. Volume, row counts against the expected range. Schema, detecting added, removed or changed columns. Distribution, such as null rates, value ranges and category mixes, which catch values that are wrong but present. And lineage, to trace a problem upstream to its cause and downstream to the dashboards it affects."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "any",
+    "ecom"
+   ],
+   "c": "data-observability",
+   "tg": [
+    "sql"
+   ],
+   "q": "Give an example of a silent data failure and how you'd detect it.",
+   "p": [
+    {
+     "t": "The job succeeded but the data was wrong",
+     "k": [
+      "silent",
+      "succeeded",
+      "no job failed"
+     ]
+    },
+    {
+     "t": "A concrete example",
+     "k": [
+      "for example",
+      "30% fewer"
+     ]
+    },
+    {
+     "t": "Volume or distribution monitoring catches it",
+     "k": [
+      "volume monitor",
+      "distribution check",
+      "anomaly"
+     ]
+    },
+    {
+     "t": "Lineage finds the root cause",
+     "k": [
+      "lineage",
+      "root cause"
+     ]
+    },
+    {
+     "t": "Add a specific check afterwards",
+     "k": [
+      "add a specific check",
+      "next time"
+     ]
+    }
+   ],
+   "a": "For example, a source team changed a filter in the CDC connector, so the orders load succeeded on time but with 30% fewer rows; no job failed, so it was silent. A volume monitor comparing row counts with the same weekday's normal range catches it, and a distribution check would catch cases like a column that suddenly becomes mostly nulls. Lineage then traces the anomaly upstream to its root cause. Afterwards I'd add a specific check so it's caught immediately next time."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "data-contracts",
+   "tg": [
+    "governance"
+   ],
+   "q": "What would you put in a data contract?",
+   "p": [
+    {
+     "t": "Schema: fields and types",
+     "k": [
+      "schema",
+      "field names",
+      "types"
+     ]
+    },
+    {
+     "t": "Meaning of each field",
+     "k": [
+      "means",
+      "meaning",
+      "definition"
+     ]
+    },
+    {
+     "t": "Quality rules",
+     "k": [
+      "quality rules",
+      "allowed values",
+      "uniqueness"
+     ]
+    },
+    {
+     "t": "Service levels such as freshness",
+     "k": [
+      "freshness",
+      "service level"
+     ]
+    },
+    {
+     "t": "Owner and change process",
+     "k": [
+      "owner",
+      "breaking changes",
+      "versioned"
+     ]
+    }
+   ],
+   "a": "The schema, with field names and types, plus what each field means, for example amount is a decimal in rupees including tax. Quality rules such as uniqueness, allowed values and null rates. Service levels, such as freshness and expected volume. And ownership: who the owner is and how breaking changes are versioned and announced, for example 30 days' notice and a new version for removed fields."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "data-contracts",
+   "tg": [
+    "governance"
+   ],
+   "q": "How would you get source teams to adopt data contracts?",
+   "p": [
+    {
+     "t": "Start with the most critical datasets",
+     "k": [
+      "critical",
+      "start small"
+     ]
+    },
+    {
+     "t": "Use real incidents to show impact",
+     "k": [
+      "incident",
+      "impact"
+     ]
+    },
+    {
+     "t": "Make it easy with templates and tooling",
+     "k": [
+      "template",
+      "tooling"
+     ]
+    },
+    {
+     "t": "Enforce in the producer's CI",
+     "k": [
+      "producer's ci",
+      "enforce"
+     ]
+    },
+    {
+     "t": "Agree it together with clear ownership",
+     "k": [
+      "agree",
+      "ownership"
+     ]
+    }
+   ],
+   "a": "Start small with the most critical datasets, where breakages have hurt, and use real incidents to show their impact on revenue reports or customers. Make it easy: provide templates and tooling, such as a schema registry or a contract file checked in their repository. Enforce contracts in the producer's CI, so they learn about a breaking change before deploying, not after. And agree the contract together, with clear ownership on both sides, rather than imposing it."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "testing-pipelines",
+   "tg": [
+    "python",
+    "dbt"
+   ],
+   "q": "What's the difference between unit tests and data tests in a pipeline?",
+   "p": [
+    {
+     "t": "Unit tests check logic on small handmade inputs",
+     "k": [
+      "unit test",
+      "handmade",
+      "logic"
+     ]
+    },
+    {
+     "t": "They run in CI before deployment",
+     "k": [
+      "ci",
+      "before deployment"
+     ]
+    },
+    {
+     "t": "Data tests check real data on every run",
+     "k": [
+      "data test",
+      "real data",
+      "every run"
+     ]
+    },
+    {
+     "t": "Examples like unique and not null",
+     "k": [
+      "unique",
+      "not null"
+     ]
+    },
+    {
+     "t": "You need both",
+     "k": [
+      "both",
+      "need both"
+     ]
+    }
+   ],
+   "a": "Unit tests check the transformation logic on small, handmade inputs with known expected outputs, including edge cases, and run in CI before deployment. Data tests check the real data on every run in production, for example that order_id is unique and not null and amounts are positive. Unit tests catch bugs in code; data tests catch problems in the data, such as an upstream change. You need both."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "testing-pipelines",
+   "tg": [
+    "python"
+   ],
+   "q": "Which edge cases would you test in a deduplication and cleaning function?",
+   "p": [
+    {
+     "t": "Exact and near duplicates",
+     "k": [
+      "duplicate",
+      "ingestion time"
+     ]
+    },
+    {
+     "t": "NULLs in keys and values",
+     "k": [
+      "null",
+      "nulls"
+     ]
+    },
+    {
+     "t": "Empty input",
+     "k": [
+      "empty",
+      "crash"
+     ]
+    },
+    {
+     "t": "Ties on timestamp",
+     "k": [
+      "tie",
+      "deterministic"
+     ]
+    },
+    {
+     "t": "Invalid or malformed values",
+     "k": [
+      "invalid",
+      "malformed"
+     ]
+    }
+   ],
+   "a": "Exact duplicates and duplicates that differ only in ingestion time, NULLs in key and value columns, and an empty input, which should return an empty result rather than crash. Ties, where two versions of a record share a timestamp, to make sure the result is deterministic. And invalid or malformed values, such as negative amounts or strings in numeric fields, to confirm they're rejected or quarantined."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "m",
+   "d": [
+    "any",
+    "fin"
+   ],
+   "c": "pii-handling",
+   "tg": [
+    "governance"
+   ],
+   "q": "What's the difference between masking, tokenisation, hashing and encryption for PII?",
+   "p": [
+    {
+     "t": "Masking hides values from viewers",
+     "k": [
+      "masking",
+      "last four"
+     ]
+    },
+    {
+     "t": "Tokenisation is reversible through a vault",
+     "k": [
+      "token",
+      "vault"
+     ]
+    },
+    {
+     "t": "Hashing is one-way; salt it",
+     "k": [
+      "one-way",
+      "salted hash"
+     ]
+    },
+    {
+     "t": "Encryption is reversible with the key",
+     "k": [
+      "encryption",
+      "key"
+     ]
+    },
+    {
+     "t": "Choose per use case",
+     "k": [
+      "per use case",
+      "use case"
+     ]
+    }
+   ],
+   "a": "Masking hides values from viewers, for example showing only the last four digits, while the underlying data stays intact. Tokenisation replaces the value with a token that can be reversed only through a secure vault. Hashing is one-way: a salted hash gives a consistent pseudonym for joins without revealing the value. Encryption protects data at rest and in transit and can be reversed by anyone with the key. I choose per use case: masking for analysts, salted hashes for join keys, tokenisation when some teams need the original."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "pii-handling",
+   "tg": [
+    "governance"
+   ],
+   "q": "How do you keep PII out of places it shouldn't be in a data platform?",
+   "p": [
+    {
+     "t": "Classify and tag PII columns",
+     "k": [
+      "classify",
+      "tag",
+      "catalog"
+     ]
+    },
+    {
+     "t": "Role-based access and masking policies",
+     "k": [
+      "role-based",
+      "masking polic"
+     ]
+    },
+    {
+     "t": "Keep PII out of logs",
+     "k": [
+      "logs",
+      "error messages"
+     ]
+    },
+    {
+     "t": "Synthetic or masked test data",
+     "k": [
+      "synthetic",
+      "test environment"
+     ]
+    },
+    {
+     "t": "Retention and deletion",
+     "k": [
+      "retention",
+      "delete"
+     ]
+    }
+   ],
+   "a": "First classify PII columns and tag them in the catalog, so policies can target them. Access is role-based, with masking policies so most users never see raw values. Pipelines must not write PII into logs or error messages. Test environments use synthetic or masked data, never copies of production. And retention rules delete personal data once it's no longer needed."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "cost-optimisation",
+   "tg": [
+    "snowflake",
+    "bigquery",
+    "databricks"
+   ],
+   "q": "Your cloud data platform bill doubled in six months. How would you bring it down?",
+   "p": [
+    {
+     "t": "Make costs visible by team and pipeline",
+     "k": [
+      "tag",
+      "visible",
+      "most expensive"
+     ]
+    },
+    {
+     "t": "Right-size and auto-suspend compute",
+     "k": [
+      "right-size",
+      "auto-suspend"
+     ]
+    },
+    {
+     "t": "Incremental instead of full rebuilds",
+     "k": [
+      "incremental",
+      "full rebuild"
+     ]
+    },
+    {
+     "t": "Scan less data",
+     "k": [
+      "partition",
+      "clustering",
+      "scan less"
+     ]
+    },
+    {
+     "t": "Cheaper storage tiers and budgets",
+     "k": [
+      "storage tier",
+      "budget"
+     ]
+    }
+   ],
+   "a": "First make costs visible: tag resources by team and pipeline and list the most expensive queries and jobs, since a few usually dominate. Then compute: right-size warehouses and clusters, and auto-suspend idle ones. Replace nightly full rebuilds with incremental models. Make queries scan less with partitioning, clustering and selecting only needed columns. Move cold data to cheaper storage tiers and expire old snapshots. Finally set budgets and alerts so growth is noticed early."
+  },
+  {
+   "r": [
+    "da",
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "cost-optimisation",
+   "tg": [
+    "bigquery",
+    "sql"
+   ],
+   "q": "Why can SELECT * be expensive on a cloud warehouse?",
+   "p": [
+    {
+     "t": "Columnar storage reads every column",
+     "k": [
+      "columnar",
+      "every column",
+      "by column"
+     ]
+    },
+    {
+     "t": "Billing by bytes scanned",
+     "k": [
+      "bytes scanned",
+      "billed"
+     ]
+    },
+    {
+     "t": "LIMIT doesn't reduce the scan",
+     "k": [
+      "limit",
+      "after reading"
+     ]
+    },
+    {
+     "t": "Select only what you need and filter partitions",
+     "k": [
+      "only the needed columns",
+      "partition column"
+     ]
+    }
+   ],
+   "a": "Cloud warehouses store data by column, so SELECT * reads every column from storage. On engines billed by bytes scanned, like BigQuery on demand, you pay for all of them, and adding LIMIT 10 doesn't reduce what's scanned because the limit applies after reading. Selecting only the needed columns and filtering on the partition column cuts both cost and time."
+  },
+  {
+   "r": [
+    "de",
+    "da"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "data-slas",
+   "tg": [
+    "governance"
+   ],
+   "q": "What's the difference between an SLI, an SLO and an SLA for a dataset?",
+   "p": [
+    {
+     "t": "SLI: the indicator you measure",
+     "k": [
+      "sli",
+      "indicator"
+     ]
+    },
+    {
+     "t": "SLO: the target",
+     "k": [
+      "slo",
+      "target"
+     ]
+    },
+    {
+     "t": "SLA: the promise to consumers",
+     "k": [
+      "sla",
+      "promise",
+      "agreement"
+     ]
+    },
+    {
+     "t": "An example",
+     "k": [
+      "for example",
+      "7:00"
+     ]
+    }
+   ],
+   "a": "An SLI is the indicator you measure, for example the time the finance mart finishes loading each day. An SLO is the target for it, such as loaded by 7:00 am IST on 99% of business days. An SLA is the agreement or promise made to consumers, often looser than the SLO and sometimes with consequences if it's missed."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "data-slas",
+   "tg": [
+    "airflow"
+   ],
+   "q": "A critical dataset keeps missing its SLA. What do you do?",
+   "p": [
+    {
+     "t": "Measure the breaches and find the bottleneck",
+     "k": [
+      "measure",
+      "bottleneck"
+     ]
+    },
+    {
+     "t": "Look along the critical path and upstream",
+     "k": [
+      "critical path",
+      "upstream"
+     ]
+    },
+    {
+     "t": "Use the error budget to prioritise reliability",
+     "k": [
+      "error budget",
+      "priority"
+     ]
+    },
+    {
+     "t": "Communicate with consumers",
+     "k": [
+      "communicate",
+      "consumers"
+     ]
+    },
+    {
+     "t": "Alert early and fix the slow step",
+     "k": [
+      "alert early",
+      "fix the bottleneck"
+     ]
+    }
+   ],
+   "a": "First measure: how often and by how much it's late, and where the time goes along the critical path, often a slow upstream extract or dependency. Once the error budget is used up, reliability work takes priority over new features. Meanwhile, communicate with consumers so they know when to expect data, and alert early when a run is at risk rather than after the deadline. Then fix the bottleneck, for example by making the slow step incremental or starting it earlier."
+  },
+  {
+   "r": [
+    "de",
+    "da"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "snowflake",
+   "tg": [
+    "snowflake"
+   ],
+   "q": "Explain virtual warehouses in Snowflake and how you control their cost.",
+   "p": [
+    {
+     "t": "Compute separate from storage",
+     "k": [
+      "separate from storage",
+      "storage and compute"
+     ]
+    },
+    {
+     "t": "Sized and billed in credits per second",
+     "k": [
+      "credits",
+      "per second"
+     ]
+    },
+    {
+     "t": "Auto-suspend and auto-resume",
+     "k": [
+      "auto-suspend",
+      "auto-resume"
+     ]
+    },
+    {
+     "t": "Separate warehouses per workload",
+     "k": [
+      "each workload",
+      "isolation"
+     ]
+    },
+    {
+     "t": "Multi-cluster for concurrency",
+     "k": [
+      "multi-cluster",
+      "concurrency"
+     ]
+    }
+   ],
+   "a": "A virtual warehouse is a compute cluster, separate from storage, so many warehouses can query the same data without competing. Each has a size, from X-Small up, and is billed in credits per second while running. Cost control: auto-suspend after a minute or so of idle time, auto-resume on demand, and right-size each one. I give each workload its own warehouse, such as ELT, BI and data science, for isolation, and use multi-cluster warehouses for BI concurrency peaks."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "snowflake",
+   "tg": [
+    "snowflake"
+   ],
+   "q": "What are Time Travel and zero-copy cloning in Snowflake, and how would you use them?",
+   "p": [
+    {
+     "t": "Time Travel queries or restores past data",
+     "k": [
+      "time travel",
+      "restore",
+      "undrop"
+     ]
+    },
+    {
+     "t": "Within a retention period",
+     "k": [
+      "retention",
+      "90 days"
+     ]
+    },
+    {
+     "t": "Zero-copy clones are instant and share storage",
+     "k": [
+      "zero-copy",
+      "clone",
+      "instant"
+     ]
+    },
+    {
+     "t": "Used for testing and recovery",
+     "k": [
+      "testing",
+      "recover"
+     ]
+    }
+   ],
+   "a": "Time Travel lets you query or restore data as it was at an earlier point, within the retention period, from one day up to 90 days on higher editions, and UNDROP restores dropped tables. Zero-copy cloning creates an instant copy of a table, schema or database that shares the underlying storage, so it costs nothing extra until data changes. I'd use clones for testing changes against production-like data, and Time Travel to recover from mistakes such as a bad delete."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "databricks",
+   "tg": [
+    "databricks",
+    "delta"
+   ],
+   "q": "What are the main components of the Databricks platform?",
+   "p": [
+    {
+     "t": "Delta Lake tables on cloud storage",
+     "k": [
+      "delta lake",
+      "delta tables"
+     ]
+    },
+    {
+     "t": "Unity Catalog for governance",
+     "k": [
+      "unity catalog",
+      "governance"
+     ]
+    },
+    {
+     "t": "Job clusters, all-purpose clusters and SQL warehouses",
+     "k": [
+      "job cluster",
+      "all-purpose",
+      "sql warehouse"
+     ]
+    },
+    {
+     "t": "Workflows and Delta Live Tables",
+     "k": [
+      "workflows",
+      "delta live tables"
+     ]
+    },
+    {
+     "t": "MLflow for experiments and models",
+     "k": [
+      "mlflow",
+      "experiment tracking"
+     ]
+    }
+   ],
+   "a": "Data lives in Delta Lake tables on your own cloud storage, and Unity Catalog provides governance: permissions, lineage and discovery. Compute comes as job clusters for scheduled pipelines, all-purpose clusters for interactive notebooks, and SQL warehouses for BI and SQL users. Workflows orchestrate jobs, and Delta Live Tables builds declarative pipelines with data quality expectations. MLflow handles experiment tracking and model management."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "databricks",
+   "tg": [
+    "databricks",
+    "snowflake"
+   ],
+   "q": "Databricks or Snowflake for a new data platform: how would you decide?",
+   "p": [
+    {
+     "t": "Databricks for Spark, streaming and ML",
+     "k": [
+      "spark",
+      "streaming",
+      "machine learning"
+     ]
+    },
+    {
+     "t": "Snowflake for SQL and BI simplicity",
+     "k": [
+      "sql-centric",
+      "simple managed warehouse",
+      "bi teams"
+     ]
+    },
+    {
+     "t": "Team skills",
+     "k": [
+      "team skills",
+      "skills"
+     ]
+    },
+    {
+     "t": "Compare cost on a realistic workload",
+     "k": [
+      "cost models",
+      "realistic workload"
+     ]
+    },
+    {
+     "t": "Open formats reduce lock-in",
+     "k": [
+      "iceberg",
+      "lock-in"
+     ]
+    }
+   ],
+   "a": "It depends on workloads and the team. Databricks suits heavy Spark engineering, streaming and machine learning on an open lakehouse with Delta tables in your own storage. Snowflake suits SQL-centric analytics and BI teams who want a simple managed warehouse with little tuning. Team skills matter: Python and Spark engineers versus SQL analysts. I'd also compare cost models on a realistic workload, and the ecosystem, such as existing BI tools and cloud. Both now support open formats like Iceberg, so lock-in is less of a deciding factor than before."
+  },
+  {
+   "r": [
+    "da",
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "bigquery",
+   "tg": [
+    "bigquery"
+   ],
+   "q": "How do you control BigQuery costs?",
+   "p": [
+    {
+     "t": "Partition and filter on the partition column",
+     "k": [
+      "partition",
+      "relevant days"
+     ]
+    },
+    {
+     "t": "Cluster on filtered columns",
+     "k": [
+      "cluster",
+      "commonly filtered"
+     ]
+    },
+    {
+     "t": "Select only the needed columns",
+     "k": [
+      "select *",
+      "columns needed"
+     ]
+    },
+    {
+     "t": "Dry runs and maximum bytes billed",
+     "k": [
+      "dry run",
+      "maximum bytes billed"
+     ]
+    },
+    {
+     "t": "Capacity pricing with slot reservations",
+     "k": [
+      "slot",
+      "capacity pricing"
+     ]
+    }
+   ],
+   "a": "Partition large tables by date and always filter on the partition column, so queries scan only the relevant days. Cluster by commonly filtered columns. Select only the columns needed, since SELECT * reads every column. Use a dry run to see the bytes a query will scan, and set maximum bytes billed as a guard. For heavy, steady usage, capacity pricing with slot reservations can be cheaper and more predictable than on-demand."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any",
+    "ecom"
+   ],
+   "c": "bigquery",
+   "tg": [
+    "bigquery"
+   ],
+   "q": "What are nested and repeated fields in BigQuery, and when would you use them?",
+   "p": [
+    {
+     "t": "STRUCT for nested records",
+     "k": [
+      "struct",
+      "nested"
+     ]
+    },
+    {
+     "t": "ARRAY for repeated values",
+     "k": [
+      "array",
+      "repeated"
+     ]
+    },
+    {
+     "t": "Store one-to-many data without a join",
+     "k": [
+      "one-to-many",
+      "without a separate table"
+     ]
+    },
+    {
+     "t": "Query them with UNNEST",
+     "k": [
+      "unnest",
+      "query the array"
+     ]
+    },
+    {
+     "t": "Harder for some tools, so marts may flatten",
+     "k": [
+      "harder",
+      "flatten"
+     ]
+    }
+   ],
+   "a": "A STRUCT groups related fields into a nested record, and an ARRAY holds repeated values, so one row can contain, say, an order with an array of line item structs. That stores one-to-many data without a separate table and join, which is efficient for reads. You query the array with UNNEST. The trade-off is that some BI tools and users find nested data harder to work with, so marts often flatten it."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "adf",
+   "tg": [
+    "azure"
+   ],
+   "q": "Explain the main building blocks of Azure Data Factory.",
+   "p": [
+    {
+     "t": "Pipelines of activities",
+     "k": [
+      "pipeline",
+      "activities"
+     ]
+    },
+    {
+     "t": "Copy activity moves data",
+     "k": [
+      "copy activity",
+      "moves data"
+     ]
+    },
+    {
+     "t": "Linked services and datasets",
+     "k": [
+      "linked service",
+      "dataset"
+     ]
+    },
+    {
+     "t": "Integration runtimes, including self-hosted",
+     "k": [
+      "integration runtime",
+      "self-hosted"
+     ]
+    },
+    {
+     "t": "Triggers start pipelines",
+     "k": [
+      "trigger",
+      "schedule"
+     ]
+    }
+   ],
+   "a": "A pipeline is a group of activities, such as a Copy activity that moves data, or activities that run notebooks, stored procedures and data flows. Linked services hold the connection details for each source or sink, and datasets describe the data's shape and location. The integration runtime provides compute; a self-hosted integration runtime reaches on-premises sources behind a firewall. Triggers start pipelines on a schedule, a tumbling window or an event."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "adf",
+   "tg": [
+    "azure"
+   ],
+   "q": "How would you build an incremental copy of 40 on-premises SQL Server tables with ADF?",
+   "p": [
+    {
+     "t": "A control table of tables and watermarks",
+     "k": [
+      "control table",
+      "watermark"
+     ]
+    },
+    {
+     "t": "Lookup plus a ForEach loop",
+     "k": [
+      "lookup",
+      "foreach"
+     ]
+    },
+    {
+     "t": "Parameterised copy selecting rows after the watermark",
+     "k": [
+      "parameterised",
+      "parameterized",
+      "after the watermark"
+     ]
+    },
+    {
+     "t": "Self-hosted integration runtime",
+     "k": [
+      "self-hosted",
+      "on-premises"
+     ]
+    },
+    {
+     "t": "Update the watermark after success",
+     "k": [
+      "updates the watermark",
+      "after each successful"
+     ]
+    }
+   ],
+   "a": "Keep a control table listing each table, its watermark column and the last watermark value. A Lookup activity reads it, and a ForEach loop runs a parameterised Copy activity per table, with a source query that selects rows after the watermark. The copy runs through a self-hosted integration runtime to reach on-premises SQL Server and writes Parquet to ADLS. After each successful copy, a stored procedure updates the watermark for that table."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "aws-glue-emr",
+   "tg": [
+    "aws"
+   ],
+   "q": "What roles do the Glue Data Catalog, Glue jobs, Athena and EMR play in an AWS data lake?",
+   "p": [
+    {
+     "t": "Glue Data Catalog holds table metadata",
+     "k": [
+      "data catalog",
+      "metadata"
+     ]
+    },
+    {
+     "t": "Glue jobs run serverless ETL",
+     "k": [
+      "glue jobs",
+      "serverless"
+     ]
+    },
+    {
+     "t": "Athena queries S3 with SQL",
+     "k": [
+      "athena",
+      "directly on s3"
+     ]
+    },
+    {
+     "t": "EMR runs managed Spark clusters",
+     "k": [
+      "emr",
+      "clusters"
+     ]
+    },
+    {
+     "t": "Lake Formation manages permissions",
+     "k": [
+      "lake formation",
+      "permissions"
+     ]
+    }
+   ],
+   "a": "Data sits in S3, and the Glue Data Catalog holds the table metadata: schemas, locations and partitions. Glue jobs run serverless Spark or Python ETL to clean and convert data, for example into partitioned Parquet. Athena queries those tables with SQL directly on S3, paying per data scanned. EMR runs managed Spark clusters for heavy or custom workloads. Lake Formation manages fine-grained permissions on the lake."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "aws-glue-emr",
+   "tg": [
+    "aws",
+    "spark"
+   ],
+   "q": "When would you choose EMR over AWS Glue for a Spark job?",
+   "p": [
+    {
+     "t": "Glue is simpler and serverless for standard ETL",
+     "k": [
+      "simpler",
+      "standard etl"
+     ]
+    },
+    {
+     "t": "EMR gives control over configuration and tuning",
+     "k": [
+      "control",
+      "configuration"
+     ]
+    },
+    {
+     "t": "Custom libraries or versions",
+     "k": [
+      "custom libraries",
+      "specific versions"
+     ]
+    },
+    {
+     "t": "Large, long-running jobs on spot instances",
+     "k": [
+      "long-running",
+      "spot"
+     ]
+    },
+    {
+     "t": "EMR Serverless as a middle ground",
+     "k": [
+      "emr serverless",
+      "middle ground"
+     ]
+    }
+   ],
+   "a": "Glue is simpler: serverless, little to manage, and good for standard ETL jobs. EMR is better when you need control over cluster configuration and Spark tuning, custom libraries or specific versions, or for very large, long-running jobs where spot instances and reserved capacity make it cheaper. EMR Serverless is a middle ground, keeping EMR's flexibility without managing clusters."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any",
+    "log"
+   ],
+   "c": "informatica",
+   "tg": [
+    "informatica"
+   ],
+   "q": "Explain the PowerCenter components: mappings, sessions and workflows.",
+   "p": [
+    {
+     "t": "A mapping defines the data flow through transformations",
+     "k": [
+      "mapping",
+      "transformations"
+     ]
+    },
+    {
+     "t": "Examples of transformations",
+     "k": [
+      "lookup",
+      "router",
+      "aggregator"
+     ]
+    },
+    {
+     "t": "A session runs a mapping with connections and settings",
+     "k": [
+      "session",
+      "connections"
+     ]
+    },
+    {
+     "t": "A workflow orchestrates sessions",
+     "k": [
+      "workflow",
+      "dependencies"
+     ]
+    },
+    {
+     "t": "Stored in the repository",
+     "k": [
+      "repository",
+      "versioned"
+     ]
+    }
+   ],
+   "a": "A mapping defines the data flow from sources to targets through transformations such as Source Qualifier, Expression, Lookup, Joiner, Aggregator and Router. A session is a task that runs a mapping with specific connections, commit intervals and performance settings. A workflow orchestrates sessions and other tasks with dependencies, schedules and conditions. Everything is stored and versioned in the central repository."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "informatica",
+   "tg": [
+    "informatica",
+    "dbt"
+   ],
+   "q": "How would you approach migrating PowerCenter jobs to the cloud?",
+   "p": [
+    {
+     "t": "Inventory and assess complexity",
+     "k": [
+      "inventory",
+      "complexity"
+     ]
+    },
+    {
+     "t": "Choose the target: IDMC or ELT on the warehouse",
+     "k": [
+      "idmc",
+      "elt",
+      "dbt"
+     ]
+    },
+    {
+     "t": "Automated conversion where possible",
+     "k": [
+      "automated conversion",
+      "conversion tools"
+     ]
+    },
+    {
+     "t": "Run in parallel and reconcile",
+     "k": [
+      "parallel",
+      "reconcile"
+     ]
+    },
+    {
+     "t": "Migrate in waves",
+     "k": [
+      "waves",
+      "decommission"
+     ]
+    }
+   ],
+   "a": "Start with an inventory of mappings, workflows, schedules and dependencies, and assess their complexity and usage; some jobs can simply be retired. Choose the target: IDMC for a like-for-like move, or ELT on the cloud warehouse with tools like dbt where it's a chance to modernise. Use automated conversion tools where possible, then fix the rest by hand. Run old and new in parallel and reconcile outputs, comparing counts and totals, before switching consumers. Migrate and decommission in waves."
+  }
+ ],
+ "searchChecks": [
+  [
+   "airflow xcom",
+   "airflow-deep"
+  ],
+  [
+   "dbt ref and tests",
+   "dbt-basics"
+  ],
+  [
+   "github actions ci cd",
+   "cicd-data"
+  ],
+  [
+   "terraform state",
+   "iac-terraform"
+  ],
+  [
+   "docker image",
+   "docker-data"
+  ],
+  [
+   "pipeline alerting",
+   "pipeline-monitoring"
+  ],
+  [
+   "data observability",
+   "data-observability"
+  ],
+  [
+   "data contract",
+   "data-contracts"
+  ],
+  [
+   "unit test pipeline",
+   "testing-pipelines"
+  ],
+  [
+   "masking pii",
+   "pii-handling"
+  ],
+  [
+   "reduce cloud cost",
+   "cost-optimisation"
+  ],
+  [
+   "sla slo sli",
+   "data-slas"
+  ],
+  [
+   "snowflake virtual warehouse",
+   "snowflake"
+  ],
+  [
+   "unity catalog",
+   "databricks"
+  ],
+  [
+   "bigquery slots",
+   "bigquery"
+  ],
+  [
+   "azure data factory",
+   "adf"
+  ],
+  [
+   "aws glue athena",
+   "aws-glue-emr"
+  ],
+  [
+   "powercenter",
+   "informatica"
+  ]
+ ]
+}

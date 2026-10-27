@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Datakul review</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='17' fill='%23F28C28'/%3E%3Cpath d='M15 51C27 51 39 49.5 39 42.5C39 35.5 21 37 21 30.5C21 25 31 27.5 40 27.5' fill='none' stroke='%23FFFFFF' stroke-width='5.4' stroke-linecap='round' stroke-dasharray='0.01 7.9'/%3E%3Ccircle cx='15' cy='51' r='5' fill='%23FFFFFF'/%3E%3Cpath d='M45 8V28' stroke='%2310202B' stroke-width='3.6' stroke-linecap='round'/%3E%3Cpath d='M45 8.5H56.5L53 13.25L56.5 18H45Z' fill='%2310202B' stroke='%2310202B' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Review desk for community picks: one queue, one draft open at a time, checks beside the fields they judge. */
+:root{
+  --bg:#F3F6F8; --surface:#FFFFFF; --surface-2:#EAF1F4; --ink:#10202B; --muted:#56687A; --line:#DCE4EA;
+  --accent:#0E6B8C; --accent-soft:#E0EFF5; --accent-ink:#FFFFFF; --flame:#F28C28; --flame-soft:#FFF0DD; --flame-ink:#9A4A00;
+  --de:#B4581A; --da:#1C6DB0; --ds:#A23A7A; --ar:#2D7A4C; --good:#2D7A4C; --good-soft:#E3F2E8; --bad:#B3261E; --bad-soft:#FBE7E5; --warn:#A66400; --warn-soft:#FBF0DC;
+  --shadow:0 1px 2px rgb(16 32 43 / .06),0 8px 24px rgb(16 32 43 / .07);
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif; --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0B141A; --surface:#13202A; --surface-2:#182A35; --ink:#E6EEF2; --muted:#8FA3AF; --line:#243742;
+  --accent:#5CC3E6; --accent-soft:#123444; --accent-ink:#06151C; --flame:#FFA552; --flame-soft:#2A2218; --flame-ink:#FFC27A;
+  --de:#F0A266; --da:#7DB7EC; --ds:#E68CC0; --ar:#7FCB9A; --good:#7FCB9A; --good-soft:#163024; --bad:#FF8A80; --bad-soft:#3A1A18; --warn:#E8B45A; --warn-soft:#33270F;
+  --shadow:0 1px 2px rgb(0 0 0 / .35),0 8px 24px rgb(0 0 0 / .25); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0B141A; --surface:#13202A; --surface-2:#182A35; --ink:#E6EEF2; --muted:#8FA3AF; --line:#243742;
+  --accent:#5CC3E6; --accent-soft:#123444; --accent-ink:#06151C; --flame:#FFA552; --flame-soft:#2A2218; --flame-ink:#FFC27A;
+  --de:#F0A266; --da:#7DB7EC; --ds:#E68CC0; --ar:#7FCB9A; --good:#7FCB9A; --good-soft:#163024; --bad:#FF8A80; --bad-soft:#3A1A18; --warn:#E8B45A; --warn-soft:#33270F;
+  --shadow:0 1px 2px rgb(0 0 0 / .35),0 8px 24px rgb(0 0 0 / .25); color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--f-body)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:8px}
+h1,h2,h3{font-family:var(--f-display);letter-spacing:-.02em;margin:0;text-wrap:balance}
+p{margin:0}
+.wrap{max-width:1120px;margin:0 auto;padding:20px 16px 80px}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:700;font-size:20px}
+.brand i{width:30px;height:30px;border-radius:9px;background:var(--flame);display:block}
+.brand small{font:500 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.sp{flex:1}
+.eyebrow{font:500 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:18px}
+.btn{border:0;border-radius:12px;padding:9px 16px;font-weight:700;background:var(--accent);color:var(--accent-ink)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.quiet{background:var(--surface-2);color:var(--ink)}
+.btn.good{background:var(--good);color:#fff}
+.btn.bad{background:transparent;color:var(--bad);box-shadow:inset 0 0 0 1.5px var(--bad)}
+input[type=text],input[type=password],input[type=url],select,textarea{width:100%;background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:8px 10px}
+textarea{resize:vertical;min-height:64px;line-height:1.5}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:700}
+label.f small{font-weight:400;color:var(--muted)}
+.login{max-width:460px;margin:8vh auto 0;display:flex;flex-direction:column;gap:12px}
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px 14px;min-width:110px}
+.stat b{display:block;font:700 22px var(--f-display)}
+.stat span{font-size:12.5px;color:var(--muted)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 12px}
+.tabs button{border:1.5px solid var(--line);background:transparent;border-radius:999px;padding:6px 14px;font-weight:700;font-size:14px}
+.tabs button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tabs button em{font-style:normal;font:500 12px var(--f-mono);opacity:.75;margin-left:4px}
+.grid{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.list{display:flex;flex-direction:column;gap:8px}
+.item{text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:3px}
+.item.on{border-color:var(--accent);background:var(--accent-soft)}
+.item b{font-size:15px;line-height:1.3}
+.item small{color:var(--muted);font-size:12.5px}
+.pill{display:inline-flex;align-items:center;gap:5px;font:500 11px var(--f-mono);letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:3px 8px;background:var(--surface-2);color:var(--muted)}
+.pill.ok{background:var(--good-soft);color:var(--good)}
+.pill.no{background:var(--bad-soft);color:var(--bad)}
+.pill.tr{color:#fff}
+.sec{display:flex;flex-direction:column;gap:12px;padding:14px 0;border-top:1px solid var(--line)}
+.sec:first-child{border-top:0;padding-top:0}
+.row2{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:600px){.row2{grid-template-columns:1fr}}
+.qs{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.qs li{background:var(--surface-2);border-radius:10px;padding:6px 10px;font-size:14px}
+.checks{border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.checks.ok{background:var(--good-soft)}
+.checks.no{background:var(--bad-soft)}
+.checks ul{margin:0;padding-left:18px}
+.checks .w{color:var(--warn)}
+.pt{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:start}
+@media (max-width:600px){.pt{grid-template-columns:1fr}}
+.x{border:0;background:none;color:var(--muted);font-size:20px;line-height:1;padding:6px}
+.qbox{border:1.5px dashed var(--line);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.acts{display:flex;gap:8px;flex-wrap:wrap;position:sticky;bottom:0;background:var(--surface);padding:12px 0 2px;border-top:1px solid var(--line)}
+.sim{display:flex;gap:6px;flex-wrap:wrap}
+.sim button{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 10px;font-size:13px}
+.msg{border-radius:12px;padding:10px 12px;font-size:14px;background:var(--surface-2)}
+.msg.bad{background:var(--bad-soft);color:var(--bad)}
+.msg.good{background:var(--good-soft);color:var(--good)}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.meter{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--flame)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><i aria-hidden="true"></i><span>Datakul</span><small>Review desk</small></div>
+    <span class="sp"></span>
+    <button class="btn quiet" id="runNow" type="button" hidden>Run grouping now</button>
+    <button class="btn quiet" id="signOut" type="button" hidden>Sign out</button>
+  </div>
+
+  <form class="card login" id="login">
+    <span class="eyebrow">Community picks</span>
+    <h1>Review what learners asked</h1>
+    <p class="muted" style="font-size:14.5px">Questions the library couldn't answer are grouped every night. When enough different learners ask about the same thing, the AI drafts a concept card and two interview questions, and the gateway checks them with the app's own grader. Nothing reaches learners until you approve it here.</p>
+    <label class="f">Gateway address<input type="url" id="gwIn" placeholder="https://datakul-gateway.you.workers.dev" required></label>
+    <label class="f">Admin token<input type="password" id="tokIn" autocomplete="current-password" required><small>The ADMIN_TOKEN secret. Kept only in this tab and cleared when you close it.</small></label>
+    <button class="btn" type="submit">Open the queue</button>
+    <p class="msg bad" id="loginErr" hidden></p>
+  </form>
+
+  <main id="desk" hidden>
+    <div class="stats" id="stats"></div>
+    <div class="tabs" role="group" aria-label="Queue">
+      <button type="button" data-tab="review" aria-pressed="true">Ready for review<em id="n-review"></em></button>
+      <button type="button" data-tab="open" aria-pressed="false">Gathering<em id="n-open"></em></button>
+      <button type="button" data-tab="live" aria-pressed="false">Live<em id="n-live"></em></button>
+      <button type="button" data-tab="rejected" aria-pressed="false">Rejected<em id="n-rejected"></em></button>
+    </div>
+    <div class="grid">
+      <div class="list" id="list"></div>
+      <div id="detail"></div>
+    </div>
+  </main>
+</div>
+
+<script src="config.js"></script>
+<script src="library.js"></script>
+<script>
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+const ss = { get: (k) => { try { return sessionStorage.getItem("dk_" + k) || ""; } catch (e) { return ""; } }, set: (k, v) => { try { v ? sessionStorage.setItem("dk_" + k, v) : sessionStorage.removeItem("dk_" + k); } catch (e) {} } };
+const TR = { de: "Data Engineering", da: "Data Analysis", ds: "Data Science", ar: "Data Architecture" };
+const LIB = typeof C !== "undefined" ? C : [];
+let GW = ss.get("gw") || ((window.DATAKUL_CONFIG && window.DATAKUL_CONFIG.gatewayUrl) || "");
+let TOK = ss.get("tok");
+let data = null, tab = "review", openId = null, busy = false;
+
+/* ---- similar library topics: a small TF-IDF over the library, so reviewers spot duplicates ---- */
+const STOP = new Set("a an the is are was what how do does to of in on for and or vs between explain about can you i my with why when which should it this that be use using get".split(" "));
+const toks = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, " ").split(" ").filter((w) => w.length > 1 && !STOP.has(w)).map((w) => w.replace(/(ies|ing|ed|s)$/, ""));
+const IDX = LIB.map((c) => { const m = {}; [[c.title, 4], [c.kw, 3], [c.s, 1]].forEach(([t, w]) => toks(t).forEach((x) => (m[x] = (m[x] || 0) + w))); return m; });
+const DF = {}; IDX.forEach((m) => Object.keys(m).forEach((t) => (DF[t] = (DF[t] || 0) + 1)));
+function similar(text, n = 5) {
+  const qt = [...new Set(toks(text))];
+  return LIB.map((c, i) => ({ c, s: qt.reduce((a, t) => a + (IDX[i][t] ? IDX[i][t] * Math.log(1 + LIB.length / DF[t]) : 0), 0) }))
+    .filter((x) => x.s > 6).sort((a, b) => b.s - a.s).slice(0, n);
+}
+
+/* ---- gateway calls ---- */
+async function api(path, body) {
+  const r = await fetch(GW.replace(/\/+$/, "") + "/api/admin/" + path, {
+    method: body ? "POST" : "GET",
+    headers: { authorization: "Bearer " + TOK, ...(body ? { "content-type": "application/json" } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  let j = {};
+  try { j = await r.json(); } catch (e) {}
+  if (r.status === 401) { signOut("That token didn't work."); throw new Error("unauthorised"); }
+  if (!r.ok && r.status !== 422) throw new Error(j.error || "HTTP " + r.status);
+  return j;
+}
+async function load() {
+  data = await api("queue");
+  $("#login").hidden = true; $("#desk").hidden = false; $("#runNow").hidden = false; $("#signOut").hidden = false;
+  const s = data.stats || {};
+  $("#stats").innerHTML = [[s.misses, "questions held"], [s.pending, "waiting to be grouped"], [data.review.length, "drafts to review"], [s.live, "live community picks"], [data.minAskers, "askers to draft a topic"]]
+    .map(([n, l]) => `<div class="stat"><b>${n ?? 0}</b><span>${l}</span></div>`).join("");
+  ["review", "open", "live", "rejected"].forEach((k) => ($("#n-" + k).textContent = data[k].length));
+  renderList();
+}
+function signOut(msg) {
+  TOK = ""; ss.set("tok", "");
+  $("#desk").hidden = true; $("#runNow").hidden = true; $("#signOut").hidden = true; $("#login").hidden = false;
+  const e = $("#loginErr"); e.hidden = !msg; e.textContent = msg || "";
+}
+
+/* ---- list ---- */
+const groups = () => (data ? data[tab] : []);
+function renderList() {
+  const g = groups();
+  if (!g.find((x) => x.id === openId)) openId = g[0] ? g[0].id : null;
+  $("#list").innerHTML = g.length ? g.map((x) => {
+    const title = x.draft && x.draft.concept.title ? x.draft.concept.title : x.label;
+    const chk = x.checks ? (x.checks.ok ? `<span class="pill ok">checks pass</span>` : `<span class="pill no">${x.checks.errors.length} to fix</span>`) : "";
+    return `<button class="item${x.id === openId ? " on" : ""}" type="button" data-id="${x.id}"><b>${esc(title)}</b><small>${x.askers} learner${x.askers === 1 ? "" : "s"} asked · ${x.n} question${x.n === 1 ? "" : "s"}</small><span>${chk}</span></button>`;
+  }).join("") : `<div class="card empty">${{ review: "No drafts waiting. New ones arrive after the nightly run.", open: "No groups gathering yet.", live: "Nothing approved yet.", rejected: "Nothing rejected." }[tab]}</div>`;
+  renderDetail();
+}
+
+/* ---- detail ---- */
+const field = (label, id, val, opts = {}) => opts.area
+  ? `<label class="f">${label}${opts.hint ? `<small>${opts.hint}</small>` : ""}<textarea id="${id}" rows="${opts.rows || 3}">${esc(val)}</textarea><small class="cnt" data-for="${id}" data-min="${opts.min || 0}" data-max="${opts.max || 0}"></small></label>`
+  : `<label class="f">${label}${opts.hint ? `<small>${opts.hint}</small>` : ""}<input type="text" id="${id}" value="${esc(val)}"></label>`;
+const sel = (label, id, val, list) => `<label class="f">${label}<select id="${id}">${list.map(([v, t]) => `<option value="${v}" ${v === val ? "selected" : ""}>${t}</option>`).join("")}</select></label>`;
+function checksBox(c) {
+  if (!c) return "";
+  return `<div class="checks ${c.ok ? "ok" : "no"}" id="checks"><b>${c.ok ? "All automatic checks pass" : `${c.errors.length} check${c.errors.length === 1 ? "" : "s"} failed`}</b>
+    ${c.errors.length ? `<ul>${c.errors.map((e) => `<li>${esc(e)}</li>`).join("")}</ul>` : ""}
+    ${c.warnings && c.warnings.length ? `<ul class="w">${c.warnings.map((e) => `<li>${esc(e)}</li>`).join("")}</ul>` : ""}
+    ${c.vague ? `<small class="muted">Vague test answers earned ${esc(c.vague)} key points (lower is better; each must stay at 1 or below per question).</small>` : ""}</div>`;
+}
+function qEditor(q, i) {
+  return `<div class="qbox" data-q="${i}"><span class="eyebrow">Interview question ${i + 1}</span>
+    ${field("Question", `q${i}-q`, q.q, { area: true, rows: 2 })}
+    <div class="row2">${field("Roles", `q${i}-r`, q.r.join(", "), { hint: "de, da, ds, ar" })}${sel("Level", `q${i}-l`, q.l, [["j", "Junior"], ["m", "Mid-level"], ["s", "Senior"]])}${field("Skill tags", `q${i}-tg`, q.tg.join(", "))}</div>
+    <div style="display:flex;flex-direction:column;gap:2px;font-size:13px;font-weight:700">Key points and the keywords that earn them<small class="muted" style="font-weight:400">A point counts when the answer contains any one keyword. Keep them specific.</small></div>
+    <div class="pts" id="q${i}-pts">${q.p.map((p, k) => ptRow(i, k, p)).join("")}</div>
+    <div><button class="btn quiet" type="button" data-addpt="${i}">Add a key point</button></div>
+    ${field("Model answer", `q${i}-a`, q.a, { area: true, rows: 4, hint: "Must earn every key point under the app's grader.", min: 120 })}
+  </div>`;
+}
+const ptRow = (i, k, p) => `<div class="pt" data-pt><input type="text" aria-label="Key point" value="${esc(p.t)}" data-pt-t><input type="text" aria-label="Keywords, comma separated" value="${esc(p.k.join(", "))}" data-pt-k><button class="x" type="button" data-delpt aria-label="Remove point">×</button></div>`;
+
+function renderDetail() {
+  const g = groups().find((x) => x.id === openId);
+  const host = $("#detail");
+  if (!g) { host.innerHTML = ""; return; }
+  const samples = `<div class="sec"><span class="eyebrow">What learners asked (${g.askers} different learners, ${g.n} questions)</span><ul class="qs">${g.sample.map((q) => `<li>${esc(q)}</li>`).join("")}</ul></div>`;
+  if (tab === "open") {
+    const pct = Math.min(100, Math.round((100 * g.askers) / data.minAskers));
+    host.innerHTML = `<div class="card">${samples}<div class="sec"><span class="eyebrow">Progress to a draft</span><div class="meter"><i style="width:${pct}%"></i></div><p class="muted" style="font-size:14px">${g.askers} of ${data.minAskers} learners. It's drafted automatically at the next nightly run once it reaches ${data.minAskers}. ${g.note ? esc(g.note) : ""}</p>${simHTML(g.label)}</div>
+      <div class="acts"><button class="btn" type="button" data-do="redraft">Draft it now</button><button class="btn bad" type="button" data-do="reject">Reject topic</button></div><div id="out"></div></div>`;
+    return;
+  }
+  if (tab === "rejected") {
+    host.innerHTML = `<div class="card">${samples}<div class="sec"><p class="muted">${esc(g.note || "Rejected")}. New questions on this topic keep joining this group, so it won't be drafted again unless you reopen it.</p></div><div class="acts"><button class="btn quiet" type="button" data-do="reopen">Reopen</button></div><div id="out"></div></div>`;
+    return;
+  }
+  const d = g.draft;
+  if (!d) {
+    host.innerHTML = `<div class="card">${samples}<div class="sec">${checksBox(g.checks)}<p class="muted">The model didn't return a usable draft. ${esc(g.note || "")}</p></div><div class="acts"><button class="btn" type="button" data-do="redraft">Redraft</button><button class="btn bad" type="button" data-do="reject">Reject</button></div><div id="out"></div></div>`;
+    return;
+  }
+  const c = d.concept;
+  const live = tab === "live";
+  host.innerHTML = `<div class="card">
+    ${samples}
+    <div class="sec">${checksBox(g.checks)}${simHTML(c.title + " " + c.kw)}</div>
+    <div class="sec"><span class="eyebrow">Concept card</span>
+      <div class="row2">${field("Title", "c-title", c.title)}${sel("Track", "c-t", c.t, Object.entries(TR))}${sel("Level", "c-lv", c.lv, [["F", "Foundations"], ["I", "Intermediate"], ["A", "Advanced"]])}</div>
+      ${field("Summary", "c-s", c.s, { area: true, rows: 2, min: 60, max: 330 })}
+      ${field("Details", "c-d", c.d, { area: true, rows: 6, min: 250, max: 1000 })}
+      ${field("Example", "c-e", c.e, { area: true, rows: 2, min: 60, max: 400 })}
+      ${field("Check yourself", "c-c", c.c, { area: true, rows: 2, min: 30, max: 260 })}
+      ${field("Interview angle", "c-i", c.i, { area: true, rows: 2, min: 60, max: 300 })}
+      ${field("Search keywords", "c-kw", c.kw, { area: true, rows: 2, min: 30, max: 260, hint: "Space separated. Include the words learners used." })}
+      ${field("Related library topics", "c-r", (c.r && c.r.length ? c.r : similar(c.title + " " + c.kw, 3).map((x) => x.c.id)).join(", "), { hint: "Up to 3 library ids, comma separated. Pre-filled with the closest topics." })}
+    </div>
+    <div class="sec">${d.questions.map(qEditor).join("")}</div>
+    <div class="acts">
+      ${live ? `<button class="btn good" type="button" data-do="approve">Save changes</button><button class="btn bad" type="button" data-do="reject">Withdraw from learners</button>`
+        : `<button class="btn good" type="button" data-do="approve">Approve and publish</button><button class="btn quiet" type="button" data-do="check">Run checks</button><button class="btn quiet" type="button" data-do="redraft">Redraft</button><button class="btn bad" type="button" data-do="reject">Reject</button>`}
+    </div>
+    <div id="out"></div>
+  </div>`;
+  counts();
+}
+function simHTML(text) {
+  const s = similar(text);
+  return s.length ? `<div><span class="eyebrow">Closest topics already in the library</span><div class="sim">${s.map((x) => `<button type="button" title="${esc(x.c.s)}" data-sim="${esc(x.c.id)}">${esc(x.c.title)}</button>`).join("")}</div><small class="muted">If one of these already covers it, reject the draft or fold the wording into that topic's keywords.</small></div>` : `<p class="muted" style="font-size:14px">No close match in the library.</p>`;
+}
+function counts() {
+  document.querySelectorAll(".cnt").forEach((el) => {
+    const v = ($("#" + el.dataset.for) || {}).value || "", min = +el.dataset.min, max = +el.dataset.max;
+    if (!min) { el.textContent = ""; return; }
+    el.textContent = `${v.length} characters${v.length < min ? ` · needs ${min}+` : max && v.length > max ? ` · long, aim under ${max}` : ""}`;
+    el.style.color = v.length < min ? "var(--bad)" : max && v.length > max ? "var(--warn)" : "";
+  });
+}
+const list = (v) => String(v || "").split(",").map((x) => x.trim()).filter(Boolean);
+function collect() {
+  const g = groups().find((x) => x.id === openId);
+  const v = (id) => ($("#" + id) || {}).value || "";
+  return {
+    concept: { title: v("c-title"), t: v("c-t"), lv: v("c-lv"), s: v("c-s"), d: v("c-d"), e: v("c-e"), c: v("c-c"), i: v("c-i"), kw: v("c-kw"), r: list(v("c-r")) },
+    questions: g.draft.questions.map((q, i) => ({
+      q: v(`q${i}-q`), r: list(v(`q${i}-r`)), l: v(`q${i}-l`), d: q.d, tg: list(v(`q${i}-tg`)), a: v(`q${i}-a`),
+      p: [...document.querySelectorAll(`#q${i}-pts [data-pt]`)].map((row) => ({ t: $("[data-pt-t]", row).value.trim(), k: list($("[data-pt-k]", row).value) })).filter((p) => p.t || p.k.length),
+    })),
+  };
+}
+
+/* ---- actions ---- */
+const out = (html, kind) => { const o = $("#out"); if (o) o.innerHTML = `<p class="msg ${kind || ""}" style="margin-top:12px">${html}</p>`; };
+async function act(what) {
+  if (busy) return;
+  const g = groups().find((x) => x.id === openId);
+  if (!g) return;
+  if (what === "reject" && !confirm(tab === "live" ? "Withdraw this card from every learner's app?" : "Reject this topic?")) return;
+  busy = true; document.querySelectorAll("[data-do]").forEach((b) => (b.disabled = true));
+  try {
+    if (what === "check" || what === "approve") {
+      const j = await api("decide", { id: g.id, action: what, draft: collect() });
+      g.draft = j.draft || g.draft; g.checks = j.checks || g.checks;
+      if (what === "approve" && j.ok) { out(`Published as <b>${esc(j.card.concept.title)}</b>. Learners get it the next time they open the app.`, "good"); setTimeout(load, 900); }
+      else { const c = $("#checks"); if (c) c.outerHTML = checksBox(g.checks); else renderDetail(); out(j.ok ? "All checks pass." : esc(j.error || "Some checks failed. Fix them and try again."), j.ok ? "good" : "bad"); }
+    } else if (what === "redraft") {
+      out("Drafting. This takes up to a minute…");
+      const j = await api("decide", { id: g.id, action: "redraft" });
+      await load(); tab = "review"; setTab("review"); openId = g.id; renderList();
+      out(j.group && j.group.checks && j.group.checks.ok ? "New draft ready. All checks pass." : "New draft ready. Some checks still fail.", j.group && j.group.checks && j.group.checks.ok ? "good" : "bad");
+    } else {
+      await api("decide", { id: g.id, action: what });
+      await load();
+    }
+  } catch (e) { if (e.message !== "unauthorised") out(esc(e.message), "bad"); }
+  finally { busy = false; document.querySelectorAll("[data-do]").forEach((b) => (b.disabled = false)); }
+}
+function setTab(t) { tab = t; document.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.tab === t)); }
+
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("[data-tab]"); if (t) { setTab(t.dataset.tab); openId = null; renderList(); return; }
+  const it = e.target.closest(".item[data-id]"); if (it) { openId = +it.dataset.id; renderList(); return; }
+  const d = e.target.closest("[data-do]"); if (d) { act(d.dataset.do); return; }
+  const ap = e.target.closest("[data-addpt]"); if (ap) { const box = $(`#q${ap.dataset.addpt}-pts`); box.insertAdjacentHTML("beforeend", ptRow(+ap.dataset.addpt, box.children.length, { t: "", k: [] })); return; }
+  const dp = e.target.closest("[data-delpt]"); if (dp) { dp.closest("[data-pt]").remove(); return; }
+  const sm = e.target.closest("[data-sim]"); if (sm) { const r = $("#c-r"); if (r) { const ids = list(r.value); if (!ids.includes(sm.dataset.sim)) { ids.push(sm.dataset.sim); r.value = ids.slice(-3).join(", "); } } }
+});
+document.addEventListener("input", (e) => { if (e.target.matches("textarea")) counts(); });
+$("#login").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  GW = $("#gwIn").value.trim().replace(/\/+$/, ""); TOK = $("#tokIn").value.trim();
+  try { await load(); ss.set("gw", GW); ss.set("tok", TOK); $("#tokIn").value = ""; }
+  catch (err) { if (err.message !== "unauthorised") { const m = $("#loginErr"); m.hidden = false; m.textContent = "Couldn't open the queue: " + err.message; } }
+});
+$("#signOut").addEventListener("click", () => signOut(""));
+$("#runNow").addEventListener("click", async () => {
+  const b = $("#runNow"); b.disabled = true; b.textContent = "Running…";
+  try { const j = await api("run", {}); await load(); b.textContent = `Grouped ${j.assigned || 0}, drafted ${(j.drafted || []).length}`; }
+  catch (e) { b.textContent = "Run failed"; }
+  setTimeout(() => { b.disabled = false; b.textContent = "Run grouping now"; }, 3500);
+});
+$("#gwIn").value = GW;
+if (GW && TOK) load().catch(() => {});
+</script>
+</body>
+</html>

@@ -1,0 +1,1672 @@
+{
+ "batch": 3,
+ "name": "Logistics and supply chain pack",
+ "concepts": [
+  {
+   "id": "sc-landscape",
+   "t": "de",
+   "title": "Supply chain systems: ERP, OMS, WMS and TMS",
+   "mod": "Domain pack: logistics and supply chain",
+   "lv": "F",
+   "kw": "supply chain systems erp oms wms tms sap oracle order management warehouse management transportation management system of record landscape",
+   "s": "A supply chain runs on several systems: the ERP for orders, finance and master data, the OMS for customer orders, the WMS for warehouse operations, and the TMS for planning and executing transport.",
+   "d": "The ERP, such as SAP or Oracle, is the system of record for products, customers, purchase and sales orders, and invoices. An order management system captures customer orders, promises dates and decides which warehouse or store fulfils each one. The WMS runs receiving, putaway, picking, packing and shipping inside warehouses. The TMS plans loads and routes, tenders them to carriers, tracks shipments and audits freight bills. Data moves between them through APIs, EDI and files. Knowing which system owns which data is the first step in any supply chain data project.",
+   "e": "A Bengaluru distributor's sales order is created in SAP, released to the WMS for picking, planned onto a truck in the TMS and tendered to a carrier by EDI 204. The delivery confirmation then flows back to SAP to raise the invoice.",
+   "c": "A customer asks why their order shows \"shipped\" in the ERP but has no tracking. Which systems would you check?",
+   "i": "Interviewers for supply chain data roles check that you can position ERP, OMS, WMS and TMS, and say which one is the source of truth for orders, inventory and shipments.",
+   "r": [
+    "tms-data-model",
+    "warehouse-data",
+    "edi-carriers"
+   ]
+  },
+  {
+   "id": "tms-data-model",
+   "t": "de",
+   "title": "TMS data model: shipments, loads, legs and stops",
+   "mod": "Domain pack: logistics and supply chain",
+   "lv": "I",
+   "kw": "tms data model shipment load trip leg stop order lane carrier equipment grain allocation movement",
+   "s": "A TMS models freight as orders and shipments that are planned onto loads, which travel in legs between stops. Getting these grains right is the key to transport analytics.",
+   "d": "An order or order line is what the customer wants delivered. A shipment is a quantity moving from an origin to a destination, often split from or consolidated across orders. A load, also called a trip or movement, is one vehicle's journey with a carrier, an equipment type and a sequence of pickup and drop stops; long moves are split into legs. Costs are rated at load or leg level and then allocated back to shipments and orders. Reference data covers locations, lanes (origin and destination pairs), carriers, service levels and equipment. Most reporting errors come from joining at the wrong grain.",
+   "e": "Load L-1001 picks up shipments S-1 and S-2 in Pune and delivers them to Mumbai and Thane: one load, two shipments, three stops. Its ₹42,000 cost is allocated to the two shipments by weight.",
+   "c": "Why does summing load cost after joining loads to shipments overstate freight spend?",
+   "i": "Expect a modelling question: design tables for orders, shipments, loads and stops, and explain how you allocate load cost back to orders.",
+   "r": [
+    "load-building",
+    "freight-rating",
+    "star-schema"
+   ]
+  },
+  {
+   "id": "load-building",
+   "t": "de",
+   "title": "Load building and consolidation",
+   "mod": "Domain pack: logistics and supply chain",
+   "lv": "I",
+   "kw": "load building consolidation optimisation truckload ftl ptl ltl utilisation weight cube volume pallet multi-stop vehicle fill",
+   "s": "Load building groups shipments onto vehicles to fill capacity and cut the cost per unit, while respecting delivery windows and vehicle limits.",
+   "d": "Consolidation combines shipments travelling the same way into one truckload instead of several part-loads. The planner, or the TMS optimiser, balances weight and volume (cube) limits, equipment type, delivery time windows, stop sequence, and compatibility rules such as not mixing food with chemicals. Multi-stop loads save money but add stops and delay risk; pooling and cross-docking are related strategies. The data needed is shipment weight, volume, pallet count, ready and due dates, and lane. Typical metrics are weight and cube utilisation, cost per kg and stops per load.",
+   "e": "Five part-load shipments of about 3 tonnes each from a Chennai plant to Bengaluru dealers are consolidated onto one 16-tonne truck with four stops, cutting the cost per kg by about 35%.",
+   "c": "A truck is at 95% of its weight limit but only 50% of its volume. What does that tell you about the freight?",
+   "i": "Expect questions on what limits a load (weight, cube, time windows), how to measure utilisation, and the trade-offs of multi-stop consolidation.",
+   "r": [
+    "tms-data-model",
+    "freight-rating",
+    "route-optimisation"
+   ]
+  },
+  {
+   "id": "edi-carriers",
+   "t": "de",
+   "title": "Carrier connectivity and EDI (204, 990, 214, 210)",
+   "mod": "Domain pack: logistics and supply chain",
+   "lv": "I",
+   "kw": "edi x12 204 990 214 210 997 tender acceptance shipment status invoice carrier connectivity edifact as2 van integration",
+   "s": "Shippers and carriers exchange tenders, acceptances, tracking updates and invoices as standard EDI messages, increasingly alongside APIs.",
+   "d": "In the ANSI X12 standard, widely used in North America, the 204 is the motor carrier load tender, the 990 is the carrier's accept or decline response, the 214 carries shipment status updates such as pickup, in transit and delivered, and the 210 is the freight invoice. A 997 functional acknowledgement confirms that a message was received and parsed. Europe and much of Asia use EDIFACT equivalents such as IFTMIN and IFTSTA, and many Indian carriers connect through APIs, portals or files instead. Messages travel over VANs or AS2 connections and are mapped into the TMS. Data engineers handle parsing, status-code mapping, duplicates and late messages.",
+   "e": "The TMS sends a 204 tender for load L-1001. The carrier replies with a 990 accept within 30 minutes, sends 214 updates at pickup and delivery, and later bills with a 210 that the TMS audits against the agreed rate.",
+   "c": "A carrier sends the same 214 delivery message twice, and another one out of order. How should your pipeline handle it?",
+   "i": "Logistics interviews expect you to know what the 204, 990, 214 and 210 are, the order they flow in, and the data quality problems each one brings.",
+   "r": [
+    "shipment-visibility",
+    "freight-settlement",
+    "file-ingestion"
+   ]
+  },
+  {
+   "id": "shipment-visibility",
+   "t": "de",
+   "title": "Shipment visibility and tracking events",
+   "mod": "Domain pack: logistics and supply chain",
+   "lv": "I",
+   "kw": "shipment visibility tracking events gps telematics eta status in transit delivered exception dwell real time track and trace",
+   "s": "Visibility means knowing where every shipment is and when it will arrive, built from a stream of tracking events from carriers, GPS devices and visibility platforms.",
+   "d": "Events arrive from EDI 214s, carrier APIs, telematics and GPS pings, driver apps and visibility providers. Each must be mapped to a standard status (picked up, in transit, arrived, delivered, exception), deduplicated, and ordered by event time rather than arrival time, because messages arrive late and out of order. From the event history you derive the current status, actual pickup and delivery times, dwell time at stops, and a predicted ETA. Exceptions such as delays and missed appointments trigger alerts. Coverage, the share of loads with timely tracking, is a key quality measure.",
+   "e": "A load's GPS pings stop for three hours near Krishnagiri. The visibility pipeline flags a possible breakdown, the ETA model moves arrival from 18:00 to 21:30, and the customer is notified automatically.",
+   "c": "Why should the current status be derived by event time rather than the time the message arrived?",
+   "i": "Expect design questions on tracking pipelines: standardising events, late and duplicate events, ETA prediction and alerting.",
+   "r": [
+    "edi-carriers",
+    "control-tower",
+    "batch-stream"
+   ]
+  },
+  {
+   "id": "freight-rating",
+   "t": "de",
+   "title": "Freight rating and tariffs",
+   "mod": "Domain pack: logistics and supply chain",
+   "lv": "I",
+   "kw": "freight rating rate tariff lane rate per km slab accessorial fuel surcharge detention minimum charge contract rate cost ltl ftl parcel",
+   "s": "Freight rating calculates what a shipment or load should cost from contracted rates, tariffs, accessorial charges and fuel surcharges.",
+   "d": "Rates depend on the mode and the agreement. Full truckload is usually priced per trip or per km on a lane; part-load and LTL by weight, distance band and freight class; parcel by weight slab and zone. On top come accessorials such as detention, loading, extra stops, tolls and out-of-delivery-area charges, plus a fuel surcharge that moves with diesel prices. Minimum charges, rate validity dates and currency all matter. The TMS rates loads before tendering to choose the cheapest suitable carrier, and the same rate engine checks invoices later. Rate tables change over time, so keep effective dates.",
+   "e": "A lane rate of ₹28 per km for a 32-foot truck from Pune to Hyderabad over 560 km gives ₹15,680, plus ₹1,200 for loading, plus a 9% fuel surcharge on that total: an expected cost of about ₹18,400.",
+   "c": "Why must rate tables keep effective-from and effective-to dates?",
+   "i": "Expect questions on rate structures (lane, slab, per km), accessorials and fuel surcharges, and how you'd model rate tables with history.",
+   "r": [
+    "freight-settlement",
+    "tms-data-model",
+    "scd"
+   ]
+  },
+  {
+   "id": "freight-settlement",
+   "t": "de",
+   "title": "Freight audit and settlement",
+   "mod": "Domain pack: logistics and supply chain",
+   "lv": "A",
+   "kw": "freight audit settlement invoice carrier payment rerate tolerance dispute accessorial validation cost allocation accrual self billing 210 gst",
+   "s": "Freight audit checks every carrier invoice against what was agreed and what actually happened, before settlement pays the carrier and allocates the cost.",
+   "d": "Audit matches each invoice (an EDI 210, an e-invoice or a PDF) to its load, rerates the load with the contracted rates, and validates accessorials against evidence such as gate timestamps for detention or proof of delivery. It catches duplicate invoices, wrong rates, unapproved charges and bills for cancelled loads. Invoices within tolerance are approved; the rest are disputed. Settlement then pays the carrier, sometimes by self-billing without waiting for an invoice, and accrues and allocates cost to orders, products and cost centres for margin reporting. In India, the GST treatment of freight, including reverse charge for some transport services, also has to be right.",
+   "e": "A carrier bills ₹21,500 for a load rated at ₹18,400. Audit finds a ₹2,000 detention charge with no gate timestamps and a duplicated loading fee, approves ₹18,400 and disputes the rest.",
+   "c": "Why does audit rerate the load instead of trusting the amount on the invoice?",
+   "i": "Senior logistics data roles ask how you'd design audit rules, tolerance thresholds, the dispute workflow, and cost allocation to orders.",
+   "r": [
+    "freight-rating",
+    "edi-carriers",
+    "data-quality"
+   ]
+  },
+  {
+   "id": "warehouse-data",
+   "t": "de",
+   "title": "Warehouse operations data: receiving, picking, slotting",
+   "mod": "Domain pack: logistics and supply chain",
+   "lv": "I",
+   "kw": "warehouse wms receiving putaway picking packing dispatch slotting asn 856 wave pick rate lines per hour dock to stock cycle count location",
+   "s": "A WMS records every movement inside a warehouse, from receiving and putaway to picking, packing and dispatch, and that data drives productivity and accuracy analytics.",
+   "d": "Inbound, advance shipping notices (ASNs, EDI 856) tell the warehouse what's coming, and receipts are checked and put away into locations. Outbound, orders are released in waves or batches, pickers follow pick lists, and items are packed and loaded. Every task has timestamps, a user, a location and a quantity, so you can measure lines picked per hour, pick accuracy, dock-to-stock time and order cycle time. Slotting places fast-moving SKUs near packing to cut travel. Inventory is held at location level, and cycle counts reconcile system stock with physical stock.",
+   "e": "Analysis of a Mumbai DC's pick tasks shows 20% of SKUs account for 80% of picks. Re-slotting those SKUs into golden-zone locations near packing raises picking from 95 to 120 lines per hour.",
+   "c": "Which timestamps would you need to measure dock-to-stock time?",
+   "i": "Expect questions on WMS data grains (task, order line, location), productivity metrics, and slotting analysis with ABC classification.",
+   "r": [
+    "inventory-analytics",
+    "sc-landscape",
+    "logistics-kpis"
+   ]
+  },
+  {
+   "id": "inventory-analytics",
+   "t": "de",
+   "title": "Inventory and replenishment analytics",
+   "mod": "Domain pack: logistics and supply chain",
+   "lv": "I",
+   "kw": "inventory stock replenishment safety stock reorder point turns days of supply fill rate stockout abc analysis service level snapshot semi-additive",
+   "s": "Inventory analytics balances having enough stock to meet demand against the cost of holding too much, using safety stock, reorder points and turnover measures.",
+   "d": "Key measures are stock on hand, inventory turns (cost of goods sold divided by average inventory), days of supply, fill rate and stock-outs. The reorder point is expected demand during the lead time plus safety stock, and safety stock grows with demand variability, lead time variability and the target service level. ABC analysis focuses attention on the few SKUs that drive most of the value, and XYZ analysis adds demand variability. The data needed is daily stock snapshots by SKU and location, demand history, lead times and open purchase orders. Snapshots can be summed across products but not across days.",
+   "e": "A SKU sells 40 units a day with a 5-day lead time and 60 units of safety stock, so its reorder point is 40 × 5 + 60 = 260 units.",
+   "c": "Why can't you sum daily stock snapshots across a month to get total inventory?",
+   "i": "Expect the formulas (reorder point, turns, days of supply), ABC analysis, and modelling inventory snapshots as semi-additive facts.",
+   "r": [
+    "warehouse-data",
+    "forecasting",
+    "star-schema"
+   ]
+  },
+  {
+   "id": "logistics-kpis",
+   "t": "de",
+   "title": "Logistics KPIs: OTIF, cost per shipment and dwell time",
+   "mod": "Domain pack: logistics and supply chain",
+   "lv": "F",
+   "kw": "logistics kpi otif on time in full transit time cost per shipment cost per kg dwell detention tender acceptance carrier scorecard",
+   "s": "Logistics performance is tracked with a few KPIs: on-time in-full delivery, cost per unit shipped, transit time, and how long vehicles wait at facilities.",
+   "d": "OTIF counts orders delivered both on time, within the agreed window, and in full, with the complete quantity. The definition must state the window, which date counts (requested or promised) and the grain (order or line). Cost measures include freight cost per shipment, per kg and as a percentage of sales. Transit time runs from pickup to delivery; dwell or detention time is the wait at a pickup or delivery location beyond the free time. Carrier scorecards add tender acceptance rate and tracking coverage. Write a definition for every KPI, because arguments about what counts as on time waste more time than bad data.",
+   "e": "Of 1,200 deliveries in October, 1,104 were on time and 1,150 were in full, but only 1,068 were both, so OTIF is 89%: lower than the on-time rate (92%) or the in-full rate (95.8%).",
+   "c": "Why is OTIF lower than both the on-time rate and the in-full rate?",
+   "i": "Interviewers ask you to define OTIF precisely, choose its grain, and explain how you'd build a carrier scorecard.",
+   "r": [
+    "kpi-metrics",
+    "shipment-visibility",
+    "freight-rating"
+   ]
+  },
+  {
+   "id": "route-optimisation",
+   "t": "de",
+   "title": "Route optimisation and last-mile delivery",
+   "mod": "Domain pack: logistics and supply chain",
+   "lv": "A",
+   "kw": "route optimisation vehicle routing problem vrp travelling salesman tsp last mile time windows geocoding distance matrix or-tools heuristics delivery",
+   "s": "Route optimisation decides which vehicle visits which stops and in what order, to minimise distance and cost while meeting time windows and capacity limits.",
+   "d": "This is the vehicle routing problem (VRP), an extension of the travelling salesman problem with several vehicles, capacity limits and delivery time windows. Exact solutions are only practical for small cases, so solvers such as Google OR-Tools use heuristics and metaheuristics. The inputs are geocoded addresses, a distance or travel-time matrix, service time at each stop, vehicle capacities and shift limits. Last-mile delivery adds failed-delivery risk, cash on delivery, and traffic that changes by the hour; in Indian cities, geocoding free-text addresses is often the biggest problem. Compare planned and actual routes to improve the inputs.",
+   "e": "A Bengaluru grocery hub routes 180 drops across 12 vans with two-hour delivery slots. Optimised routes cut total distance by 18% and late deliveries by half compared with zone-based manual planning.",
+   "c": "Why does poor address geocoding hurt route optimisation more than a weaker solver does?",
+   "i": "Expect to explain VRP constraints, why heuristics are used, and the data you'd need, including how you'd measure plan against actual.",
+   "r": [
+    "load-building",
+    "logistics-kpis",
+    "capacity-planning"
+   ]
+  },
+  {
+   "id": "capacity-planning",
+   "t": "de",
+   "title": "Demand and capacity planning",
+   "mod": "Domain pack: logistics and supply chain",
+   "lv": "A",
+   "kw": "capacity planning demand planning forecast lanes trucks drivers docks labour peak season diwali spot market scenario planning",
+   "s": "Capacity planning matches forecast freight volumes with the trucks, drivers, docks and warehouse labour needed to move them, before the peak arrives.",
+   "d": "It starts from a demand forecast by lane, week and mode, converted into the capacity needed: truckloads, vehicle types, dock slots and labour hours. Compare that with committed carrier capacity and contracts, and plan for the gaps with spot market buying, temporary labour or pre-building inventory. In India, festive peaks such as Diwali, harvest seasons and monsoon disruption shape both demand and transit times. Scenario planning (best, base and worst case) and tracking forecast accuracy by lane keep the plan honest.",
+   "e": "The forecast shows Delhi to Lucknow volume rising from 40 to 70 truckloads a week in the three weeks before Diwali, so the team contracts 20 extra trucks and plans to buy the rest on the spot market.",
+   "c": "Why plan capacity by lane and week instead of using one national monthly forecast?",
+   "i": "Senior roles ask how you'd turn a demand forecast into capacity needs, and how you'd handle peaks and forecast error.",
+   "r": [
+    "forecasting",
+    "route-optimisation",
+    "logistics-kpis"
+   ]
+  },
+  {
+   "id": "control-tower",
+   "t": "de",
+   "title": "Supply chain control tower analytics",
+   "mod": "Domain pack: logistics and supply chain",
+   "lv": "A",
+   "kw": "control tower visibility exceptions alerts end to end orders shipments inventory dashboard predictive delays resolution canonical model",
+   "s": "A control tower is one place where teams see orders, inventory and shipments end to end, get alerted to exceptions, and act before customers notice.",
+   "d": "It combines data from the ERP, OMS, WMS, TMS, carriers and visibility platforms into a shared model of orders, shipments and events. Rules and models detect exceptions such as late pickups, stock-outs, missed appointments and predicted delays, and route them to the right team with a recommended action. Good control towers rank exceptions by business impact rather than by count, and track how quickly each one is resolved. Underneath, the data platform needs near-real-time ingestion, a canonical shipment model and reliable identifiers across systems.",
+   "e": "The control tower flags 14 shipments for a key customer that are at risk of missing tomorrow's delivery window, ranked by order value, and the transport team moves 3 loads to a faster carrier.",
+   "c": "Why rank exceptions by business impact rather than by count?",
+   "i": "Architecture interviews ask what data and integrations a control tower needs, how you'd model exceptions, and how you'd avoid alert fatigue.",
+   "r": [
+    "shipment-visibility",
+    "logistics-kpis",
+    "sc-landscape"
+   ]
+  }
+ ],
+ "questions": [
+  {
+   "r": [
+    "de",
+    "da",
+    "ar"
+   ],
+   "l": "j",
+   "d": [
+    "log"
+   ],
+   "c": "sc-landscape",
+   "tg": [
+    "edi",
+    "api"
+   ],
+   "q": "Explain the roles of the ERP, WMS and TMS in a supply chain.",
+   "p": [
+    {
+     "t": "ERP: system of record for master data, orders and finance",
+     "k": [
+      "erp",
+      "system of record",
+      "master data"
+     ]
+    },
+    {
+     "t": "WMS: warehouse operations such as picking",
+     "k": [
+      "wms",
+      "warehouse",
+      "picking"
+     ]
+    },
+    {
+     "t": "TMS: transport planning, tendering, tracking, freight audit",
+     "k": [
+      "tms",
+      "transport",
+      "tender"
+     ]
+    },
+    {
+     "t": "How they integrate",
+     "k": [
+      "integrat",
+      "edi",
+      "api"
+     ]
+    }
+   ],
+   "a": "The ERP, such as SAP, is the system of record for master data, sales and purchase orders, and finance, including invoicing. The WMS runs operations inside the warehouse: receiving, putaway, picking, packing and shipping. The TMS plans transport, builds loads, tenders them to carriers, tracks shipments and audits freight invoices. They're integrated through APIs, EDI and files: orders flow from the ERP to the WMS and TMS, and shipment confirmations flow back to the ERP so it can invoice the customer."
+  },
+  {
+   "r": [
+    "ar",
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "log"
+   ],
+   "c": "sc-landscape",
+   "tg": [
+    "edi"
+   ],
+   "q": "An order shows as shipped in the ERP, but the customer can't track it. How do you investigate?",
+   "p": [
+    {
+     "t": "Trace the order across systems by its references",
+     "k": [
+      "reference",
+      "identifier",
+      "order number"
+     ]
+    },
+    {
+     "t": "Check the WMS dispatch confirmation",
+     "k": [
+      "wms",
+      "dispatch"
+     ]
+    },
+    {
+     "t": "Check the TMS load, tender and tracking reference",
+     "k": [
+      "tms",
+      "tender",
+      "load"
+     ]
+    },
+    {
+     "t": "Check carrier status messages",
+     "k": [
+      "214",
+      "status message",
+      "carrier"
+     ]
+    },
+    {
+     "t": "Fix the gap and add monitoring",
+     "k": [
+      "monitor",
+      "alert"
+     ]
+    }
+   ],
+   "a": "I'd trace the order across systems using its references: the order number, delivery number and load or shipment reference. First the WMS, to confirm it was really dispatched and on which load. Then the TMS, to check the load exists, was tendered and accepted by a carrier, and has a tracking reference. Then the carrier side: are 214 status messages or API updates arriving for it? Usually the gap is a missing reference or a failed interface message, so after fixing it I'd add monitoring that alerts when shipped orders have no tracking after a few hours."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "m",
+   "d": [
+    "log"
+   ],
+   "c": "tms-data-model",
+   "tg": [
+    "data modeling",
+    "sql"
+   ],
+   "q": "Design the core tables for a TMS analytics model.",
+   "p": [
+    {
+     "t": "Separate grains for orders, shipments, loads and stops",
+     "k": [
+      "grain",
+      "shipments",
+      "loads",
+      "stops"
+     ]
+    },
+    {
+     "t": "A bridge for the many-to-many link between shipments and loads",
+     "k": [
+      "bridge",
+      "many-to-many",
+      "mapping table"
+     ]
+    },
+    {
+     "t": "Dimensions: carrier, lane, location, equipment, date",
+     "k": [
+      "dimension",
+      "carrier",
+      "lane"
+     ]
+    },
+    {
+     "t": "Cost at load level, allocated to shipments",
+     "k": [
+      "allocat",
+      "load level"
+     ]
+    },
+    {
+     "t": "A fact for tracking events",
+     "k": [
+      "event",
+      "status"
+     ]
+    }
+   ],
+   "a": "I'd keep each grain in its own fact: orders, shipments, loads and stops. Because a load carries many shipments and a shipment can move on several legs, a bridge table maps shipments to loads, which is a many-to-many link. Dimensions cover carrier, lane, origin and destination location, equipment type and date. Freight cost sits at load level and is allocated to shipments by weight or volume, so order-level margin reports don't double count. A separate fact holds tracking events and status changes."
+  },
+  {
+   "r": [
+    "da",
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "log"
+   ],
+   "c": "tms-data-model",
+   "tg": [
+    "sql"
+   ],
+   "q": "Your freight spend report is 40% too high after joining loads to shipments. What happened?",
+   "p": [
+    {
+     "t": "The join repeated the load cost on every shipment row",
+     "k": [
+      "fan out",
+      "fanned out",
+      "repeat",
+      "multipl"
+     ]
+    },
+    {
+     "t": "It's a grain problem",
+     "k": [
+      "grain",
+      "granularity",
+      "level of detail"
+     ]
+    },
+    {
+     "t": "Aggregate at load level first, or allocate the cost",
+     "k": [
+      "allocat",
+      "aggregate",
+      "load level"
+     ]
+    },
+    {
+     "t": "Reconcile with invoiced spend",
+     "k": [
+      "reconcil",
+      "invoice"
+     ]
+    }
+   ],
+   "a": "The join fanned out: each load has several shipments, so joining loads to shipments repeats the load cost on each shipment row, and summing it multiplies the spend. It's a grain problem. Either aggregate cost at load level before joining, or allocate each load's cost across its shipments, for example by weight, so the shipment costs add up to the load cost. Then reconcile the report total against invoiced freight spend."
+  },
+  {
+   "r": [
+    "de",
+    "da"
+   ],
+   "l": "m",
+   "d": [
+    "log"
+   ],
+   "c": "load-building",
+   "tg": [
+    "python"
+   ],
+   "q": "What constraints does a load-building optimiser have to respect?",
+   "p": [
+    {
+     "t": "Weight and volume limits",
+     "k": [
+      "weight",
+      "volume",
+      "cube"
+     ]
+    },
+    {
+     "t": "Pickup and delivery time windows",
+     "k": [
+      "time window",
+      "appointment"
+     ]
+    },
+    {
+     "t": "Equipment suited to the freight",
+     "k": [
+      "equipment",
+      "reefer",
+      "vehicle type"
+     ]
+    },
+    {
+     "t": "Maximum stops in a sensible sequence",
+     "k": [
+      "stops",
+      "sequence"
+     ]
+    },
+    {
+     "t": "Compatibility rules",
+     "k": [
+      "compatib",
+      "hazardous",
+      "mixing"
+     ]
+    }
+   ],
+   "a": "Physical limits first: maximum weight and volume, or cube, for the vehicle, and sometimes pallet positions. Then service constraints: pickup and delivery time windows and appointments, and a maximum number of stops in a sensible sequence. The equipment must suit the freight, such as a reefer for temperature-controlled goods. Finally compatibility rules, such as not mixing hazardous goods with food."
+  },
+  {
+   "r": [
+    "da"
+   ],
+   "l": "j",
+   "d": [
+    "log"
+   ],
+   "c": "load-building",
+   "tg": [
+    "sql"
+   ],
+   "q": "A truck is at 95% of its weight limit but only 50% of its volume. What does that tell you, and what would you report?",
+   "p": [
+    {
+     "t": "The freight is dense, so weight is the binding limit",
+     "k": [
+      "dense",
+      "heavy",
+      "weighs out",
+      "binding"
+     ]
+    },
+    {
+     "t": "The spare volume can't take more of the same goods",
+     "k": [
+      "volume",
+      "cube"
+     ]
+    },
+    {
+     "t": "Report both weight and cube utilisation",
+     "k": [
+      "utilisation",
+      "utilization",
+      "fill"
+     ]
+    },
+    {
+     "t": "Mix in lighter, bulky freight where lanes match",
+     "k": [
+      "mix",
+      "lighter",
+      "bulky"
+     ]
+    }
+   ],
+   "a": "The freight is dense, so the truck weighs out before it cubes out: weight is the binding constraint, and the empty volume can't be filled with more of the same goods. I'd report both weight utilisation and cube utilisation per load, because one number alone hides this. Planners can improve fill by mixing lighter, bulky freight with heavy freight on the same load where the lanes match."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "j",
+   "d": [
+    "log"
+   ],
+   "c": "edi-carriers",
+   "tg": [
+    "edi"
+   ],
+   "q": "Describe the EDI messages exchanged between a shipper and a carrier for one load.",
+   "p": [
+    {
+     "t": "204 load tender",
+     "k": [
+      "204",
+      "load tender"
+     ]
+    },
+    {
+     "t": "990 accept or decline response",
+     "k": [
+      "990",
+      "accept"
+     ]
+    },
+    {
+     "t": "214 shipment status updates",
+     "k": [
+      "214",
+      "status update"
+     ]
+    },
+    {
+     "t": "210 freight invoice",
+     "k": [
+      "210",
+      "invoice"
+     ]
+    },
+    {
+     "t": "997 functional acknowledgement",
+     "k": [
+      "997",
+      "acknowledg"
+     ]
+    }
+   ],
+   "a": "The shipper's TMS sends a 204 load tender with the stops, freight and requested times. The carrier answers with a 990 response to accept or decline. Each message is confirmed with a 997 functional acknowledgement. During transport the carrier sends 214 status updates, such as picked up, in transit and delivered. Finally the carrier bills with a 210 freight invoice, which the shipper audits against the agreed rate."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "log"
+   ],
+   "c": "edi-carriers",
+   "tg": [
+    "edi"
+   ],
+   "q": "Carrier 214 messages arrive duplicated and out of order. How should your pipeline handle them?",
+   "p": [
+    {
+     "t": "Keep the raw messages",
+     "k": [
+      "raw",
+      "audit"
+     ]
+    },
+    {
+     "t": "Deduplicate on a business key",
+     "k": [
+      "dedup",
+      "duplicate"
+     ]
+    },
+    {
+     "t": "Order by event time, not arrival time",
+     "k": [
+      "event time",
+      "arrival"
+     ]
+    },
+    {
+     "t": "Map carrier codes to standard statuses",
+     "k": [
+      "standard status",
+      "map"
+     ]
+    },
+    {
+     "t": "Don't let the status move backwards",
+     "k": [
+      "backwards",
+      "regress"
+     ]
+    }
+   ],
+   "a": "I'd keep every raw message for audit, then deduplicate on a key such as load, status code, location and event timestamp. Statuses are ordered by event time, not by when the message arrived, so a late pickup message can't overwrite a delivery. Carrier-specific codes are mapped to standard statuses, and a rule stops the current status moving backwards, for example from delivered to in transit, unless the carrier sends an explicit correction."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "m",
+   "d": [
+    "log"
+   ],
+   "c": "shipment-visibility",
+   "tg": [
+    "kafka",
+    "api"
+   ],
+   "q": "Design a pipeline that shows the current status and ETA of every shipment.",
+   "p": [
+    {
+     "t": "Ingest from EDI, carrier APIs and GPS",
+     "k": [
+      "edi",
+      "api",
+      "gps",
+      "telematics"
+     ]
+    },
+    {
+     "t": "Standardise and deduplicate events",
+     "k": [
+      "standard",
+      "dedup"
+     ]
+    },
+    {
+     "t": "Current status is the latest event by event time",
+     "k": [
+      "latest event",
+      "event time"
+     ]
+    },
+    {
+     "t": "Predict the ETA",
+     "k": [
+      "eta",
+      "predict"
+     ]
+    },
+    {
+     "t": "Alert on exceptions",
+     "k": [
+      "alert",
+      "exception"
+     ]
+    }
+   ],
+   "a": "Events come from carrier EDI 214s, carrier APIs and GPS or telematics feeds into a streaming or micro-batch pipeline. Each event is mapped to a standard status and deduplicated. The current status of each shipment is the latest event by event time. An ETA model predicts arrival from distance remaining, historical transit times on the lane and live delays. Rules raise alerts for exceptions, such as no update for several hours or a predicted late arrival."
+  },
+  {
+   "r": [
+    "da"
+   ],
+   "l": "m",
+   "d": [
+    "log"
+   ],
+   "c": "shipment-visibility",
+   "tg": [
+    "sql"
+   ],
+   "q": "How would you measure the quality of your shipment tracking data?",
+   "p": [
+    {
+     "t": "Coverage: share of loads with tracking",
+     "k": [
+      "coverage",
+      "share of loads"
+     ]
+    },
+    {
+     "t": "Completeness of key milestones",
+     "k": [
+      "milestone",
+      "missing"
+     ]
+    },
+    {
+     "t": "Timeliness of updates",
+     "k": [
+      "timeliness",
+      "late",
+      "latency"
+     ]
+    },
+    {
+     "t": "Accuracy against proof of delivery",
+     "k": [
+      "proof of delivery",
+      "accuracy"
+     ]
+    },
+    {
+     "t": "Reported per carrier",
+     "k": [
+      "per carrier",
+      "scorecard"
+     ]
+    }
+   ],
+   "a": "Coverage first: the share of loads with any tracking, and the share with every key milestone from pickup to delivery, so missing milestones are visible. Then timeliness: how long after the event each update arrives, since late updates are useless for alerts. Accuracy can be checked by comparing reported delivery times with proof of delivery. I'd report all of this per carrier as a scorecard, because quality varies widely between carriers."
+  },
+  {
+   "r": [
+    "de",
+    "da"
+   ],
+   "l": "m",
+   "d": [
+    "log"
+   ],
+   "c": "freight-rating",
+   "tg": [
+    "data modeling",
+    "sql"
+   ],
+   "q": "How would you model carrier rate tables in a data warehouse?",
+   "p": [
+    {
+     "t": "Keyed by carrier, lane, equipment and mode",
+     "k": [
+      "carrier",
+      "lane",
+      "equipment"
+     ]
+    },
+    {
+     "t": "A rate basis: per trip, per km or weight slab",
+     "k": [
+      "per km",
+      "slab",
+      "per trip",
+      "rate basis"
+     ]
+    },
+    {
+     "t": "Effective dates to keep history",
+     "k": [
+      "effective",
+      "history"
+     ]
+    },
+    {
+     "t": "Accessorials and fuel surcharge in their own tables",
+     "k": [
+      "accessorial",
+      "fuel surcharge"
+     ]
+    },
+    {
+     "t": "Minimum charges",
+     "k": [
+      "minimum",
+      "min charge",
+      "floor"
+     ]
+    }
+   ],
+   "a": "Each rate row is keyed by carrier, lane (origin and destination), equipment type and mode, with a rate basis such as per trip, per km or weight slab. Rows carry effective-from and effective-to dates so history is kept, like an SCD Type 2 table, and any shipment can be rated with the rate valid on its ship date. Accessorials and the fuel surcharge sit in their own tables, and minimum charges are stored with each rate."
+  },
+  {
+   "r": [
+    "da"
+   ],
+   "l": "j",
+   "d": [
+    "log"
+   ],
+   "c": "freight-rating",
+   "tg": [
+    "excel"
+   ],
+   "q": "Calculate the expected cost of a 560 km load at ₹28 per km, with a ₹1,200 loading charge and a 9% fuel surcharge on the linehaul only.",
+   "p": [
+    {
+     "t": "Linehaul is 560 × 28 = ₹15,680",
+     "k": [
+      "15,680",
+      "linehaul"
+     ]
+    },
+    {
+     "t": "Fuel surcharge on the linehaul is ₹1,411.20",
+     "k": [
+      "1,411",
+      "fuel surcharge"
+     ]
+    },
+    {
+     "t": "Add the ₹1,200 loading accessorial",
+     "k": [
+      "1,200",
+      "loading"
+     ]
+    },
+    {
+     "t": "Total about ₹18,291",
+     "k": [
+      "18,291",
+      "total"
+     ]
+    }
+   ],
+   "a": "The linehaul is 560 km × ₹28 = ₹15,680. The 9% fuel surcharge applies to the linehaul only, so it's ₹1,411.20. Adding the ₹1,200 loading accessorial gives a total of ₹18,291.20, about ₹18,291. I'd also check whether a minimum charge applies on the lane, though here the rated amount is well above any typical minimum."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "log"
+   ],
+   "c": "freight-settlement",
+   "tg": [
+    "edi",
+    "sql"
+   ],
+   "q": "Design an automated freight audit process.",
+   "p": [
+    {
+     "t": "Match each invoice to its load",
+     "k": [
+      "match",
+      "invoice"
+     ]
+    },
+    {
+     "t": "Rerate with the contracted rates",
+     "k": [
+      "rerate",
+      "contract rate"
+     ]
+    },
+    {
+     "t": "Validate accessorials against evidence",
+     "k": [
+      "accessorial",
+      "evidence",
+      "proof of delivery"
+     ]
+    },
+    {
+     "t": "Auto-approve within a tolerance threshold",
+     "k": [
+      "tolerance",
+      "threshold",
+      "auto-approve"
+     ]
+    },
+    {
+     "t": "Disputes and duplicate detection",
+     "k": [
+      "dispute",
+      "duplicate"
+     ]
+    }
+   ],
+   "a": "Each invoice is matched to its load using the load or shipment reference, and invoices for cancelled or unknown loads are rejected. The load is rerated with the contract rates valid on the ship date and compared with the billed amount. Accessorials such as detention are validated against evidence like gate timestamps and proof of delivery. Differences within a tolerance threshold are auto-approved, and anything outside goes to a dispute workflow. Duplicate invoices are caught by checking invoice numbers and amounts."
+  },
+  {
+   "r": [
+    "da",
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "log"
+   ],
+   "c": "freight-settlement",
+   "tg": [
+    "sql"
+   ],
+   "q": "How would you allocate a load's freight cost to the orders on it?",
+   "p": [
+    {
+     "t": "Choose an allocation driver such as weight or volume",
+     "k": [
+      "driver",
+      "weight",
+      "volume"
+     ]
+    },
+    {
+     "t": "Shares add up exactly to the load cost",
+     "k": [
+      "proportional",
+      "add up",
+      "sum"
+     ]
+    },
+    {
+     "t": "Weight by distance on multi-stop loads",
+     "k": [
+      "distance",
+      "multi-stop"
+     ]
+    },
+    {
+     "t": "Assign accessorials to the order that caused them",
+     "k": [
+      "accessorial",
+      "caused"
+     ]
+    },
+    {
+     "t": "Handle rounding remainders",
+     "k": [
+      "rounding",
+      "remainder"
+     ]
+    }
+   ],
+   "a": "Pick an allocation driver that reflects what used the capacity, usually weight or volume, sometimes pallet positions, whichever binds. Each order gets a proportional share, so the allocated costs add up exactly to the load cost. On multi-stop loads I'd weight by distance too, since a drop at the far end uses more of the trip. Accessorials go to the order that caused them, such as detention at one customer's stop. Rounding remainders go to the largest order so the totals reconcile."
+  },
+  {
+   "r": [
+    "da",
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "log"
+   ],
+   "c": "warehouse-data",
+   "tg": [
+    "sql",
+    "power bi"
+   ],
+   "q": "Which metrics would you build for a warehouse operations dashboard, and from what data?",
+   "p": [
+    {
+     "t": "Productivity: lines picked per hour",
+     "k": [
+      "lines per hour",
+      "pick rate",
+      "productivity"
+     ]
+    },
+    {
+     "t": "Accuracy of picking and shipping",
+     "k": [
+      "accuracy",
+      "error"
+     ]
+    },
+    {
+     "t": "Dock-to-stock time",
+     "k": [
+      "dock-to-stock",
+      "dock to stock"
+     ]
+    },
+    {
+     "t": "Order cycle time",
+     "k": [
+      "cycle time",
+      "release to dispatch",
+      "lead time"
+     ]
+    },
+    {
+     "t": "Built from WMS task timestamps",
+     "k": [
+      "task",
+      "timestamp"
+     ]
+    }
+   ],
+   "a": "Productivity as lines picked per hour per picker and shift, accuracy as the share of order lines picked and shipped without error, dock-to-stock time for inbound, and order cycle time from release to dispatch for outbound. All of these come from WMS task data: each receiving, putaway, pick and pack task has timestamps, a user, a location and a quantity, so the metrics are aggregations over tasks."
+  },
+  {
+   "r": [
+    "da"
+   ],
+   "l": "m",
+   "d": [
+    "log"
+   ],
+   "c": "warehouse-data",
+   "tg": [
+    "sql"
+   ],
+   "q": "How would you use data to improve warehouse slotting?",
+   "p": [
+    {
+     "t": "ABC analysis by pick frequency",
+     "k": [
+      "abc",
+      "pick frequency",
+      "velocity"
+     ]
+    },
+    {
+     "t": "Fast movers into the golden zone near packing",
+     "k": [
+      "golden zone",
+      "near packing",
+      "travel"
+     ]
+    },
+    {
+     "t": "Fit locations to item size and weight",
+     "k": [
+      "size",
+      "weight"
+     ]
+    },
+    {
+     "t": "Keep items picked together close",
+     "k": [
+      "affinity",
+      "together"
+     ]
+    },
+    {
+     "t": "Measure before and after",
+     "k": [
+      "before and after",
+      "measure"
+     ]
+    }
+   ],
+   "a": "Rank SKUs by pick frequency from the WMS pick history, which is an ABC analysis by velocity. The fast-moving A items go into the golden zone, at waist height near packing, to cut travel time. Item size and weight decide which locations fit, and affinity analysis keeps items that are often picked together close to each other. Then I'd measure lines per hour and travel distance before and after re-slotting to confirm the gain."
+  },
+  {
+   "r": [
+    "da",
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "log",
+    "ecom"
+   ],
+   "c": "inventory-analytics",
+   "tg": [
+    "statistics",
+    "excel"
+   ],
+   "q": "How do you calculate a reorder point and safety stock?",
+   "p": [
+    {
+     "t": "Reorder point is demand during lead time plus safety stock",
+     "k": [
+      "reorder point",
+      "lead time"
+     ]
+    },
+    {
+     "t": "Safety stock covers demand variability",
+     "k": [
+      "variability",
+      "standard deviation"
+     ]
+    },
+    {
+     "t": "Set by a target service level",
+     "k": [
+      "service level",
+      "z"
+     ]
+    },
+    {
+     "t": "Include lead time variability",
+     "k": [
+      "lead time variability",
+      "supplier"
+     ]
+    },
+    {
+     "t": "A worked example",
+     "k": [
+      "example",
+      "units"
+     ]
+    }
+   ],
+   "a": "The reorder point is expected demand during the lead time plus safety stock. Safety stock protects against variability: a common formula is z × the standard deviation of daily demand × the square root of the lead time, where z comes from the target service level, for example 1.65 for 95%. If supplier lead times also vary, that variability is added too. For example, 40 units a day over a 5-day lead time with 60 units of safety stock gives a reorder point of 260 units."
+  },
+  {
+   "r": [
+    "da",
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "log",
+    "any"
+   ],
+   "c": "inventory-analytics",
+   "tg": [
+    "sql",
+    "data modeling"
+   ],
+   "q": "Why can't you sum daily inventory snapshots across a month, and how do you report monthly inventory?",
+   "p": [
+    {
+     "t": "Snapshots repeat the full stock level every day",
+     "k": [
+      "snapshot",
+      "repeat"
+     ]
+    },
+    {
+     "t": "Inventory is semi-additive",
+     "k": [
+      "semi-additive",
+      "semi additive",
+      "not fully additive"
+     ]
+    },
+    {
+     "t": "Sum across products, not across time",
+     "k": [
+      "across products",
+      "not across time",
+      "across days"
+     ]
+    },
+    {
+     "t": "Use closing balance or average inventory",
+     "k": [
+      "closing",
+      "average"
+     ]
+    }
+   ],
+   "a": "A daily snapshot is a periodic snapshot fact: each day repeats the full stock level, so summing thirty days counts the same units thirty times. Inventory is semi-additive: you can sum across products and locations on one day, but not across time or across days. For a month, report the closing balance at month end or the average daily inventory, which is also what turns and days of supply use."
+  },
+  {
+   "r": [
+    "da"
+   ],
+   "l": "j",
+   "d": [
+    "log",
+    "ecom"
+   ],
+   "c": "logistics-kpis",
+   "tg": [
+    "sql"
+   ],
+   "q": "How would you define OTIF, and what choices must the definition make?",
+   "p": [
+    {
+     "t": "On time: within the agreed window",
+     "k": [
+      "on time",
+      "window"
+     ]
+    },
+    {
+     "t": "In full: the complete quantity",
+     "k": [
+      "in full",
+      "quantity"
+     ]
+    },
+    {
+     "t": "Both on the same order",
+     "k": [
+      "both",
+      "same order",
+      "together"
+     ]
+    },
+    {
+     "t": "Which date counts: requested or promised",
+     "k": [
+      "requested",
+      "promised"
+     ]
+    },
+    {
+     "t": "The grain: order or line",
+     "k": [
+      "grain",
+      "line level",
+      "order level"
+     ]
+    }
+   ],
+   "a": "OTIF is the share of orders delivered both on time and in full. On time means delivered within the agreed window, and in full means the complete ordered quantity arrived. The definition must state which date counts, the customer's requested date or the promised date, how wide the window is, and the grain: order level is stricter than order line level. Writing these down avoids endless arguments about the number."
+  },
+  {
+   "r": [
+    "da"
+   ],
+   "l": "m",
+   "d": [
+    "log"
+   ],
+   "c": "logistics-kpis",
+   "tg": [
+    "sql"
+   ],
+   "q": "On-time delivery is 92% and in-full is 96%, but OTIF is 89%. Explain why, and what you'd look at next.",
+   "p": [
+    {
+     "t": "OTIF needs both conditions, so it's lower than either",
+     "k": [
+      "both",
+      "lower than either"
+     ]
+    },
+    {
+     "t": "Failures only partly overlap",
+     "k": [
+      "overlap",
+      "different orders"
+     ]
+    },
+    {
+     "t": "Break failures down by reason, carrier and customer",
+     "k": [
+      "break down",
+      "reason",
+      "carrier"
+     ]
+    },
+    {
+     "t": "Find the root cause: late versus short",
+     "k": [
+      "root cause",
+      "late",
+      "short"
+     ]
+    }
+   ],
+   "a": "OTIF requires both conditions on the same order, so it's lower than either rate. Some orders were late but complete and others on time but short, and the failures only partly overlap. Next I'd break the OTIF failures down by reason, late versus short, and by carrier, lane and customer, to find the root cause: short shipments point to inventory or picking problems, late ones to transport."
+  },
+  {
+   "r": [
+    "ds",
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "log"
+   ],
+   "c": "route-optimisation",
+   "tg": [
+    "python"
+   ],
+   "q": "What is the vehicle routing problem, and why are heuristics used to solve it?",
+   "p": [
+    {
+     "t": "Assign stops to vehicles and sequence them",
+     "k": [
+      "assign",
+      "sequence"
+     ]
+    },
+    {
+     "t": "Constraints: capacity and time windows",
+     "k": [
+      "capacity",
+      "time window"
+     ]
+    },
+    {
+     "t": "NP-hard, so exact methods are too slow",
+     "k": [
+      "np-hard",
+      "exact",
+      "too slow"
+     ]
+    },
+    {
+     "t": "Heuristics find good solutions quickly",
+     "k": [
+      "heuristic",
+      "or-tools"
+     ]
+    }
+   ],
+   "a": "The vehicle routing problem decides which vehicle serves which stops and in what sequence, minimising distance or cost, subject to vehicle capacity and delivery time windows. It extends the travelling salesman problem and is NP-hard, so exact methods are too slow beyond small cases because the combinations explode. Solvers such as Google OR-Tools use heuristics and metaheuristics, like local search, to find good solutions quickly, which is what operations need every morning."
+  },
+  {
+   "r": [
+    "de",
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "log"
+   ],
+   "c": "route-optimisation",
+   "tg": [
+    "python"
+   ],
+   "q": "Planned delivery routes keep failing in practice. What data would you check?",
+   "p": [
+    {
+     "t": "Compare planned with actual GPS routes",
+     "k": [
+      "planned",
+      "actual",
+      "gps"
+     ]
+    },
+    {
+     "t": "Geocoding quality of addresses",
+     "k": [
+      "geocod",
+      "address"
+     ]
+    },
+    {
+     "t": "Travel times that ignore traffic",
+     "k": [
+      "travel time",
+      "traffic"
+     ]
+    },
+    {
+     "t": "Underestimated service time at stops",
+     "k": [
+      "service time",
+      "unloading"
+     ]
+    },
+    {
+     "t": "Feed actuals back to calibrate",
+     "k": [
+      "feed",
+      "calibrat"
+     ]
+    }
+   ],
+   "a": "I'd compare planned with actual routes using GPS traces. Usually the inputs are wrong rather than the solver: poor geocoding from free-text addresses puts stops in the wrong place, the travel time matrix ignores traffic at that hour, and service time at each stop, such as unloading and finding the customer, is underestimated. Feeding actual travel and service times back to calibrate the inputs fixes more than tuning the algorithm."
+  },
+  {
+   "r": [
+    "ds",
+    "da"
+   ],
+   "l": "s",
+   "d": [
+    "log"
+   ],
+   "c": "capacity-planning",
+   "tg": [
+    "forecasting"
+   ],
+   "q": "How would you turn a demand forecast into a transport capacity plan for the Diwali peak?",
+   "p": [
+    {
+     "t": "Forecast by lane and week",
+     "k": [
+      "lane",
+      "week"
+     ]
+    },
+    {
+     "t": "Convert volume into truckloads by vehicle type",
+     "k": [
+      "truckload",
+      "vehicle type"
+     ]
+    },
+    {
+     "t": "Compare with committed carrier capacity",
+     "k": [
+      "committed",
+      "contract"
+     ]
+    },
+    {
+     "t": "Close the gap early",
+     "k": [
+      "gap",
+      "spot market",
+      "pre-build"
+     ]
+    },
+    {
+     "t": "Scenarios sized by forecast error",
+     "k": [
+      "scenario",
+      "forecast error"
+     ]
+    }
+   ],
+   "a": "Start with the volume forecast by lane, week and mode for the weeks before Diwali. Convert it into truckloads by vehicle type using typical load sizes and utilisation. Compare that with committed contract capacity from carriers to find the gap per lane and week. Close the gap early: extra contracted carriers, a spot market budget, or pre-building inventory closer to customers. I'd plan best, base and worst case scenarios, sized by our historical forecast error."
+  },
+  {
+   "r": [
+    "da",
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "log"
+   ],
+   "c": "capacity-planning",
+   "tg": [
+    "forecasting"
+   ],
+   "q": "Why measure forecast accuracy by lane rather than in total?",
+   "p": [
+    {
+     "t": "Errors cancel out in the total",
+     "k": [
+      "cancel",
+      "offset"
+     ]
+    },
+    {
+     "t": "Capacity is needed lane by lane",
+     "k": [
+      "by lane",
+      "per lane",
+      "lane level"
+     ]
+    },
+    {
+     "t": "Track WAPE or MAPE per lane",
+     "k": [
+      "wape",
+      "mape"
+     ]
+    },
+    {
+     "t": "Focus on the high-volume lanes",
+     "k": [
+      "high-volume",
+      "biggest"
+     ]
+    }
+   ],
+   "a": "In total, over-forecasts on some lanes cancel out under-forecasts on others, so the national number can look accurate while individual lanes are badly wrong. Trucks are needed lane by lane, so that's where error hurts. I'd track WAPE or MAPE per lane and week, and focus on the high-volume lanes where errors cost the most."
+  },
+  {
+   "r": [
+    "ar",
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "log"
+   ],
+   "c": "control-tower",
+   "tg": [
+    "kafka",
+    "edi",
+    "api"
+   ],
+   "q": "What data and integrations does a supply chain control tower need?",
+   "p": [
+    {
+     "t": "Data from ERP, WMS, TMS and carriers",
+     "k": [
+      "erp",
+      "wms",
+      "tms",
+      "carrier"
+     ]
+    },
+    {
+     "t": "Near-real-time ingestion",
+     "k": [
+      "near real-time",
+      "real-time",
+      "event-driven"
+     ]
+    },
+    {
+     "t": "A canonical model of orders, shipments and events",
+     "k": [
+      "canonical",
+      "common model",
+      "shared model"
+     ]
+    },
+    {
+     "t": "Consistent identifiers across systems",
+     "k": [
+      "identifier",
+      "cross-reference"
+     ]
+    },
+    {
+     "t": "Exception rules and workflow",
+     "k": [
+      "exception",
+      "workflow"
+     ]
+    }
+   ],
+   "a": "It needs orders from the ERP and OMS, inventory and dispatches from the WMS, loads and tenders from the TMS, and tracking events from carriers and visibility platforms. Ingestion should be near real-time and event-driven where possible. Everything maps into a canonical model of orders, shipments and events, which depends on consistent identifiers and cross-references between systems. On top sit exception rules, alerts and a workflow so teams can act and record the resolution."
+  },
+  {
+   "r": [
+    "da",
+    "ar"
+   ],
+   "l": "m",
+   "d": [
+    "log"
+   ],
+   "c": "control-tower",
+   "tg": [
+    "sql"
+   ],
+   "q": "Your control tower raises 2,000 alerts a day and teams ignore them. How do you fix it?",
+   "p": [
+    {
+     "t": "Prioritise by business impact",
+     "k": [
+      "impact",
+      "priorit"
+     ]
+    },
+    {
+     "t": "Tune thresholds to cut noise",
+     "k": [
+      "threshold",
+      "noise",
+      "tune"
+     ]
+    },
+    {
+     "t": "Group related alerts",
+     "k": [
+      "group",
+      "one alert"
+     ]
+    },
+    {
+     "t": "Route each alert to an owner with an action",
+     "k": [
+      "owner",
+      "action"
+     ]
+    },
+    {
+     "t": "Measure resolution and false positives",
+     "k": [
+      "false positive",
+      "resolution"
+     ]
+    }
+   ],
+   "a": "Alert fatigue means the signal is lost. I'd prioritise alerts by business impact, such as order value, key customer and how late, so teams see the top 50 first. Thresholds get tuned to cut noise, for example ignoring a 10-minute delay on a two-day transit. Related alerts are grouped, so one late truck raises one alert, not one per order. Each alert goes to an owner with a suggested action, and we measure resolution time and the false positive rate to keep tuning."
+  }
+ ],
+ "searchChecks": [
+  [
+   "what is otif",
+   "logistics-kpis"
+  ],
+  [
+   "edi 204 214",
+   "edi-carriers"
+  ],
+  [
+   "freight audit",
+   "freight-settlement"
+  ],
+  [
+   "load consolidation",
+   "load-building"
+  ],
+  [
+   "vehicle routing",
+   "route-optimisation"
+  ],
+  [
+   "safety stock reorder point",
+   "inventory-analytics"
+  ],
+  [
+   "shipment tracking eta",
+   "shipment-visibility"
+  ],
+  [
+   "tms loads and stops",
+   "tms-data-model"
+  ],
+  [
+   "erp wms tms",
+   "sc-landscape"
+  ],
+  [
+   "warehouse slotting",
+   "warehouse-data"
+  ],
+  [
+   "diwali peak capacity",
+   "capacity-planning"
+  ],
+  [
+   "control tower",
+   "control-tower"
+  ]
+ ]
+}

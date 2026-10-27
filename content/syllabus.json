@@ -1,0 +1,2763 @@
+[
+ {
+  "id": "de-lifecycle",
+  "title": "The data engineering lifecycle",
+  "track": "de",
+  "module": "Foundations",
+  "level": "F",
+  "prereqs": [],
+  "pack": "core",
+  "status": "existing",
+  "order": 1
+ },
+ {
+  "id": "shell-for-data",
+  "title": "Linux and shell for data engineers",
+  "track": "de",
+  "module": "Foundations",
+  "level": "F",
+  "prereqs": [],
+  "pack": "core",
+  "status": "existing",
+  "order": 2
+ },
+ {
+  "id": "git-for-data",
+  "title": "Git and version control for pipelines",
+  "track": "de",
+  "module": "Foundations",
+  "level": "F",
+  "prereqs": [],
+  "pack": "core",
+  "status": "existing",
+  "order": 3
+ },
+ {
+  "id": "python-for-de",
+  "title": "Python for data engineering",
+  "track": "de",
+  "module": "Foundations",
+  "level": "F",
+  "prereqs": [],
+  "pack": "core",
+  "status": "existing",
+  "order": 4
+ },
+ {
+  "id": "sql-for-engineers",
+  "title": "SQL for engineers: DDL, DML and transactions",
+  "track": "de",
+  "module": "Foundations",
+  "level": "F",
+  "prereqs": [],
+  "pack": "core",
+  "status": "existing",
+  "order": 5
+ },
+ {
+  "id": "encodings-timezones",
+  "title": "Data types, encodings and time zones",
+  "track": "de",
+  "module": "Foundations",
+  "level": "F",
+  "prereqs": [
+   "python-for-de"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 6
+ },
+ {
+  "id": "apis-json",
+  "title": "APIs and JSON for data ingestion",
+  "track": "de",
+  "module": "Foundations",
+  "level": "F",
+  "prereqs": [
+   "python-for-de"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 7
+ },
+ {
+  "id": "batch-stream",
+  "title": "Batch vs streaming",
+  "track": "de",
+  "module": "Ingestion",
+  "level": "F",
+  "prereqs": [
+   "de-lifecycle"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 8
+ },
+ {
+  "id": "etl-elt",
+  "title": "ETL vs ELT",
+  "track": "de",
+  "module": "Ingestion",
+  "level": "F",
+  "prereqs": [
+   "de-lifecycle"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 9
+ },
+ {
+  "id": "cdc",
+  "title": "Change data capture (CDC)",
+  "track": "de",
+  "module": "Ingestion",
+  "level": "I",
+  "prereqs": [
+   "etl-elt"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 10
+ },
+ {
+  "id": "incremental-loads",
+  "title": "Incremental loads and watermarks",
+  "track": "de",
+  "module": "Ingestion",
+  "level": "I",
+  "prereqs": [
+   "etl-elt"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 11
+ },
+ {
+  "id": "api-ingestion",
+  "title": "API ingestion: pagination, rate limits and retries",
+  "track": "de",
+  "module": "Ingestion",
+  "level": "I",
+  "prereqs": [
+   "apis-json"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 12
+ },
+ {
+  "id": "file-ingestion",
+  "title": "File ingestion: SFTP, landing zones and manifests",
+  "track": "de",
+  "module": "Ingestion",
+  "level": "F",
+  "prereqs": [
+   "etl-elt"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 13
+ },
+ {
+  "id": "schema-evolution",
+  "title": "Schema evolution and drift",
+  "track": "de",
+  "module": "Ingestion",
+  "level": "I",
+  "prereqs": [
+   "file-formats"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 14
+ },
+ {
+  "id": "backfills",
+  "title": "Backfills and reprocessing history",
+  "track": "de",
+  "module": "Ingestion",
+  "level": "I",
+  "prereqs": [
+   "incremental-loads"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 15
+ },
+ {
+  "id": "idempotency",
+  "title": "Idempotent pipelines",
+  "track": "de",
+  "module": "Ingestion",
+  "level": "I",
+  "prereqs": [
+   "incremental-loads"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 16
+ },
+ {
+  "id": "object-storage",
+  "title": "Object storage: S3, ADLS and GCS",
+  "track": "de",
+  "module": "Storage and file formats",
+  "level": "F",
+  "prereqs": [
+   "de-lifecycle"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 17
+ },
+ {
+  "id": "file-formats",
+  "title": "Parquet, Avro and ORC",
+  "track": "de",
+  "module": "Storage and file formats",
+  "level": "F",
+  "prereqs": [
+   "object-storage"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 18
+ },
+ {
+  "id": "partitioning",
+  "title": "Partitioning",
+  "track": "de",
+  "module": "Storage and file formats",
+  "level": "I",
+  "prereqs": [
+   "file-formats"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 19
+ },
+ {
+  "id": "small-files",
+  "title": "Compression, file sizing and the small-files problem",
+  "track": "de",
+  "module": "Storage and file formats",
+  "level": "I",
+  "prereqs": [
+   "partitioning"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 20
+ },
+ {
+  "id": "table-formats",
+  "title": "Open table formats: Delta, Iceberg and Hudi",
+  "track": "de",
+  "module": "Storage and file formats",
+  "level": "I",
+  "prereqs": [
+   "file-formats"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 21
+ },
+ {
+  "id": "clustering-zorder",
+  "title": "Clustering, Z-ordering and data skipping",
+  "track": "de",
+  "module": "Storage and file formats",
+  "level": "A",
+  "prereqs": [
+   "partitioning"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 22
+ },
+ {
+  "id": "distributed-basics",
+  "title": "Distributed computing fundamentals",
+  "track": "de",
+  "module": "Distributed processing",
+  "level": "F",
+  "prereqs": [
+   "python-for-de"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 23
+ },
+ {
+  "id": "spark-architecture",
+  "title": "Spark architecture: driver, executors and lazy evaluation",
+  "track": "de",
+  "module": "Distributed processing",
+  "level": "I",
+  "prereqs": [
+   "distributed-basics"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 24
+ },
+ {
+  "id": "pyspark-api",
+  "title": "PySpark DataFrame API",
+  "track": "de",
+  "module": "Distributed processing",
+  "level": "I",
+  "prereqs": [
+   "spark-architecture"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 25
+ },
+ {
+  "id": "spark-shuffle",
+  "title": "Spark shuffles and skew",
+  "track": "de",
+  "module": "Distributed processing",
+  "level": "I",
+  "prereqs": [
+   "spark-architecture"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 26
+ },
+ {
+  "id": "spark-joins",
+  "title": "Spark join strategies: broadcast and sort-merge",
+  "track": "de",
+  "module": "Distributed processing",
+  "level": "I",
+  "prereqs": [
+   "spark-shuffle"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 27
+ },
+ {
+  "id": "spark-tuning",
+  "title": "Spark memory, AQE and performance tuning",
+  "track": "de",
+  "module": "Distributed processing",
+  "level": "A",
+  "prereqs": [
+   "spark-joins"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 28
+ },
+ {
+  "id": "caching",
+  "title": "Caching and persistence",
+  "track": "de",
+  "module": "Distributed processing",
+  "level": "I",
+  "prereqs": [
+   "spark-architecture"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 29
+ },
+ {
+  "id": "query-engines",
+  "title": "Query engines and reading query plans",
+  "track": "de",
+  "module": "Distributed processing",
+  "level": "I",
+  "prereqs": [
+   "sql-for-engineers"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 30
+ },
+ {
+  "id": "kafka-basics",
+  "title": "Kafka fundamentals: topics, partitions and consumer groups",
+  "track": "de",
+  "module": "Streaming",
+  "level": "I",
+  "prereqs": [
+   "batch-stream"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 31
+ },
+ {
+  "id": "delivery-semantics",
+  "title": "Delivery semantics: at-least-once and exactly-once",
+  "track": "de",
+  "module": "Streaming",
+  "level": "I",
+  "prereqs": [
+   "kafka-basics"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 32
+ },
+ {
+  "id": "event-time",
+  "title": "Event time, watermarks and late data",
+  "track": "de",
+  "module": "Streaming",
+  "level": "I",
+  "prereqs": [
+   "kafka-basics"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 33
+ },
+ {
+  "id": "stream-processing",
+  "title": "Stream processing with Flink and Spark Structured Streaming",
+  "track": "de",
+  "module": "Streaming",
+  "level": "A",
+  "prereqs": [
+   "event-time"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 34
+ },
+ {
+  "id": "stateful-streaming",
+  "title": "Stateful streaming and windowed aggregations",
+  "track": "de",
+  "module": "Streaming",
+  "level": "A",
+  "prereqs": [
+   "stream-processing"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 35
+ },
+ {
+  "id": "schema-registry",
+  "title": "Schema registry and Avro contracts",
+  "track": "de",
+  "module": "Streaming",
+  "level": "I",
+  "prereqs": [
+   "kafka-basics"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 36
+ },
+ {
+  "id": "orchestration",
+  "title": "Orchestration and DAGs",
+  "track": "de",
+  "module": "Orchestration and operations",
+  "level": "F",
+  "prereqs": [
+   "de-lifecycle"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 37
+ },
+ {
+  "id": "airflow-deep",
+  "title": "Airflow in depth: sensors, XCom, catchup and pools",
+  "track": "de",
+  "module": "Orchestration and operations",
+  "level": "I",
+  "prereqs": [
+   "orchestration"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 38
+ },
+ {
+  "id": "dbt-basics",
+  "title": "dbt fundamentals: models, refs, tests and docs",
+  "track": "de",
+  "module": "Orchestration and operations",
+  "level": "I",
+  "prereqs": [
+   "etl-elt"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 39
+ },
+ {
+  "id": "cicd-data",
+  "title": "CI/CD for data pipelines",
+  "track": "de",
+  "module": "Orchestration and operations",
+  "level": "I",
+  "prereqs": [
+   "git-for-data"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 40
+ },
+ {
+  "id": "iac-terraform",
+  "title": "Infrastructure as code with Terraform",
+  "track": "de",
+  "module": "Orchestration and operations",
+  "level": "A",
+  "prereqs": [
+   "cicd-data"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 41
+ },
+ {
+  "id": "docker-data",
+  "title": "Containers for data workloads",
+  "track": "de",
+  "module": "Orchestration and operations",
+  "level": "I",
+  "prereqs": [
+   "shell-for-data"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 42
+ },
+ {
+  "id": "pipeline-monitoring",
+  "title": "Monitoring, logging and alerting for pipelines",
+  "track": "de",
+  "module": "Orchestration and operations",
+  "level": "I",
+  "prereqs": [
+   "orchestration"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 43
+ },
+ {
+  "id": "data-observability",
+  "title": "Data observability: freshness, volume, schema and lineage",
+  "track": "de",
+  "module": "Orchestration and operations",
+  "level": "I",
+  "prereqs": [
+   "pipeline-monitoring"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 44
+ },
+ {
+  "id": "data-quality",
+  "title": "Data quality checks",
+  "track": "de",
+  "module": "Quality and reliability",
+  "level": "F",
+  "prereqs": [
+   "etl-elt"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 45
+ },
+ {
+  "id": "data-contracts",
+  "title": "Data contracts",
+  "track": "de",
+  "module": "Quality and reliability",
+  "level": "I",
+  "prereqs": [
+   "data-quality"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 46
+ },
+ {
+  "id": "testing-pipelines",
+  "title": "Testing data pipelines",
+  "track": "de",
+  "module": "Quality and reliability",
+  "level": "I",
+  "prereqs": [
+   "data-quality"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 47
+ },
+ {
+  "id": "pii-handling",
+  "title": "Handling PII: masking, tokenisation and encryption",
+  "track": "de",
+  "module": "Quality and reliability",
+  "level": "I",
+  "prereqs": [
+   "data-quality"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 48
+ },
+ {
+  "id": "cost-optimisation",
+  "title": "Cost optimisation in cloud data platforms",
+  "track": "de",
+  "module": "Quality and reliability",
+  "level": "A",
+  "prereqs": [
+   "partitioning"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 49
+ },
+ {
+  "id": "data-slas",
+  "title": "SLAs and SLOs for data",
+  "track": "de",
+  "module": "Quality and reliability",
+  "level": "I",
+  "prereqs": [
+   "pipeline-monitoring"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 50
+ },
+ {
+  "id": "snowflake",
+  "title": "Snowflake essentials",
+  "track": "de",
+  "module": "Platforms and tools",
+  "level": "I",
+  "prereqs": [
+   "sql-for-engineers"
+  ],
+  "pack": "tool",
+  "status": "new",
+  "order": 51
+ },
+ {
+  "id": "databricks",
+  "title": "Databricks essentials",
+  "track": "de",
+  "module": "Platforms and tools",
+  "level": "I",
+  "prereqs": [
+   "spark-architecture"
+  ],
+  "pack": "tool",
+  "status": "new",
+  "order": 52
+ },
+ {
+  "id": "bigquery",
+  "title": "BigQuery essentials",
+  "track": "de",
+  "module": "Platforms and tools",
+  "level": "I",
+  "prereqs": [
+   "sql-for-engineers"
+  ],
+  "pack": "tool",
+  "status": "new",
+  "order": 53
+ },
+ {
+  "id": "adf",
+  "title": "Azure Data Factory essentials",
+  "track": "de",
+  "module": "Platforms and tools",
+  "level": "I",
+  "prereqs": [
+   "orchestration"
+  ],
+  "pack": "tool",
+  "status": "new",
+  "order": 54
+ },
+ {
+  "id": "aws-glue-emr",
+  "title": "AWS Glue and EMR essentials",
+  "track": "de",
+  "module": "Platforms and tools",
+  "level": "I",
+  "prereqs": [
+   "spark-architecture"
+  ],
+  "pack": "tool",
+  "status": "new",
+  "order": 55
+ },
+ {
+  "id": "informatica",
+  "title": "Informatica PowerCenter and IDMC essentials",
+  "track": "de",
+  "module": "Platforms and tools",
+  "level": "I",
+  "prereqs": [
+   "etl-elt"
+  ],
+  "pack": "tool",
+  "status": "new",
+  "order": 56
+ },
+ {
+  "id": "sql-basics",
+  "title": "SELECT, filtering and sorting",
+  "track": "da",
+  "module": "SQL foundations",
+  "level": "F",
+  "prereqs": [],
+  "pack": "core",
+  "status": "existing",
+  "order": 57
+ },
+ {
+  "id": "group-by-having",
+  "title": "Aggregations, GROUP BY and HAVING",
+  "track": "da",
+  "module": "SQL foundations",
+  "level": "F",
+  "prereqs": [
+   "sql-basics"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 58
+ },
+ {
+  "id": "sql-joins",
+  "title": "SQL joins",
+  "track": "da",
+  "module": "SQL foundations",
+  "level": "F",
+  "prereqs": [
+   "sql-basics"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 59
+ },
+ {
+  "id": "ctes-subqueries",
+  "title": "Subqueries and CTEs",
+  "track": "da",
+  "module": "SQL foundations",
+  "level": "F",
+  "prereqs": [
+   "sql-joins"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 60
+ },
+ {
+  "id": "null-handling",
+  "title": "NULL handling in SQL",
+  "track": "da",
+  "module": "SQL foundations",
+  "level": "F",
+  "prereqs": [
+   "sql-basics"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 61
+ },
+ {
+  "id": "case-pivot",
+  "title": "CASE expressions and pivoting",
+  "track": "da",
+  "module": "SQL foundations",
+  "level": "F",
+  "prereqs": [
+   "group-by-having"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 62
+ },
+ {
+  "id": "sql-dates",
+  "title": "Date and time functions",
+  "track": "da",
+  "module": "SQL foundations",
+  "level": "F",
+  "prereqs": [
+   "sql-basics"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 63
+ },
+ {
+  "id": "sql-strings",
+  "title": "String functions and text cleaning",
+  "track": "da",
+  "module": "SQL foundations",
+  "level": "F",
+  "prereqs": [
+   "sql-basics"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 64
+ },
+ {
+  "id": "window-functions",
+  "title": "Window functions",
+  "track": "da",
+  "module": "Advanced SQL",
+  "level": "I",
+  "prereqs": [
+   "group-by-having"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 65
+ },
+ {
+  "id": "running-totals",
+  "title": "Running totals and moving averages",
+  "track": "da",
+  "module": "Advanced SQL",
+  "level": "I",
+  "prereqs": [
+   "window-functions"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 66
+ },
+ {
+  "id": "gaps-islands",
+  "title": "Gaps and islands",
+  "track": "da",
+  "module": "Advanced SQL",
+  "level": "A",
+  "prereqs": [
+   "window-functions"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 67
+ },
+ {
+  "id": "recursive-ctes",
+  "title": "Recursive CTEs and hierarchies",
+  "track": "da",
+  "module": "Advanced SQL",
+  "level": "A",
+  "prereqs": [
+   "ctes-subqueries"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 68
+ },
+ {
+  "id": "set-operations",
+  "title": "Set operations: UNION, INTERSECT and EXCEPT",
+  "track": "da",
+  "module": "Advanced SQL",
+  "level": "F",
+  "prereqs": [
+   "sql-basics"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 69
+ },
+ {
+  "id": "sql-performance",
+  "title": "Query performance for analysts",
+  "track": "da",
+  "module": "Advanced SQL",
+  "level": "I",
+  "prereqs": [
+   "query-engines"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 70
+ },
+ {
+  "id": "descriptive-stats",
+  "title": "Descriptive statistics",
+  "track": "da",
+  "module": "Statistics for analysts",
+  "level": "F",
+  "prereqs": [],
+  "pack": "core",
+  "status": "new",
+  "order": 71
+ },
+ {
+  "id": "distributions",
+  "title": "Distributions: normal, skewed and long-tailed",
+  "track": "da",
+  "module": "Statistics for analysts",
+  "level": "F",
+  "prereqs": [
+   "descriptive-stats"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 72
+ },
+ {
+  "id": "sampling-bias",
+  "title": "Sampling and sampling bias",
+  "track": "da",
+  "module": "Statistics for analysts",
+  "level": "F",
+  "prereqs": [
+   "distributions"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 73
+ },
+ {
+  "id": "confidence-intervals",
+  "title": "Confidence intervals",
+  "track": "da",
+  "module": "Statistics for analysts",
+  "level": "I",
+  "prereqs": [
+   "sampling-bias"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 74
+ },
+ {
+  "id": "hypothesis-testing",
+  "title": "Hypothesis testing and p-values",
+  "track": "da",
+  "module": "Statistics for analysts",
+  "level": "I",
+  "prereqs": [
+   "confidence-intervals"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 75
+ },
+ {
+  "id": "correlation-causation",
+  "title": "Correlation vs causation",
+  "track": "da",
+  "module": "Statistics for analysts",
+  "level": "F",
+  "prereqs": [
+   "descriptive-stats"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 76
+ },
+ {
+  "id": "outliers",
+  "title": "Detecting and handling outliers",
+  "track": "da",
+  "module": "Statistics for analysts",
+  "level": "F",
+  "prereqs": [
+   "distributions"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 77
+ },
+ {
+  "id": "kpi-metrics",
+  "title": "KPIs and metric design",
+  "track": "da",
+  "module": "Metrics and business analysis",
+  "level": "F",
+  "prereqs": [],
+  "pack": "core",
+  "status": "existing",
+  "order": 78
+ },
+ {
+  "id": "funnels",
+  "title": "Funnel analysis",
+  "track": "da",
+  "module": "Metrics and business analysis",
+  "level": "I",
+  "prereqs": [
+   "kpi-metrics"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 79
+ },
+ {
+  "id": "cohort",
+  "title": "Cohort analysis",
+  "track": "da",
+  "module": "Metrics and business analysis",
+  "level": "I",
+  "prereqs": [
+   "kpi-metrics"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 80
+ },
+ {
+  "id": "retention-churn",
+  "title": "Retention and churn metrics",
+  "track": "da",
+  "module": "Metrics and business analysis",
+  "level": "I",
+  "prereqs": [
+   "cohort"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 81
+ },
+ {
+  "id": "unit-economics",
+  "title": "Unit economics: CAC, LTV, AOV and margin",
+  "track": "da",
+  "module": "Metrics and business analysis",
+  "level": "I",
+  "prereqs": [
+   "kpi-metrics"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 82
+ },
+ {
+  "id": "metric-rca",
+  "title": "Root-cause analysis of metric changes",
+  "track": "da",
+  "module": "Metrics and business analysis",
+  "level": "A",
+  "prereqs": [
+   "kpi-metrics"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 83
+ },
+ {
+  "id": "segmentation",
+  "title": "Customer segmentation and RFM",
+  "track": "da",
+  "module": "Metrics and business analysis",
+  "level": "I",
+  "prereqs": [
+   "group-by-having"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 84
+ },
+ {
+  "id": "ab-testing",
+  "title": "A/B testing",
+  "track": "da",
+  "module": "Experimentation",
+  "level": "I",
+  "prereqs": [
+   "hypothesis-testing"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 85
+ },
+ {
+  "id": "power-sample-size",
+  "title": "Statistical power and sample size",
+  "track": "da",
+  "module": "Experimentation",
+  "level": "I",
+  "prereqs": [
+   "ab-testing"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 86
+ },
+ {
+  "id": "peeking-multiple-tests",
+  "title": "Peeking and multiple testing",
+  "track": "da",
+  "module": "Experimentation",
+  "level": "A",
+  "prereqs": [
+   "ab-testing"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 87
+ },
+ {
+  "id": "quasi-experiments",
+  "title": "Quasi-experiments and difference-in-differences",
+  "track": "da",
+  "module": "Experimentation",
+  "level": "A",
+  "prereqs": [
+   "ab-testing"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 88
+ },
+ {
+  "id": "dashboards",
+  "title": "Dashboard design",
+  "track": "da",
+  "module": "Visualisation and storytelling",
+  "level": "F",
+  "prereqs": [
+   "kpi-metrics"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 89
+ },
+ {
+  "id": "chart-choice",
+  "title": "Choosing the right chart",
+  "track": "da",
+  "module": "Visualisation and storytelling",
+  "level": "F",
+  "prereqs": [],
+  "pack": "core",
+  "status": "new",
+  "order": 90
+ },
+ {
+  "id": "data-storytelling",
+  "title": "Data storytelling and executive summaries",
+  "track": "da",
+  "module": "Visualisation and storytelling",
+  "level": "I",
+  "prereqs": [
+   "chart-choice"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 91
+ },
+ {
+  "id": "power-bi",
+  "title": "Power BI essentials: data model and DAX",
+  "track": "da",
+  "module": "Visualisation and storytelling",
+  "level": "I",
+  "prereqs": [
+   "dashboards"
+  ],
+  "pack": "tool",
+  "status": "new",
+  "order": 92
+ },
+ {
+  "id": "tableau",
+  "title": "Tableau essentials",
+  "track": "da",
+  "module": "Visualisation and storytelling",
+  "level": "I",
+  "prereqs": [
+   "dashboards"
+  ],
+  "pack": "tool",
+  "status": "new",
+  "order": 93
+ },
+ {
+  "id": "excel-analysts",
+  "title": "Excel for analysts: pivots and lookups",
+  "track": "da",
+  "module": "Visualisation and storytelling",
+  "level": "F",
+  "prereqs": [],
+  "pack": "tool",
+  "status": "new",
+  "order": 94
+ },
+ {
+  "id": "pandas-basics",
+  "title": "pandas fundamentals",
+  "track": "da",
+  "module": "Python for analysis",
+  "level": "F",
+  "prereqs": [
+   "python-for-de"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 95
+ },
+ {
+  "id": "pandas-cleaning",
+  "title": "Data cleaning with pandas",
+  "track": "da",
+  "module": "Python for analysis",
+  "level": "F",
+  "prereqs": [
+   "pandas-basics"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 96
+ },
+ {
+  "id": "eda",
+  "title": "Exploratory data analysis",
+  "track": "da",
+  "module": "Python for analysis",
+  "level": "I",
+  "prereqs": [
+   "pandas-cleaning"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 97
+ },
+ {
+  "id": "notebooks",
+  "title": "Notebook workflow and reproducibility",
+  "track": "da",
+  "module": "Python for analysis",
+  "level": "F",
+  "prereqs": [
+   "pandas-basics"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 98
+ },
+ {
+  "id": "probability-bayes",
+  "title": "Probability and Bayes' theorem",
+  "track": "ds",
+  "module": "Maths and statistics foundations",
+  "level": "F",
+  "prereqs": [
+   "descriptive-stats"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 99
+ },
+ {
+  "id": "linear-algebra-ml",
+  "title": "Linear algebra for machine learning",
+  "track": "ds",
+  "module": "Maths and statistics foundations",
+  "level": "F",
+  "prereqs": [],
+  "pack": "core",
+  "status": "new",
+  "order": 100
+ },
+ {
+  "id": "loss-mle",
+  "title": "Loss functions and maximum likelihood",
+  "track": "ds",
+  "module": "Maths and statistics foundations",
+  "level": "I",
+  "prereqs": [
+   "probability-bayes"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 101
+ },
+ {
+  "id": "gradient-descent",
+  "title": "Gradient descent",
+  "track": "ds",
+  "module": "Maths and statistics foundations",
+  "level": "I",
+  "prereqs": [
+   "loss-mle"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 102
+ },
+ {
+  "id": "supervised-unsupervised",
+  "title": "Supervised vs unsupervised learning",
+  "track": "ds",
+  "module": "Machine learning fundamentals",
+  "level": "F",
+  "prereqs": [],
+  "pack": "core",
+  "status": "new",
+  "order": 103
+ },
+ {
+  "id": "linear-regression",
+  "title": "Linear regression",
+  "track": "ds",
+  "module": "Machine learning fundamentals",
+  "level": "F",
+  "prereqs": [
+   "supervised-unsupervised"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 104
+ },
+ {
+  "id": "logistic-regression",
+  "title": "Logistic regression",
+  "track": "ds",
+  "module": "Machine learning fundamentals",
+  "level": "F",
+  "prereqs": [
+   "linear-regression"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 105
+ },
+ {
+  "id": "bias-variance",
+  "title": "Bias–variance trade-off",
+  "track": "ds",
+  "module": "Machine learning fundamentals",
+  "level": "F",
+  "prereqs": [
+   "linear-regression"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 106
+ },
+ {
+  "id": "overfitting",
+  "title": "Overfitting and regularisation",
+  "track": "ds",
+  "module": "Machine learning fundamentals",
+  "level": "I",
+  "prereqs": [
+   "bias-variance"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 107
+ },
+ {
+  "id": "cross-validation",
+  "title": "Train/test split and cross-validation",
+  "track": "ds",
+  "module": "Machine learning fundamentals",
+  "level": "F",
+  "prereqs": [
+   "overfitting"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 108
+ },
+ {
+  "id": "data-leakage",
+  "title": "Data leakage",
+  "track": "ds",
+  "module": "Machine learning fundamentals",
+  "level": "I",
+  "prereqs": [
+   "cross-validation"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 109
+ },
+ {
+  "id": "hyperparameter-tuning",
+  "title": "Hyperparameter tuning",
+  "track": "ds",
+  "module": "Machine learning fundamentals",
+  "level": "I",
+  "prereqs": [
+   "cross-validation"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 110
+ },
+ {
+  "id": "decision-trees",
+  "title": "Decision trees",
+  "track": "ds",
+  "module": "Models",
+  "level": "F",
+  "prereqs": [
+   "supervised-unsupervised"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 111
+ },
+ {
+  "id": "random-forests",
+  "title": "Random forests and bagging",
+  "track": "ds",
+  "module": "Models",
+  "level": "I",
+  "prereqs": [
+   "decision-trees"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 112
+ },
+ {
+  "id": "gradient-boosting",
+  "title": "Gradient boosting",
+  "track": "ds",
+  "module": "Models",
+  "level": "I",
+  "prereqs": [
+   "random-forests"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 113
+ },
+ {
+  "id": "knn-distance",
+  "title": "k-nearest neighbours and distance metrics",
+  "track": "ds",
+  "module": "Models",
+  "level": "F",
+  "prereqs": [
+   "supervised-unsupervised"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 114
+ },
+ {
+  "id": "clustering",
+  "title": "Clustering: k-means and DBSCAN",
+  "track": "ds",
+  "module": "Models",
+  "level": "I",
+  "prereqs": [
+   "knn-distance"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 115
+ },
+ {
+  "id": "pca",
+  "title": "Dimensionality reduction with PCA",
+  "track": "ds",
+  "module": "Models",
+  "level": "I",
+  "prereqs": [
+   "linear-algebra-ml"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 116
+ },
+ {
+  "id": "anomaly-detection",
+  "title": "Anomaly detection",
+  "track": "ds",
+  "module": "Models",
+  "level": "I",
+  "prereqs": [
+   "clustering"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 117
+ },
+ {
+  "id": "recommenders",
+  "title": "Recommender systems",
+  "track": "ds",
+  "module": "Models",
+  "level": "A",
+  "prereqs": [
+   "clustering"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 118
+ },
+ {
+  "id": "precision-recall",
+  "title": "Precision, recall and F1",
+  "track": "ds",
+  "module": "Model evaluation",
+  "level": "F",
+  "prereqs": [
+   "logistic-regression"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 119
+ },
+ {
+  "id": "roc-calibration",
+  "title": "ROC-AUC and probability calibration",
+  "track": "ds",
+  "module": "Model evaluation",
+  "level": "I",
+  "prereqs": [
+   "precision-recall"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 120
+ },
+ {
+  "id": "regression-metrics",
+  "title": "Regression metrics: MAE, RMSE and MAPE",
+  "track": "ds",
+  "module": "Model evaluation",
+  "level": "F",
+  "prereqs": [
+   "linear-regression"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 121
+ },
+ {
+  "id": "class-imbalance",
+  "title": "Handling class imbalance",
+  "track": "ds",
+  "module": "Model evaluation",
+  "level": "I",
+  "prereqs": [
+   "precision-recall"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 122
+ },
+ {
+  "id": "interpretability",
+  "title": "Model interpretability: feature importance and SHAP",
+  "track": "ds",
+  "module": "Model evaluation",
+  "level": "I",
+  "prereqs": [
+   "gradient-boosting"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 123
+ },
+ {
+  "id": "model-fairness",
+  "title": "Fairness and bias in models",
+  "track": "ds",
+  "module": "Model evaluation",
+  "level": "A",
+  "prereqs": [
+   "interpretability"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 124
+ },
+ {
+  "id": "feature-engineering",
+  "title": "Feature engineering",
+  "track": "ds",
+  "module": "Features and data preparation",
+  "level": "I",
+  "prereqs": [
+   "eda"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 125
+ },
+ {
+  "id": "categorical-encoding",
+  "title": "Encoding categorical variables",
+  "track": "ds",
+  "module": "Features and data preparation",
+  "level": "F",
+  "prereqs": [
+   "feature-engineering"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 126
+ },
+ {
+  "id": "feature-scaling",
+  "title": "Feature scaling and normalisation",
+  "track": "ds",
+  "module": "Features and data preparation",
+  "level": "F",
+  "prereqs": [
+   "feature-engineering"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 127
+ },
+ {
+  "id": "missing-data",
+  "title": "Missing data and imputation",
+  "track": "ds",
+  "module": "Features and data preparation",
+  "level": "I",
+  "prereqs": [
+   "feature-engineering"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 128
+ },
+ {
+  "id": "feature-stores",
+  "title": "Feature stores",
+  "track": "ds",
+  "module": "Features and data preparation",
+  "level": "A",
+  "prereqs": [
+   "feature-engineering"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 129
+ },
+ {
+  "id": "forecasting",
+  "title": "Time series forecasting",
+  "track": "ds",
+  "module": "Time series",
+  "level": "I",
+  "prereqs": [
+   "regression-metrics"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 130
+ },
+ {
+  "id": "stationarity",
+  "title": "Stationarity, trend and seasonality",
+  "track": "ds",
+  "module": "Time series",
+  "level": "I",
+  "prereqs": [
+   "forecasting"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 131
+ },
+ {
+  "id": "arima-ets",
+  "title": "ARIMA and exponential smoothing",
+  "track": "ds",
+  "module": "Time series",
+  "level": "A",
+  "prereqs": [
+   "stationarity"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 132
+ },
+ {
+  "id": "backtesting",
+  "title": "Forecast evaluation and backtesting",
+  "track": "ds",
+  "module": "Time series",
+  "level": "I",
+  "prereqs": [
+   "forecasting"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 133
+ },
+ {
+  "id": "forecasting-scale",
+  "title": "Forecasting thousands of series",
+  "track": "ds",
+  "module": "Time series",
+  "level": "A",
+  "prereqs": [
+   "backtesting"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 134
+ },
+ {
+  "id": "neural-networks",
+  "title": "Neural network basics",
+  "track": "ds",
+  "module": "Deep learning, NLP and LLMs",
+  "level": "I",
+  "prereqs": [
+   "gradient-descent"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 135
+ },
+ {
+  "id": "embeddings",
+  "title": "Embeddings",
+  "track": "ds",
+  "module": "Deep learning, NLP and LLMs",
+  "level": "I",
+  "prereqs": [
+   "neural-networks"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 136
+ },
+ {
+  "id": "transformers",
+  "title": "Transformers and attention",
+  "track": "ds",
+  "module": "Deep learning, NLP and LLMs",
+  "level": "A",
+  "prereqs": [
+   "embeddings"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 137
+ },
+ {
+  "id": "llm-fundamentals",
+  "title": "LLM fundamentals: tokens, context and sampling",
+  "track": "ds",
+  "module": "Deep learning, NLP and LLMs",
+  "level": "I",
+  "prereqs": [
+   "transformers"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 138
+ },
+ {
+  "id": "rag",
+  "title": "Retrieval-augmented generation (RAG)",
+  "track": "ds",
+  "module": "Deep learning, NLP and LLMs",
+  "level": "I",
+  "prereqs": [
+   "llm-fundamentals"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 139
+ },
+ {
+  "id": "prompting-data",
+  "title": "Prompting LLMs for data tasks",
+  "track": "ds",
+  "module": "Deep learning, NLP and LLMs",
+  "level": "F",
+  "prereqs": [
+   "llm-fundamentals"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 140
+ },
+ {
+  "id": "llm-evaluation",
+  "title": "Evaluating LLM outputs",
+  "track": "ds",
+  "module": "Deep learning, NLP and LLMs",
+  "level": "A",
+  "prereqs": [
+   "rag"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 141
+ },
+ {
+  "id": "model-deployment",
+  "title": "Model deployment: batch and online",
+  "track": "ds",
+  "module": "MLOps",
+  "level": "I",
+  "prereqs": [
+   "cross-validation"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 142
+ },
+ {
+  "id": "model-monitoring",
+  "title": "Model monitoring and drift",
+  "track": "ds",
+  "module": "MLOps",
+  "level": "I",
+  "prereqs": [
+   "model-deployment"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 143
+ },
+ {
+  "id": "experiment-tracking",
+  "title": "Experiment tracking with MLflow",
+  "track": "ds",
+  "module": "MLOps",
+  "level": "I",
+  "prereqs": [
+   "hyperparameter-tuning"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 144
+ },
+ {
+  "id": "ml-pipelines",
+  "title": "ML pipelines and retraining",
+  "track": "ds",
+  "module": "MLOps",
+  "level": "A",
+  "prereqs": [
+   "model-monitoring"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 145
+ },
+ {
+  "id": "causal-uplift",
+  "title": "Causal inference and uplift modelling",
+  "track": "ds",
+  "module": "MLOps",
+  "level": "A",
+  "prereqs": [
+   "quasi-experiments"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 146
+ },
+ {
+  "id": "normalization",
+  "title": "Normalisation vs denormalisation",
+  "track": "ar",
+  "module": "Data modelling",
+  "level": "F",
+  "prereqs": [
+   "sql-basics"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 147
+ },
+ {
+  "id": "model-layers",
+  "title": "Conceptual, logical and physical models",
+  "track": "ar",
+  "module": "Data modelling",
+  "level": "F",
+  "prereqs": [
+   "normalization"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 148
+ },
+ {
+  "id": "star-schema",
+  "title": "Star schema and dimensional modelling",
+  "track": "ar",
+  "module": "Data modelling",
+  "level": "F",
+  "prereqs": [
+   "model-layers"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 149
+ },
+ {
+  "id": "scd",
+  "title": "Slowly changing dimensions (SCD)",
+  "track": "ar",
+  "module": "Data modelling",
+  "level": "I",
+  "prereqs": [
+   "star-schema"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 150
+ },
+ {
+  "id": "data-vault",
+  "title": "Data Vault 2.0",
+  "track": "ar",
+  "module": "Data modelling",
+  "level": "A",
+  "prereqs": [
+   "star-schema"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 151
+ },
+ {
+  "id": "wide-tables",
+  "title": "One big table and wide-table modelling",
+  "track": "ar",
+  "module": "Data modelling",
+  "level": "I",
+  "prereqs": [
+   "star-schema"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 152
+ },
+ {
+  "id": "semantic-layer",
+  "title": "Semantic and metrics layers",
+  "track": "ar",
+  "module": "Data modelling",
+  "level": "I",
+  "prereqs": [
+   "kpi-metrics"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 153
+ },
+ {
+  "id": "mdm",
+  "title": "Master data management",
+  "track": "ar",
+  "module": "Data modelling",
+  "level": "A",
+  "prereqs": [
+   "model-layers"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 154
+ },
+ {
+  "id": "lakehouse",
+  "title": "Data lake, warehouse and lakehouse",
+  "track": "ar",
+  "module": "Platform architecture",
+  "level": "I",
+  "prereqs": [
+   "table-formats"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 155
+ },
+ {
+  "id": "medallion",
+  "title": "Medallion architecture",
+  "track": "ar",
+  "module": "Platform architecture",
+  "level": "I",
+  "prereqs": [
+   "lakehouse"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 156
+ },
+ {
+  "id": "lambda-kappa",
+  "title": "Lambda vs Kappa architecture",
+  "track": "ar",
+  "module": "Platform architecture",
+  "level": "A",
+  "prereqs": [
+   "stream-processing"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 157
+ },
+ {
+  "id": "modern-data-stack",
+  "title": "Modern data stack reference architecture",
+  "track": "ar",
+  "module": "Platform architecture",
+  "level": "F",
+  "prereqs": [
+   "etl-elt"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 158
+ },
+ {
+  "id": "cloud-platforms",
+  "title": "Cloud data platforms compared: AWS, Azure and GCP",
+  "track": "ar",
+  "module": "Platform architecture",
+  "level": "I",
+  "prereqs": [
+   "modern-data-stack"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 159
+ },
+ {
+  "id": "storage-compute",
+  "title": "Separating storage and compute",
+  "track": "ar",
+  "module": "Platform architecture",
+  "level": "I",
+  "prereqs": [
+   "lakehouse"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 160
+ },
+ {
+  "id": "realtime-analytics",
+  "title": "Real-time analytics architecture",
+  "track": "ar",
+  "module": "Platform architecture",
+  "level": "A",
+  "prereqs": [
+   "stream-processing"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 161
+ },
+ {
+  "id": "reverse-etl",
+  "title": "Reverse ETL and operational analytics",
+  "track": "ar",
+  "module": "Platform architecture",
+  "level": "I",
+  "prereqs": [
+   "modern-data-stack"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 162
+ },
+ {
+  "id": "governance",
+  "title": "Data governance and lineage",
+  "track": "ar",
+  "module": "Governance and security",
+  "level": "I",
+  "prereqs": [
+   "data-quality"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 163
+ },
+ {
+  "id": "data-mesh",
+  "title": "Data mesh",
+  "track": "ar",
+  "module": "Governance and security",
+  "level": "A",
+  "prereqs": [
+   "governance"
+  ],
+  "pack": "core",
+  "status": "existing",
+  "order": 164
+ },
+ {
+  "id": "data-catalog",
+  "title": "Data catalogues and metadata",
+  "track": "ar",
+  "module": "Governance and security",
+  "level": "I",
+  "prereqs": [
+   "governance"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 165
+ },
+ {
+  "id": "access-control",
+  "title": "Access control: RBAC, ABAC, row and column security",
+  "track": "ar",
+  "module": "Governance and security",
+  "level": "I",
+  "prereqs": [
+   "governance"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 166
+ },
+ {
+  "id": "privacy-regulation",
+  "title": "Privacy regulation: India's DPDP Act and GDPR",
+  "track": "ar",
+  "module": "Governance and security",
+  "level": "I",
+  "prereqs": [
+   "pii-handling"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 167
+ },
+ {
+  "id": "retention-archival",
+  "title": "Data retention and archival",
+  "track": "ar",
+  "module": "Governance and security",
+  "level": "I",
+  "prereqs": [
+   "governance"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 168
+ },
+ {
+  "id": "enterprise-dq",
+  "title": "Enterprise data quality frameworks",
+  "track": "ar",
+  "module": "Governance and security",
+  "level": "A",
+  "prereqs": [
+   "data-contracts"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 169
+ },
+ {
+  "id": "integration-patterns",
+  "title": "Integration patterns: batch, API, events and files",
+  "track": "ar",
+  "module": "Integration architecture",
+  "level": "F",
+  "prereqs": [
+   "etl-elt"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 170
+ },
+ {
+  "id": "event-driven",
+  "title": "Event-driven architecture",
+  "track": "ar",
+  "module": "Integration architecture",
+  "level": "I",
+  "prereqs": [
+   "kafka-basics"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 171
+ },
+ {
+  "id": "data-apis",
+  "title": "Designing APIs for data products",
+  "track": "ar",
+  "module": "Integration architecture",
+  "level": "I",
+  "prereqs": [
+   "integration-patterns"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 172
+ },
+ {
+  "id": "ipaas-esb",
+  "title": "Enterprise integration: ESB and iPaaS",
+  "track": "ar",
+  "module": "Integration architecture",
+  "level": "I",
+  "prereqs": [
+   "integration-patterns"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 173
+ },
+ {
+  "id": "canonical-models",
+  "title": "Canonical data models",
+  "track": "ar",
+  "module": "Integration architecture",
+  "level": "I",
+  "prereqs": [
+   "integration-patterns"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 174
+ },
+ {
+  "id": "nfrs",
+  "title": "Non-functional requirements for data platforms",
+  "track": "ar",
+  "module": "Design and delivery",
+  "level": "I",
+  "prereqs": [
+   "modern-data-stack"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 175
+ },
+ {
+  "id": "finops",
+  "title": "Cost architecture and FinOps",
+  "track": "ar",
+  "module": "Design and delivery",
+  "level": "A",
+  "prereqs": [
+   "cost-optimisation"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 176
+ },
+ {
+  "id": "adrs",
+  "title": "Architecture decision records",
+  "track": "ar",
+  "module": "Design and delivery",
+  "level": "F",
+  "prereqs": [],
+  "pack": "core",
+  "status": "new",
+  "order": 177
+ },
+ {
+  "id": "migrations",
+  "title": "Legacy-to-cloud migration strategies",
+  "track": "ar",
+  "module": "Design and delivery",
+  "level": "A",
+  "prereqs": [
+   "cloud-platforms"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 178
+ },
+ {
+  "id": "dr-ha",
+  "title": "High availability and disaster recovery",
+  "track": "ar",
+  "module": "Design and delivery",
+  "level": "A",
+  "prereqs": [
+   "nfrs"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 179
+ },
+ {
+  "id": "solution-design-docs",
+  "title": "Writing solution designs and SOWs",
+  "track": "ar",
+  "module": "Design and delivery",
+  "level": "I",
+  "prereqs": [
+   "nfrs"
+  ],
+  "pack": "core",
+  "status": "new",
+  "order": 180
+ },
+ {
+  "id": "sc-landscape",
+  "title": "Supply chain systems: ERP, OMS, WMS and TMS",
+  "track": "de",
+  "module": "Domain pack: logistics and supply chain",
+  "level": "F",
+  "prereqs": [],
+  "pack": "logistics",
+  "status": "new",
+  "order": 181
+ },
+ {
+  "id": "tms-data-model",
+  "title": "TMS data model: shipments, loads, legs and stops",
+  "track": "de",
+  "module": "Domain pack: logistics and supply chain",
+  "level": "I",
+  "prereqs": [
+   "sc-landscape"
+  ],
+  "pack": "logistics",
+  "status": "new",
+  "order": 182
+ },
+ {
+  "id": "load-building",
+  "title": "Load building and consolidation",
+  "track": "de",
+  "module": "Domain pack: logistics and supply chain",
+  "level": "I",
+  "prereqs": [
+   "tms-data-model"
+  ],
+  "pack": "logistics",
+  "status": "new",
+  "order": 183
+ },
+ {
+  "id": "edi-carriers",
+  "title": "Carrier connectivity and EDI (204, 990, 214, 210)",
+  "track": "de",
+  "module": "Domain pack: logistics and supply chain",
+  "level": "I",
+  "prereqs": [
+   "integration-patterns"
+  ],
+  "pack": "logistics",
+  "status": "new",
+  "order": 184
+ },
+ {
+  "id": "shipment-visibility",
+  "title": "Shipment visibility and tracking events",
+  "track": "de",
+  "module": "Domain pack: logistics and supply chain",
+  "level": "I",
+  "prereqs": [
+   "edi-carriers"
+  ],
+  "pack": "logistics",
+  "status": "new",
+  "order": 185
+ },
+ {
+  "id": "freight-rating",
+  "title": "Freight rating and tariffs",
+  "track": "de",
+  "module": "Domain pack: logistics and supply chain",
+  "level": "I",
+  "prereqs": [
+   "tms-data-model"
+  ],
+  "pack": "logistics",
+  "status": "new",
+  "order": 186
+ },
+ {
+  "id": "freight-settlement",
+  "title": "Freight audit and settlement",
+  "track": "de",
+  "module": "Domain pack: logistics and supply chain",
+  "level": "A",
+  "prereqs": [
+   "freight-rating"
+  ],
+  "pack": "logistics",
+  "status": "new",
+  "order": 187
+ },
+ {
+  "id": "warehouse-data",
+  "title": "Warehouse operations data: receiving, picking, slotting",
+  "track": "de",
+  "module": "Domain pack: logistics and supply chain",
+  "level": "I",
+  "prereqs": [
+   "sc-landscape"
+  ],
+  "pack": "logistics",
+  "status": "new",
+  "order": 188
+ },
+ {
+  "id": "inventory-analytics",
+  "title": "Inventory and replenishment analytics",
+  "track": "de",
+  "module": "Domain pack: logistics and supply chain",
+  "level": "I",
+  "prereqs": [
+   "warehouse-data"
+  ],
+  "pack": "logistics",
+  "status": "new",
+  "order": 189
+ },
+ {
+  "id": "logistics-kpis",
+  "title": "Logistics KPIs: OTIF, cost per shipment and dwell time",
+  "track": "de",
+  "module": "Domain pack: logistics and supply chain",
+  "level": "F",
+  "prereqs": [
+   "kpi-metrics"
+  ],
+  "pack": "logistics",
+  "status": "new",
+  "order": 190
+ },
+ {
+  "id": "route-optimisation",
+  "title": "Route optimisation and last-mile delivery",
+  "track": "de",
+  "module": "Domain pack: logistics and supply chain",
+  "level": "A",
+  "prereqs": [
+   "logistics-kpis"
+  ],
+  "pack": "logistics",
+  "status": "new",
+  "order": 191
+ },
+ {
+  "id": "capacity-planning",
+  "title": "Demand and capacity planning",
+  "track": "de",
+  "module": "Domain pack: logistics and supply chain",
+  "level": "A",
+  "prereqs": [
+   "forecasting"
+  ],
+  "pack": "logistics",
+  "status": "new",
+  "order": 192
+ },
+ {
+  "id": "control-tower",
+  "title": "Supply chain control tower analytics",
+  "track": "de",
+  "module": "Domain pack: logistics and supply chain",
+  "level": "A",
+  "prereqs": [
+   "shipment-visibility"
+  ],
+  "pack": "logistics",
+  "status": "new",
+  "order": 193
+ },
+ {
+  "id": "upi-lifecycle",
+  "title": "UPI architecture and transaction lifecycle",
+  "track": "de",
+  "module": "Domain pack: fintech and UPI payments",
+  "level": "F",
+  "prereqs": [],
+  "pack": "fintech",
+  "status": "new",
+  "order": 194
+ },
+ {
+  "id": "payment-reconciliation",
+  "title": "Payment reconciliation",
+  "track": "de",
+  "module": "Domain pack: fintech and UPI payments",
+  "level": "I",
+  "prereqs": [
+   "upi-lifecycle"
+  ],
+  "pack": "fintech",
+  "status": "new",
+  "order": 195
+ },
+ {
+  "id": "settlement",
+  "title": "Settlement cycles and merchant payouts",
+  "track": "de",
+  "module": "Domain pack: fintech and UPI payments",
+  "level": "I",
+  "prereqs": [
+   "payment-reconciliation"
+  ],
+  "pack": "fintech",
+  "status": "new",
+  "order": 196
+ },
+ {
+  "id": "ledger-design",
+  "title": "Ledger design and double-entry accounting",
+  "track": "de",
+  "module": "Domain pack: fintech and UPI payments",
+  "level": "I",
+  "prereqs": [
+   "upi-lifecycle"
+  ],
+  "pack": "fintech",
+  "status": "new",
+  "order": 197
+ },
+ {
+  "id": "payment-success-metrics",
+  "title": "Payment success rate and failure analysis",
+  "track": "de",
+  "module": "Domain pack: fintech and UPI payments",
+  "level": "I",
+  "prereqs": [
+   "kpi-metrics"
+  ],
+  "pack": "fintech",
+  "status": "new",
+  "order": 198
+ },
+ {
+  "id": "refunds-chargebacks",
+  "title": "Refunds, chargebacks and disputes",
+  "track": "de",
+  "module": "Domain pack: fintech and UPI payments",
+  "level": "I",
+  "prereqs": [
+   "settlement"
+  ],
+  "pack": "fintech",
+  "status": "new",
+  "order": 199
+ },
+ {
+  "id": "fraud-signals",
+  "title": "Fraud detection signals and rules",
+  "track": "de",
+  "module": "Domain pack: fintech and UPI payments",
+  "level": "A",
+  "prereqs": [
+   "anomaly-detection"
+  ],
+  "pack": "fintech",
+  "status": "new",
+  "order": 200
+ },
+ {
+  "id": "kyc-compliance",
+  "title": "KYC and compliance data",
+  "track": "de",
+  "module": "Domain pack: fintech and UPI payments",
+  "level": "I",
+  "prereqs": [
+   "pii-handling"
+  ],
+  "pack": "fintech",
+  "status": "new",
+  "order": 201
+ },
+ {
+  "id": "credit-scoring",
+  "title": "Credit risk scoring basics",
+  "track": "de",
+  "module": "Domain pack: fintech and UPI payments",
+  "level": "A",
+  "prereqs": [
+   "logistic-regression"
+  ],
+  "pack": "fintech",
+  "status": "new",
+  "order": 202
+ },
+ {
+  "id": "ecom-data-model",
+  "title": "E-commerce data model: catalogue, carts and orders",
+  "track": "da",
+  "module": "Domain pack: e-commerce and D2C",
+  "level": "F",
+  "prereqs": [
+   "star-schema"
+  ],
+  "pack": "ecom",
+  "status": "new",
+  "order": 203
+ },
+ {
+  "id": "clickstream",
+  "title": "Clickstream and event tracking",
+  "track": "da",
+  "module": "Domain pack: e-commerce and D2C",
+  "level": "I",
+  "prereqs": [
+   "ecom-data-model"
+  ],
+  "pack": "ecom",
+  "status": "new",
+  "order": 204
+ },
+ {
+  "id": "attribution",
+  "title": "Marketing attribution",
+  "track": "da",
+  "module": "Domain pack: e-commerce and D2C",
+  "level": "A",
+  "prereqs": [
+   "clickstream"
+  ],
+  "pack": "ecom",
+  "status": "new",
+  "order": 205
+ },
+ {
+  "id": "pricing-promotions",
+  "title": "Pricing and promotions analytics",
+  "track": "da",
+  "module": "Domain pack: e-commerce and D2C",
+  "level": "I",
+  "prereqs": [
+   "unit-economics"
+  ],
+  "pack": "ecom",
+  "status": "new",
+  "order": 206
+ },
+ {
+  "id": "returns-analytics",
+  "title": "Returns analytics",
+  "track": "da",
+  "module": "Domain pack: e-commerce and D2C",
+  "level": "I",
+  "prereqs": [
+   "ecom-data-model"
+  ],
+  "pack": "ecom",
+  "status": "new",
+  "order": 207
+ },
+ {
+  "id": "seller-analytics",
+  "title": "Marketplace seller analytics",
+  "track": "da",
+  "module": "Domain pack: e-commerce and D2C",
+  "level": "I",
+  "prereqs": [
+   "ecom-data-model"
+  ],
+  "pack": "ecom",
+  "status": "new",
+  "order": 208
+ },
+ {
+  "id": "personalisation",
+  "title": "Personalisation and product recommendations",
+  "track": "da",
+  "module": "Domain pack: e-commerce and D2C",
+  "level": "A",
+  "prereqs": [
+   "recommenders"
+  ],
+  "pack": "ecom",
+  "status": "new",
+  "order": 209
+ },
+ {
+  "id": "availability",
+  "title": "Inventory availability and stock-outs",
+  "track": "da",
+  "module": "Domain pack: e-commerce and D2C",
+  "level": "I",
+  "prereqs": [
+   "inventory-analytics"
+  ],
+  "pack": "ecom",
+  "status": "new",
+  "order": 210
+ },
+ {
+  "id": "de-system-design",
+  "title": "Data system design interviews",
+  "track": "ar",
+  "module": "Career: interviews and portfolio",
+  "level": "A",
+  "prereqs": [
+   "modern-data-stack"
+  ],
+  "pack": "career",
+  "status": "new",
+  "order": 211
+ },
+ {
+  "id": "sql-interview-strategy",
+  "title": "SQL interview strategy",
+  "track": "ar",
+  "module": "Career: interviews and portfolio",
+  "level": "I",
+  "prereqs": [
+   "window-functions"
+  ],
+  "pack": "career",
+  "status": "new",
+  "order": 212
+ },
+ {
+  "id": "analytics-case",
+  "title": "Analytics case interviews",
+  "track": "ar",
+  "module": "Career: interviews and portfolio",
+  "level": "I",
+  "prereqs": [
+   "metric-rca"
+  ],
+  "pack": "career",
+  "status": "new",
+  "order": 213
+ },
+ {
+  "id": "behavioural-star",
+  "title": "Behavioural interviews with the STAR method",
+  "track": "ar",
+  "module": "Career: interviews and portfolio",
+  "level": "F",
+  "prereqs": [],
+  "pack": "career",
+  "status": "new",
+  "order": 214
+ },
+ {
+  "id": "portfolio",
+  "title": "Building a data portfolio",
+  "track": "ar",
+  "module": "Career: interviews and portfolio",
+  "level": "F",
+  "prereqs": [],
+  "pack": "career",
+  "status": "new",
+  "order": 215
+ }
+]
