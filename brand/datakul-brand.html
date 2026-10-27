@@ -1,137 +1,60 @@
-<title>Datakul Brand</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='17' fill='%23F28C28'/%3E%3Cpath d='M15 51C27 51 39 49.5 39 42.5C39 35.5 21 37 21 30.5C21 25 31 27.5 40 27.5' fill='none' stroke='%23FFFFFF' stroke-width='5.4' stroke-linecap='round' stroke-dasharray='0.01 7.9'/%3E%3Ccircle cx='15' cy='51' r='5' fill='%23FFFFFF'/%3E%3Cpath d='M45 8V28' stroke='%2310202B' stroke-width='3.6' stroke-linecap='round'/%3E%3Cpath d='M45 8.5H56.5L53 13.25L56.5 18H45Z' fill='%2310202B' stroke='%2310202B' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500&display=swap">
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Datakul brand</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400&display=swap">
 <style>
-/* Layout: a one-page brand sheet. The mark large, then lockups, palette swatches, type specimens and usage rules. Same tokens as the app. */
-:root{
-  --bg:#F3F6F8; --surface:#FFFFFF; --surface-2:#EAF1F4; --ink:#10202B; --muted:#56687A; --line:#DCE4EA; --dot:#D3DDE4;
-  --accent:#0E6B8C; --accent-soft:#E0EFF5; --accent-ink:#FFFFFF; --accent-deep:#09506A;
-  --flame:#F28C28; --flame-soft:#FFF0DD; --flame-ink:#9A4A00; --flame-line:#F7C995;
-  --de:#B4581A; --da:#1C6DB0; --ds:#A23A7A; --ar:#2D7A4C; --good:#2D7A4C; --good-soft:#E3F2E8; --warn:#A66400; --warn-soft:#FBF0DC;
-  --lock:#8B9AA6; --night:#10202B; --night-ink:#FFFFFF; --night-muted:#B9C7D0; --night-line:#243742;
-  --shadow:0 1px 2px rgb(16 32 43 / .06),0 8px 24px rgb(16 32 43 / .07);
-  --shadow-lift:0 2px 4px rgb(16 32 43 / .07),0 14px 30px rgb(16 32 43 / .10);
-  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
-  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
-  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
-  --r-card:22px; --r-ctl:12px; --side:240px; --tabh:0px;
-}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0B141A; --surface:#13202A; --surface-2:#182A35; --ink:#E6EEF2; --muted:#8FA3AF; --line:#243742; --dot:#1A2B35;
-  --accent:#5CC3E6; --accent-soft:#123444; --accent-ink:#06151C; --accent-deep:#2E8FB3;
-  --flame:#FFA552; --flame-soft:#2A2218; --flame-ink:#FFC27A; --flame-line:#5A3E1E;
-  --de:#F0A266; --da:#7DB7EC; --ds:#E68CC0; --ar:#7FCB9A; --good:#7FCB9A; --good-soft:#163024; --warn:#E8B45A; --warn-soft:#33270F;
-  --lock:#5D7180; --night:#1B2E3A; --night-ink:#FFFFFF; --night-muted:#A9BAC5; --night-line:#2C4352;
-  --shadow:0 1px 2px rgb(0 0 0 / .35),0 8px 24px rgb(0 0 0 / .25);
-  --shadow-lift:0 2px 4px rgb(0 0 0 / .4),0 14px 30px rgb(0 0 0 / .3); color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#0B141A; --surface:#13202A; --surface-2:#182A35; --ink:#E6EEF2; --muted:#8FA3AF; --line:#243742; --dot:#1A2B35;
-  --accent:#5CC3E6; --accent-soft:#123444; --accent-ink:#06151C; --accent-deep:#2E8FB3;
-  --flame:#FFA552; --flame-soft:#2A2218; --flame-ink:#FFC27A; --flame-line:#5A3E1E;
-  --de:#F0A266; --da:#7DB7EC; --ds:#E68CC0; --ar:#7FCB9A; --good:#7FCB9A; --good-soft:#163024; --warn:#E8B45A; --warn-soft:#33270F;
-  --lock:#5D7180; --night:#1B2E3A; --night-ink:#FFFFFF; --night-muted:#A9BAC5; --night-line:#2C4352;
-  --shadow:0 1px 2px rgb(0 0 0 / .35),0 8px 24px rgb(0 0 0 / .25);
-  --shadow-lift:0 2px 4px rgb(0 0 0 / .4),0 14px 30px rgb(0 0 0 / .3); color-scheme:dark}
-
-
+:root{--bg:#F2F6F8;--surface:#FFFFFF;--ink:#0B2A3A;--muted:#4F6676;--line:#D8E3EA}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#071C27;--surface:#0C2836;--ink:#E4F0F5;--muted:#8FAFBF;--line:#1D4357}}
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.6}
-.wrap{max-width:900px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 56px;display:flex;flex-direction:column;gap:40px}
-h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance}
-p{margin:0}
-.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.hero{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr);gap:32px;align-items:center}
-.hero svg{width:100%;max-width:220px;height:auto;filter:drop-shadow(0 18px 30px rgb(242 140 40 / .30))}
-.hero h1{font-size:clamp(36px,7vw,56px);font-weight:800;letter-spacing:-.035em;line-height:1}
-.hero p{color:var(--muted);max-width:54ch;margin-top:12px}
-.tag{display:inline-block;margin-top:14px;font-family:var(--f-display);font-weight:700;font-size:20px;color:var(--flame-ink)}
-section{display:flex;flex-direction:column;gap:14px}
-section>h2{font-size:26px;font-weight:800;letter-spacing:-.025em}
-section>p{color:var(--muted);max-width:64ch}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-.panel{border-radius:22px;padding:28px;display:flex;align-items:center;justify-content:center;min-height:150px;border:1px solid var(--line)}
-.panel.light{background:#FFFFFF} .panel.dark{background:#0B141A;border-color:#0B141A}
-.lock{display:flex;align-items:center;gap:14px}
-.cap{font-size:13px;color:var(--muted);margin-top:6px}
-.sw{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.chipc{border-radius:18px;overflow:hidden;border:1px solid var(--line);background:var(--surface)}
-.chipc i{display:block;height:84px}
-.chipc div{padding:10px 12px;display:flex;flex-direction:column;gap:1px}
-.chipc b{font-size:14.5px}
-.chipc code{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
-.type{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:22px;display:flex;flex-direction:column;gap:18px;box-shadow:var(--shadow)}
-.spec{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;align-items:baseline;border-top:1px solid var(--line);padding-top:16px}
-.spec:first-child{border-top:0;padding-top:0}
-.spec .k{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
-.d1{font-family:var(--f-display);font-weight:800;font-size:40px;letter-spacing:-.03em;line-height:1.05}
-.b1{font-size:17px}
-.m1{font-family:var(--f-mono);font-size:14px}
-.rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-.rule{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px 18px;display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow)}
-.rule b{font-family:var(--f-display);font-size:17px}
-.rule.do b{color:var(--good)} .rule.dont b{color:var(--warn)}
-.rule p{font-size:14.5px;color:var(--muted)}
-.icons{display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap}
-.icons figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:6px}
-.icons figcaption{font-family:var(--f-mono);font-size:11.5px;color:#56687A}
-@media (max-width:640px){.hero{grid-template-columns:1fr;justify-items:start}.hero svg{max-width:150px}.grid,.rules{grid-template-columns:1fr}.sw{grid-template-columns:repeat(2,minmax(0,1fr))}.spec{grid-template-columns:1fr;gap:4px}.lock svg:last-child{height:30px}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Atkinson Hyperlegible",system-ui,sans-serif}
+.wrap{max-width:1040px;margin:0 auto;padding:40px 16px 80px;display:flex;flex-direction:column;gap:28px}
+h1,h2{font-family:"Space Grotesk",system-ui,sans-serif;letter-spacing:-.02em;margin:0}
+h1{font-size:40px}
+.eyebrow{font:12px "JetBrains Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-wrap:wrap;gap:20px;align-items:center}
+.row img{display:block;max-width:100%}
+.dark{background:#071C27;border-radius:18px;padding:20px}
+.sw{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.sw div{border-radius:16px;overflow:hidden;border:1px solid var(--line)}
+.sw i{display:block;height:64px}
+.sw p{margin:0;padding:8px 10px;font-size:13px}
+.sw code{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--muted)}
+.muted{color:var(--muted)}
 </style>
+</head>
+<body>
 <div class="wrap">
-  <div class="hero">
-    <svg viewBox="0 0 64 64" width="220" height="220" aria-hidden="true"><rect width="64" height="64" rx="17" fill="#F28C28"/><path d="M15 51C27 51 39 49.5 39 42.5C39 35.5 21 37 21 30.5C21 25 31 27.5 40 27.5" fill="none" stroke="#FFFFFF" stroke-width="5.4" stroke-linecap="round" stroke-dasharray="0.01 7.9"/><circle cx="15" cy="51" r="5" fill="#FFFFFF"/><path d="M45 8V28" stroke="#10202B" stroke-width="3.6" stroke-linecap="round"/><path d="M45 8.5H56.5L53 13.25L56.5 18H45Z" fill="#10202B" stroke="#10202B" stroke-width="1.6" stroke-linejoin="round"/></svg>
-    <div>
-      <span class="eyebrow">Brand sheet</span>
-      <h1>Datakul</h1>
-      <p>A gurukul for data careers, built on quest-based learning. The mark is the quest trail: a winding path of milestones climbing from where you start to the flag you're aiming for, on saffron. The wordmark is drawn as one rounded line and ends in a saffron dot, the next step.</p>
-      <span class="tag">Every topic a quest. Every quest a step closer.</span>
-    </div>
-  </div>
-  <section>
-    <span class="eyebrow">Logo</span><h2>Lockups</h2>
-    <div class="grid">
-      <div><div class="panel light"><div class="lock"><svg viewBox="0 0 64 64" width="56" height="56" aria-hidden="true"><rect width="64" height="64" rx="17" fill="#F28C28"/><path d="M15 51C27 51 39 49.5 39 42.5C39 35.5 21 37 21 30.5C21 25 31 27.5 40 27.5" fill="none" stroke="#FFFFFF" stroke-width="5.4" stroke-linecap="round" stroke-dasharray="0.01 7.9"/><circle cx="15" cy="51" r="5" fill="#FFFFFF"/><path d="M45 8V28" stroke="#10202B" stroke-width="3.6" stroke-linecap="round"/><path d="M45 8.5H56.5L53 13.25L56.5 18H45Z" fill="#10202B" stroke="#10202B" stroke-width="1.6" stroke-linejoin="round"/></svg><svg viewBox="-4 -2 201 46" height="40" style="width:auto" aria-hidden="true"><path d="M23 6V40 M23 30A10 10 0 1 1 3 30A10 10 0 1 1 23 30 M54 20V40 M54 30A10 10 0 1 1 34 30A10 10 0 1 1 54 30 M66 9V33.5Q66 40 72.5 40H75 M60 20H75 M103 20V40 M103 30A10 10 0 1 1 83 30A10 10 0 1 1 103 30 M116 6V40 M133 20L117.5 32 M123.5 27.5L134 40 M145 20V30A10 10 0 0 0 165 30 M165 20V40 M178 6V40" fill="none" stroke="#10202B" stroke-width="6.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="191" cy="37.2" r="4.6" fill="#F28C28"/></svg></div></div><p class="cap">Primary, on light backgrounds</p></div>
-      <div><div class="panel dark"><div class="lock"><svg viewBox="0 0 64 64" width="56" height="56" aria-hidden="true"><rect width="64" height="64" rx="17" fill="#F28C28"/><path d="M15 51C27 51 39 49.5 39 42.5C39 35.5 21 37 21 30.5C21 25 31 27.5 40 27.5" fill="none" stroke="#FFFFFF" stroke-width="5.4" stroke-linecap="round" stroke-dasharray="0.01 7.9"/><circle cx="15" cy="51" r="5" fill="#FFFFFF"/><path d="M45 8V28" stroke="#10202B" stroke-width="3.6" stroke-linecap="round"/><path d="M45 8.5H56.5L53 13.25L56.5 18H45Z" fill="#10202B" stroke="#10202B" stroke-width="1.6" stroke-linejoin="round"/></svg><svg viewBox="-4 -2 201 46" height="40" style="width:auto" aria-hidden="true"><path d="M23 6V40 M23 30A10 10 0 1 1 3 30A10 10 0 1 1 23 30 M54 20V40 M54 30A10 10 0 1 1 34 30A10 10 0 1 1 54 30 M66 9V33.5Q66 40 72.5 40H75 M60 20H75 M103 20V40 M103 30A10 10 0 1 1 83 30A10 10 0 1 1 103 30 M116 6V40 M133 20L117.5 32 M123.5 27.5L134 40 M145 20V30A10 10 0 0 0 165 30 M165 20V40 M178 6V40" fill="none" stroke="#E6EEF2" stroke-width="6.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="191" cy="37.2" r="4.6" fill="#F28C28"/></svg></div></div><p class="cap">On dark backgrounds</p></div>
-      <div><div class="panel light" style="background:#FFF0DD;border-color:#FFF0DD"><div class="lock"><svg viewBox="-4 -2 201 46" height="44" style="width:auto" aria-hidden="true"><path d="M23 6V40 M23 30A10 10 0 1 1 3 30A10 10 0 1 1 23 30 M54 20V40 M54 30A10 10 0 1 1 34 30A10 10 0 1 1 54 30 M66 9V33.5Q66 40 72.5 40H75 M60 20H75 M103 20V40 M103 30A10 10 0 1 1 83 30A10 10 0 1 1 103 30 M116 6V40 M133 20L117.5 32 M123.5 27.5L134 40 M145 20V30A10 10 0 0 0 165 30 M165 20V40 M178 6V40" fill="none" stroke="#10202B" stroke-width="6.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="191" cy="37.2" r="4.6" fill="#F28C28"/></svg></div></div><p class="cap">Wordmark alone, when the mark is already nearby</p></div>
-      <div><div class="panel light"><div class="icons">
-        <figure><svg viewBox="0 0 64 64" width="96" height="96" aria-hidden="true"><rect width="64" height="64" rx="17" fill="#F28C28"/><path d="M15 51C27 51 39 49.5 39 42.5C39 35.5 21 37 21 30.5C21 25 31 27.5 40 27.5" fill="none" stroke="#FFFFFF" stroke-width="5.4" stroke-linecap="round" stroke-dasharray="0.01 7.9"/><circle cx="15" cy="51" r="5" fill="#FFFFFF"/><path d="M45 8V28" stroke="#10202B" stroke-width="3.6" stroke-linecap="round"/><path d="M45 8.5H56.5L53 13.25L56.5 18H45Z" fill="#10202B" stroke="#10202B" stroke-width="1.6" stroke-linejoin="round"/></svg><figcaption>App icon</figcaption></figure>
-        <figure><svg viewBox="0 0 64 64" width="48" height="48" aria-hidden="true"><rect width="64" height="64" rx="17" fill="#F28C28"/><path d="M15 51C27 51 39 49.5 39 42.5C39 35.5 21 37 21 30.5C21 25 31 27.5 40 27.5" fill="none" stroke="#FFFFFF" stroke-width="5.4" stroke-linecap="round" stroke-dasharray="0.01 7.9"/><circle cx="15" cy="51" r="5" fill="#FFFFFF"/><path d="M45 8V28" stroke="#10202B" stroke-width="3.6" stroke-linecap="round"/><path d="M45 8.5H56.5L53 13.25L56.5 18H45Z" fill="#10202B" stroke="#10202B" stroke-width="1.6" stroke-linejoin="round"/></svg><figcaption>48 px</figcaption></figure>
-        <figure><svg viewBox="0 0 64 64" width="24" height="24" aria-hidden="true"><rect width="64" height="64" rx="17" fill="#F28C28"/><path d="M15 51C27 51 39 49.5 39 42.5C39 35.5 21 37 21 30.5C21 25 31 27.5 40 27.5" fill="none" stroke="#FFFFFF" stroke-width="5.4" stroke-linecap="round" stroke-dasharray="0.01 7.9"/><circle cx="15" cy="51" r="5" fill="#FFFFFF"/><path d="M45 8V28" stroke="#10202B" stroke-width="3.6" stroke-linecap="round"/><path d="M45 8.5H56.5L53 13.25L56.5 18H45Z" fill="#10202B" stroke="#10202B" stroke-width="1.6" stroke-linejoin="round"/></svg><figcaption>24 px</figcaption></figure>
-        <figure><svg viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><rect width="64" height="64" rx="17" fill="#F28C28"/><path d="M15 51C27 51 39 49.5 39 42.5C39 35.5 21 37 21 30.5C21 25 31 27.5 40 27.5" fill="none" stroke="#FFFFFF" stroke-width="5.4" stroke-linecap="round" stroke-dasharray="0.01 7.9"/><circle cx="15" cy="51" r="5" fill="#FFFFFF"/><path d="M45 8V28" stroke="#10202B" stroke-width="3.6" stroke-linecap="round"/><path d="M45 8.5H56.5L53 13.25L56.5 18H45Z" fill="#10202B" stroke="#10202B" stroke-width="1.6" stroke-linejoin="round"/></svg><figcaption>16 px</figcaption></figure>
-      </div></div><p class="cap">The trail and flag hold up down to favicon size</p></div>
-    </div>
+  <div><span class="eyebrow">Brand</span><h1>Datakul</h1><p class="muted">The compass: find your path through data careers. A saffron north needle in a sky-blue ring on deep navy. Built by <code>tools/make_brand.py</code>.</p></div>
+  <section class="card"><h2>Logo</h2>
+    <div class="row"><img src="datakul-logo.svg" alt="Datakul logo" style="height:72px"><img src="datakul-logo-stacked.svg" alt="Datakul stacked logo" style="height:140px"></div>
+    <div class="dark"><img src="datakul-logo-dark.svg" alt="Datakul logo on dark" style="height:90px"></div>
+    <p class="muted">Keep clear space of half the mark's width around the logo. Don't recolour, stretch or add effects.</p>
   </section>
-  <section>
-    <span class="eyebrow">Colour</span><h2>Saffron and peacock</h2>
-    <p>Saffron is the brand: the logo, progress, XP and wins. Peacock blue runs the interface: buttons, links and the selected tab. Four track colours tell the career streams apart.</p>
+  <section class="card"><h2>App icons</h2>
+    <div class="row"><img src="datakul-icon-192.png" alt="App icon" width="96" height="96"><img src="datakul-maskable-512.png" alt="Android adaptive icon" width="96" height="96"><img src="datakul-apple-180.png" alt="Apple touch icon" width="64" height="64"><img src="datakul-favicon-32.png" alt="Favicon" width="32" height="32"></div>
+  </section>
+  <section class="card"><h2>Colour</h2>
     <div class="sw">
-      <div class="chipc"><i style="background:#F28C28"></i><div><b>Saffron</b><code>#F28C28</code></div></div>
-      <div class="chipc"><i style="background:#0E6B8C"></i><div><b>Peacock</b><code>#0E6B8C</code></div></div>
-      <div class="chipc"><i style="background:#10202B"></i><div><b>Ink</b><code>#10202B</code></div></div>
-      <div class="chipc"><i style="background:#F3F6F8;border-bottom:1px solid #DCE4EA"></i><div><b>Chalk</b><code>#F3F6F8</code></div></div>
-      <div class="chipc"><i style="background:#B4581A"></i><div><b>Engineering</b><code>#B4581A</code></div></div>
-      <div class="chipc"><i style="background:#1C6DB0"></i><div><b>Analysis</b><code>#1C6DB0</code></div></div>
-      <div class="chipc"><i style="background:#A23A7A"></i><div><b>Science</b><code>#A23A7A</code></div></div>
-      <div class="chipc"><i style="background:#2D7A4C"></i><div><b>Architecture</b><code>#2D7A4C</code></div></div>
+      <div><i style="background:#0B2A3A"></i><p>Navy<br><code>#0B2A3A</code></p></div>
+      <div><i style="background:#5CC3E6"></i><p>Sky<br><code>#5CC3E6</code></p></div>
+      <div><i style="background:#0B6F94"></i><p>Interface blue<br><code>#0B6F94</code></p></div>
+      <div><i style="background:#FF8A2A"></i><p>Saffron<br><code>#FF8A2A</code></p></div>
+      <div><i style="background:#F2F6F8"></i><p>Chalk<br><code>#F2F6F8</code></p></div>
+      <div><i style="background:#000000"></i><p>Pitch dark<br><code>#000000</code></p></div>
     </div>
   </section>
-  <section>
-    <span class="eyebrow">Type</span><h2>Three voices</h2>
-    <div class="type">
-      <div class="spec"><span class="k">Bricolage Grotesque<br>Display, 700–800</span><span class="d1">Good morning. Ready for today's quest?</span></div>
-      <div class="spec"><span class="k">Atkinson Hyperlegible<br>Body, 400 and 700</span><span class="b1">Change data capture streams every insert, update and delete from the database log, so downstream tables stay current without full reloads.</span></div>
-      <div class="spec"><span class="k">JetBrains Mono<br>Code and data</span><span class="m1">SELECT region, SUM(amount) FROM orders GROUP BY 1;</span></div>
-    </div>
+  <section class="card"><h2>Type</h2>
+    <p style="font-family:'Space Grotesk';font-weight:700;font-size:34px;margin:0">Space Grotesk, for headings</p>
+    <p style="margin:0">Atkinson Hyperlegible, for body text: chosen for legibility.</p>
+    <p style="font-family:'JetBrains Mono',monospace;margin:0">JetBrains Mono, for code and data</p>
   </section>
-  <section>
-    <span class="eyebrow">Usage</span><h2>A few rules</h2>
-    <div class="rules">
-      <div class="rule do"><b>Do give it room</b><p>Keep clear space around the logo at least the height of the flag.</p></div>
-      <div class="rule do"><b>Do write it "Datakul"</b><p>Capital D in sentences. The wordmark itself is always lowercase, with its saffron dot.</p></div>
-      <div class="rule dont"><b>Don't recolour the tile</b><p>The mark is always saffron with a white trail and an ink flag.</p></div>
-      <div class="rule dont"><b>Don't use saffron for everything</b><p>In the app, saffron marks progress and wins. If everything glows, nothing does.</p></div>
-    </div>
+  <section class="card"><h2>Themes</h2>
+    <p style="margin:0">Auto (follows the device), Light, Dark (navy) and Pitch dark (true black for OLED phones), in Settings → Appearance.</p>
   </section>
 </div>
+</body>
+</html>

@@ -98,7 +98,7 @@ function loadMermaid() {
   mermaidP.catch(() => { mermaidP = null; });
   return mermaidP;
 }
-const isDark = () => { const t = document.documentElement.dataset.theme; return t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches; };
+const isDark = () => { const t = document.documentElement.dataset.theme; return t ? t === "dark" || t === "black" : matchMedia("(prefers-color-scheme: dark)").matches; };
 async function drawMermaid(root) {
   const els = [...root.querySelectorAll(".mmd[data-src]")];
   if (!els.length) return;
@@ -179,6 +179,22 @@ async function streamChat(payload, onText) {
   return { text: full, ...used };
 }
 
+/* appearance: auto (follows the device), light, dark (navy) or black ("Pitch dark", for OLED phones) */
+const THEME_BG = { light: "#F2F6F8", dark: "#071C27", black: "#000000" };
+function applyTheme(t) {
+  const r = document.documentElement;
+  if (THEME_BG[t]) r.dataset.theme = t; else delete r.dataset.theme;
+  const eff = r.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.remove());
+  const m = document.createElement("meta"); m.name = "theme-color"; m.content = THEME_BG[eff]; document.head.appendChild(m);
+}
+applyTheme(store.get("theme", "auto"));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => applyTheme(store.get("theme", "auto")));
+document.addEventListener("change", (e) => {
+  if (e.target.name !== "theme") return;
+  store.set("theme", e.target.value); applyTheme(e.target.value);
+});
+
 /* settings sheet */
 /* model used to generate practice problems: null = same as the answer engine */
 let genEngine = store.get("genEngine", null);
@@ -209,6 +225,8 @@ function renderSheet() {
   }).join("")).join("");
   $("#shareWrap").hidden = !canShare();
   $("#shareChk").checked = shareOn();
+  const tv = store.get("theme", "auto");
+  document.querySelectorAll('input[name="theme"]').forEach((r) => (r.checked = r.value === tv));
   const st = $("#gwStatus");
   st.className = "status";
   if (gwState === "off") st.textContent = "AI providers appear here once the gateway address is set in config.js.";
@@ -234,7 +252,7 @@ $("#genSel").addEventListener("change", (e) => {
   store.set("genEngine", genEngine);
   if (typeof onGenEngineChange === "function") onGenEngineChange();
 });
-const openSheet = () => { renderSheet(); $("#sheet").hidden = false; $("#sheetDone").focus(); };
+const openSheet = () => { renderSheet(); $("#sheet").hidden = false; $("#sheet .sheet-card").scrollTop = 0; const r = $('input[name="theme"]:checked'); (r || $("#sheetDone")).focus({ preventScroll: true }); };
 const closeSheet = () => { $("#sheet").hidden = true; if (typeof onGenEngineChange === "function") onGenEngineChange(); };
 $("#gear").addEventListener("click", openSheet);
 $("#engineLine").addEventListener("click", openSheet);

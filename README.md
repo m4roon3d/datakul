@@ -202,13 +202,15 @@ tools/sync-grader.mjs copies the grader from app.js into the gateway
 
 ## Brand
 
-The `brand/` folder holds the Datakul logo and icons:
+The logo is the **compass**: a saffron north needle in a sky-blue ring on a deep navy tile, for "find your path". The wordmark is "datakul" in Space Grotesk Bold, "data" in navy and "kul" in saffron, outlined so it looks the same everywhere.
 
-- `datakul-logo.svg` / `datakul-logo-dark.svg`: horizontal lockup for light and dark backgrounds (PNG copies included).
-- `datakul-logo-stacked.svg`, `datakul-wordmark.svg`, `datakul-mark.svg`: stacked lockup, wordmark only, mark only.
-- `datakul-icon-512.png`, `datakul-icon-192.png`, `datakul-maskable-512.png`, `datakul-apple-180.png`, `datakul-favicon-32.png`: app and Android icons. Use the maskable icon for the Android adaptive icon.
-- `datakul-brand.html`: the brand sheet (colours, type, usage).
+All brand files are built by `python3 tools/make_brand.py` from one definition (the font is in `brand/fonts/`, OFL licence):
 
-The mark is the quest trail: a dotted path winding up to a flag on a saffron tile. The wordmark is a single rounded line ending in a saffron dot.
+- `datakul-logo.svg` / `datakul-logo-dark.svg` (+ PNG), `datakul-logo-stacked.svg`, `datakul-wordmark.svg`, `datakul-mark.svg`
+- `datakul-icon-512.png`, `datakul-icon-192.png`, `datakul-maskable-512.png` (Android adaptive icon), `datakul-apple-180.png`, `datakul-favicon-32.png`
+- `inline.json`: the mark and wordmark snippets used in `web/index.html` and `web/admin.html`
+- `datakul-brand.html`: the brand sheet
 
-Colours: saffron `#F28C28` (brand, progress), peacock `#0E6B8C` (interface), ink `#10202B`, chalk `#F3F6F8`. Type: Bricolage Grotesque (display), Atkinson Hyperlegible (body), JetBrains Mono (code).
+Colours: navy `#0B2A3A` (ink, tile), interface blue `#0B6F94` (light) / sky `#5CC3E6` (dark), saffron `#F7861F` / `#FF8A2A` (brand, progress, XP). Type: Space Grotesk (display), Atkinson Hyperlegible (body), JetBrains Mono (code).
+
+**Themes:** Settings → Appearance offers Auto (follows the device), Light, Dark (navy) and Pitch dark (true black, kind to OLED phone batteries). The choice is saved in `dp_theme` and applied before the page paints.
