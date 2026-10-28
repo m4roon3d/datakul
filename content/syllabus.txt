@@ -1,6 +1,6 @@
 # Datakul syllabus source.
 # "## track | module" starts a module. Each topic line: id | title | level (F/I/A) | prerequisite ids (comma) | pack
-# Packs: core, logistics, fintech, ecom, tool, career. Topics whose id matches an existing library entry are marked as existing automatically.
+# Packs: core, logistics, fintech, ecom, tool, career (wave 1); genai, cloud, industry, advanced (wave 2). Topics whose id matches an existing library entry are marked as existing automatically.
 
 ## de | Foundations
 de-lifecycle | The data engineering lifecycle | F | | core
@@ -280,3 +280,170 @@ sql-interview-strategy | SQL interview strategy | I | window-functions | career
 analytics-case | Analytics case interviews | I | metric-rca | career
 behavioural-star | Behavioural interviews with the STAR method | F | | career
 portfolio | Building a data portfolio | F | | career
+
+# ===================== Wave 2 (planned 28 Oct 2026) =====================
+# Written about 10 a week by the weekly content task, in the order of queue.txt. Packs: genai, cloud, industry, advanced.
+
+## ds | GenAI and AI engineering
+ai-engineer-role | The AI engineer role and career path | F | llm-fundamentals | genai
+vector-databases | Vector databases and similarity search | I | embeddings | genai
+chunking-strategies | Chunking documents for retrieval | I | rag | genai
+hybrid-search | Hybrid search and re-ranking | A | vector-databases | genai
+rag-evaluation | Evaluating RAG systems | A | rag, llm-evaluation | genai
+eval-datasets | Building evaluation datasets and golden sets | I | llm-evaluation | genai
+function-calling | Structured outputs and function calling | I | prompting-data | genai
+llm-agents | LLM agents and tool use | A | function-calling | genai
+mcp-integrations | Connecting LLMs to tools and data with MCP | I | function-calling | genai
+fine-tuning | Fine-tuning vs prompting vs RAG | I | rag | genai
+lora-peft | Parameter-efficient fine-tuning with LoRA | A | fine-tuning | genai
+llm-serving | Serving LLMs: latency, batching and throughput | A | llm-fundamentals | genai
+llm-cost | Token economics and LLM cost control | I | llm-fundamentals | genai
+semantic-caching | Semantic caching for LLM apps | I | vector-databases | genai
+guardrails | Guardrails, safety and prompt injection | I | prompting-data | genai
+llm-observability | LLM observability and tracing | I | llm-evaluation | genai
+text-to-sql | Text-to-SQL and natural language analytics | I | prompting-data | genai
+synthetic-data | Synthetic data generation | I | llm-fundamentals | genai
+multimodal | Multimodal models: images, audio and documents | I | transformers | genai
+knowledge-graphs | Knowledge graphs and GraphRAG | A | rag | genai
+genai-system-design | GenAI system design interviews | A | rag-evaluation, llm-serving | genai
+
+## de | Data engineering for AI
+document-ai | Document AI: OCR and extraction pipelines | I | file-ingestion | genai
+llm-pipelines-de | LLM-powered steps in data pipelines | I | function-calling | genai
+data-for-llm-training | Preparing data for LLM training and fine-tuning | A | data-quality | genai
+embedding-pipelines | Embedding pipelines and keeping vectors fresh | I | vector-databases | genai
+
+## da | AI for analysts
+prompting-analysts | Prompting for analysts | F | | genai
+ai-assisted-sql | AI-assisted SQL and analysis | F | sql-basics | genai
+llm-text-analytics | Analysing text with LLMs: themes and sentiment | I | prompting-analysts | genai
+ai-output-validation | Checking AI-generated analysis | I | ai-assisted-sql | genai
+nl-dashboards | Conversational BI and natural-language dashboards | I | dashboards | genai
+
+## de | Cloud platforms: AWS
+aws-data-services | AWS data services map | F | cloud-platforms | cloud
+aws-s3-lake | Building a data lake on S3 with Lake Formation | I | aws-data-services | cloud
+aws-redshift | Amazon Redshift | I | aws-data-services | cloud
+aws-kinesis-msk | Streaming on AWS: Kinesis and MSK | I | kafka-basics | cloud
+aws-de-cert | Preparing for the AWS Data Engineer Associate exam | I | aws-data-services | cloud
+
+## de | Cloud platforms: Azure
+azure-data-services | Azure data services map | F | cloud-platforms | cloud
+azure-fabric | Microsoft Fabric for data engineers | I | azure-data-services | cloud
+azure-event-hubs | Streaming on Azure: Event Hubs and Stream Analytics | I | kafka-basics | cloud
+azure-dp-cert | Preparing for the Fabric Data Engineer (DP-700) exam | I | azure-fabric | cloud
+
+## de | Cloud platforms: Google Cloud
+gcp-data-services | Google Cloud data services map | F | cloud-platforms | cloud
+gcp-dataflow-pubsub | Dataflow and Pub/Sub | I | stream-processing | cloud
+gcp-pde-cert | Preparing for the Google Professional Data Engineer exam | I | gcp-data-services | cloud
+
+## de | Databricks and Snowflake in depth
+unity-catalog | Databricks Unity Catalog | I | databricks | cloud
+lakeflow-dlt | Declarative pipelines in Databricks (Lakeflow, formerly Delta Live Tables) | I | databricks | cloud
+databricks-cert | Preparing for the Databricks Data Engineer Associate exam | I | databricks | cloud
+snowflake-pipelines | Snowpipe, streams and tasks | A | snowflake | cloud
+snowpark | Snowpark for Python | I | snowflake | cloud
+snowflake-cert | Preparing for the SnowPro Core exam | I | snowflake | cloud
+
+## da | Certifications for analysts
+pl300-cert | Preparing for the Power BI Data Analyst (PL-300) exam | I | power-bi | cloud
+tableau-cert | Preparing for Tableau certification | I | tableau | cloud
+
+## ds | Cloud machine learning
+sagemaker | Amazon SageMaker | I | model-deployment | cloud
+vertex-ai | Google Vertex AI | I | model-deployment | cloud
+azure-ml | Azure Machine Learning | I | model-deployment | cloud
+
+## ar | Cloud architecture
+cloud-security-data | Cloud identity, access and encryption for data platforms | I | access-control | cloud
+cloud-networking-data | Networking for data platforms | I | cloud-platforms | cloud
+multi-cloud | Multi-cloud and hybrid data platforms | A | cloud-platforms | cloud
+
+## de | Domain pack: logistics and supply chain
+last-mile | Last-mile delivery data | I | shipment-visibility | logistics
+cold-chain | Cold chain monitoring | I | shipment-visibility | logistics
+freight-emissions | Freight emissions accounting | I | logistics-kpis | logistics
+
+## de | Domain pack: fintech and UPI payments
+account-aggregator | Account Aggregator and open banking in India | I | kyc-compliance | fintech
+credit-bureau | Credit bureau data | I | credit-scoring | fintech
+
+## de | Domain pack: banking and insurance
+core-banking-data | Core banking data model | I | ledger-design | industry
+aml-monitoring | Anti-money-laundering monitoring | A | fraud-signals | industry
+insurance-data | Insurance policy and claims data | I | | industry
+regulatory-reporting | Regulatory reporting for banks | A | core-banking-data | industry
+loan-portfolio | Loan portfolio analytics: NPAs and vintages | I | credit-scoring | industry
+insurance-pricing | Insurance pricing and loss ratios for analysts | I | insurance-data | industry
+
+## de | Domain pack: healthcare
+health-data-standards | Healthcare data standards: HL7 and FHIR | I | apis-json | industry
+abdm | India's digital health stack (ABDM) | F | | industry
+health-claims | Health insurance claims analytics | I | insurance-data | industry
+hospital-ops | Hospital operations analytics | I | kpi-metrics | industry
+health-privacy | Health data privacy and consent | I | privacy-regulation | industry
+clinical-ml | Machine learning on clinical data | A | model-fairness | industry
+
+## da | Domain pack: retail and quick commerce
+qcom-ops | Quick commerce operations: dark stores and delivery slots | I | availability | industry
+assortment | Assortment and category analytics | I | kpi-metrics | industry
+store-analytics | Store performance and footfall analytics | I | kpi-metrics | industry
+loyalty | CRM and loyalty programme analytics | I | cohort | industry
+retail-demand | Store and SKU demand forecasting | A | forecasting | industry
+
+## de | Domain pack: manufacturing and IoT
+iot-pipelines | IoT and sensor data pipelines | I | stream-processing | industry
+time-series-db | Time series databases | I | iot-pipelines | industry
+oee | OEE and production analytics | I | kpi-metrics | industry
+predictive-maintenance | Predictive maintenance | A | anomaly-detection | industry
+mes-erp-data | MES and ERP data integration | I | integration-patterns | industry
+
+## da | Domain pack: telecom, media and ads
+telecom-churn | Telecom churn and ARPU | I | retention-churn | industry
+cdr-processing | Call detail record processing | I | batch-stream | industry
+content-engagement | Streaming media engagement analytics | I | cohort | industry
+ad-tech | Ad tech data: impressions, bids and attribution | A | attribution | industry
+
+## de | Advanced engineering
+duckdb-local | DuckDB and local-first analytics | I | query-engines | advanced
+polars | Polars for fast DataFrames | I | pandas-basics | advanced
+iceberg-internals | Apache Iceberg internals: snapshots, manifests and catalogs | A | table-formats | advanced
+table-maintenance | Table maintenance: compaction, expiry and clustering | A | table-formats | advanced
+spark-aqe | Spark query planning and adaptive execution | A | spark-tuning | advanced
+streaming-joins | Stream joins and late data | A | stateful-streaming | advanced
+exactly-once-e2e | End-to-end exactly-once pipelines | A | delivery-semantics | advanced
+cdc-at-scale | CDC at scale: snapshots, ordering and schema drift | A | cdc | advanced
+data-platform-design | Designing an internal data platform | A | modern-data-stack | advanced
+de-leadership | Leading a data engineering team | A | | advanced
+
+## da | Advanced analytics
+analytics-engineering | Analytics engineering with dbt | I | dbt-basics | advanced
+tracking-plans | Product event tracking plans | I | funnels | advanced
+cuped | CUPED and variance reduction | A | ab-testing | advanced
+experimentation-programme | Running an experimentation programme | A | ab-testing | advanced
+marketing-mix | Marketing mix modelling | A | attribution | advanced
+forecasting-analysts | Forecasting for analysts | I | descriptive-stats | advanced
+
+## ds | Advanced data science
+causal-inference | Causal inference: difference-in-differences and synthetic control | A | quasi-experiments | advanced
+bayesian-ab | Bayesian A/B testing | A | ab-testing, probability-bayes | advanced
+survival-analysis | Survival analysis | A | retention-churn | advanced
+learning-to-rank | Learning to rank | A | recommenders | advanced
+bandits | Multi-armed bandits | A | ab-testing | advanced
+graph-ml | Graph data and graph machine learning | A | embeddings | advanced
+
+## ar | Strategy and leadership
+data-strategy | Writing a data strategy | A | governance | advanced
+data-products | Data products and product thinking | I | data-mesh | advanced
+data-team-topology | Data team structures and operating models | A | data-mesh | advanced
+vendor-evaluation | Evaluating data tools and vendors | I | modern-data-stack | advanced
+ai-governance | AI governance and regulation | A | governance | advanced
+architecture-review | Running architecture reviews | A | adrs | advanced
+
+## ar | Career: interviews and portfolio
+staff-interviews | Staff and principal interview loops | A | de-system-design | career
+salary-negotiation | Negotiating a data job offer | F | | career
+switching-into-data | Switching into data from another career | F | | career
+data-resume | Writing a data résumé | F | portfolio | career
+freelancing-data | Freelancing and consulting in data | F | | career

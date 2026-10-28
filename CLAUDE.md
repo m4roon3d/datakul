@@ -8,8 +8,11 @@ short answers, no jargon).
 
 - `web/`: the app, served as static files. Scripts load in this order: config.js, library.js, community.js, problems.js,
   diagrams.js, app.js, pyrunner.js, practice.js, quests.js. `admin.html` is the community review page.
-- `web/library.js`: 215 concepts (`C`) and 400 interview questions (`Q`). Content is written in `content/batches/batchNN.py`,
-  checked with `node content/validate_batch.js <batch.json>` and merged with `content/merge_batch.js`.
+- `web/library.js`: the concepts (`C`) and interview questions (`Q`), 225 and 420 as of 28 Oct 2026 and growing weekly.
+  Content is written in `content/batches/batchNN.py`, checked with `node content/validate_batch.js <batch.json>` and merged
+  with `content/merge_batch.js` (which stamps new concepts with an `nw` date). The syllabus source is
+  `content/syllabus.txt`; wave 2 is written in the order of `content/queue.txt`. The weekly update follows
+  `docs/weekly-content.md`.
 - `worker/src/index.js`: AI gateway (providers, prompts, fallback). `worker/src/community.js`: layer 2 (collect unanswered
   questions, group nightly, draft, check, review, publish). `worker/migrations/`: D1 schema.
 - `worker/src/grader.js` is generated from the grader in `web/app.js` by `node tools/sync-grader.mjs`. Never edit it by hand;

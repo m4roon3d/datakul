@@ -226,6 +226,8 @@ a.lnk:hover{text-decoration:underline;text-underline-offset:3px}
 .chapters{display:flex;flex-direction:column}
 .chapters summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;font-weight:700;color:var(--accent);padding:4px 0}
 .chapters summary::-webkit-details-marker{display:none}
+.chapters summary svg{width:18px;height:18px;flex:none;transition:transform .2s}
+.chapters[open] summary svg{transform:rotate(180deg)}
 .chlist{display:flex;flex-direction:column;margin-top:8px}
 .ch{display:flex;align-items:center;gap:12px;border:0;border-top:1px solid var(--line);background:none;padding:11px 2px;text-align:left;width:100%}
 .ch span{flex:1;min-width:0}
@@ -473,6 +475,14 @@ textarea.ans-in:focus{border-color:var(--accent);outline:none}
 .sw-dark{background:#0C2836}
 .sw-black{background:#000000}
 .sw-auto{background:linear-gradient(135deg,#F2F6F8 50%,#0C2836 50%)}
+.newshelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.nitem{display:flex;flex-direction:column;gap:5px;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:18px;padding:13px 14px;box-shadow:var(--shadow);transition:border-color .15s,transform .15s}
+.nitem:hover{border-color:var(--accent);transform:translateY(-1px)}
+.nitem .nmeta{display:flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--flame-ink)}
+.nitem .nmeta .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.nitem b{font-family:var(--f-display);font-size:16px;line-height:1.25}
+.nitem small{color:var(--muted);font-size:12.5px}
+@media (max-width:899px){.newshelf{grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:minmax(210px,72%);overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;margin-inline:-2px}.nitem{scroll-snap-align:start}}
 .chk{display:flex;gap:12px;align-items:flex-start;border:1.5px solid var(--line);border-radius:16px;padding:12px 14px;cursor:pointer;margin-top:12px}
 .chk input{margin-top:5px;accent-color:var(--accent);width:18px;height:18px;flex:none}
 .chk span{display:flex;flex-direction:column;gap:2px;min-width:0}

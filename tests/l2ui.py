@@ -23,18 +23,18 @@ with sync_playwright() as p:
     pg.on("request", lambda r: misses.append(r.post_data) if r.url.endswith("/api/miss") else None)
     pg.goto(B + "/#tutor"); pg.wait_for_timeout(1200)
     ok(pg.is_visible("#shareNote"), "Ask home shows the anonymous sharing notice")
-    Q1 = "how do I tune pgvector hnsw indexes"
+    Q1 = "what is quillstream"  # a made-up tool, so the library never matches it
     top = pg.evaluate("(q)=>{const r=search(q);return r[0]?r[0].s:0}", Q1)
     ok(top < 8, f"test question has no strong library match (top score {top:.1f})")
     pg.fill("#askInput", Q1); pg.press("#askInput", "Enter"); pg.wait_for_timeout(2500)
-    ok(len(misses) == 1 and "pgvector" in (misses[0] or ""), "unanswered question is reported to /api/miss")
+    ok(len(misses) == 1 and "quillstream" in (misses[0] or ""), "unanswered question is reported to /api/miss")
     # opt out
     pg.click("#gear"); pg.wait_for_timeout(300)
     ok(pg.is_visible("#shareWrap") and pg.is_checked("#shareChk"), "settings show 'Help grow the library', on by default")
     pg.screenshot(path=OUT+"/l2-settings.png")
     pg.uncheck("#shareChk"); pg.click("#sheetDone"); pg.wait_for_timeout(200)
     ok(pg.evaluate("document.querySelector('#shareNote').hidden"), "notice hides after opting out")
-    pg.fill("#askInput", "is pgvector or pinecone faster"); pg.press("#askInput", "Enter"); pg.wait_for_timeout(2500)
+    pg.fill("#askInput", "is quillstream faster than vortiq"); pg.press("#askInput", "Enter"); pg.wait_for_timeout(2500)
     ok(len(misses) == 1, "after opting out, nothing is reported")
     # more learners ask the same thing, then the nightly job runs
     for i, q in enumerate(["vector database vs postgres for embeddings", "what is ann similarity search", "how do vector embeddings get indexed"]):
