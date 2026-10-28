@@ -27,7 +27,7 @@ globalThis.fetch = fakeLLM;
 
 /* ---- environment ---- */
 const DB = new D1Mock();
-await DB.exec(readFileSync(new URL("../worker/migrations/0001_init.sql", import.meta.url), "utf8"));
+for (const f of ["0001_init.sql", "0002_usage.sql"]) await DB.exec(readFileSync(new URL("../worker/migrations/" + f, import.meta.url), "utf8"));
 const env = { GROQ_API_KEY: "k", ADMIN_TOKEN: "s3cret-token", MIN_ASKERS: "10", DB, AI: { run: async (m, i) => ({ data: i.text.map(fakeVec) }) } };
 const req = (p, { method = "GET", body, ip = "1.1.1.1", token } = {}) => worker.fetch(new Request("https://gw" + p, {
   method, headers: { "content-type": "application/json", "cf-connecting-ip": ip, ...(token ? { authorization: "Bearer " + token } : {}) }, body: body ? JSON.stringify(body) : undefined,

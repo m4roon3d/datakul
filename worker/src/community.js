@@ -271,7 +271,10 @@ export async function runJob(env, deps) {
       drafted.push({ id: row.id, error: e.message });
     }
   }
-  return { deleted: del.meta ? del.meta.changes : undefined, ...grouped, drafted };
+  const result = { deleted: del.meta ? del.meta.changes : undefined, ...grouped, drafted };
+  if (deps.pruneUsage) await deps.pruneUsage();
+  if (deps.setMeta) await deps.setMeta("lastJob", { at: now(), result });
+  return result;
 }
 
 /* ---------------- 4. review ---------------- */
@@ -318,6 +321,12 @@ async function admin(request, url, env, deps) {
     };
   }
   if (path === "run" && request.method === "POST") return { status: 200, out: await runJob(env, deps) };
+  if (path === "status" && request.method === "GET" && deps.usageStatus) return { status: 200, out: await deps.usageStatus() };
+  if (path === "ping" && request.method === "POST" && deps.ping) {
+    let body;
+    try { body = await request.json(); } catch { return { status: 400, out: { error: "Request body must be JSON." } }; }
+    return { status: 200, out: await deps.ping(String(body.provider || ""), String(body.model || "")) };
+  }
 
   if (path === "decide" && request.method === "POST") {
     let body;

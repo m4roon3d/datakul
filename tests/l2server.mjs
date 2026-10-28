@@ -9,12 +9,13 @@ import worker from "../worker/src/index.js";
 
 const PORT = +(process.argv[2] || 8788), WEB = new URL("../web/", import.meta.url).pathname;
 const DB = new D1Mock();
-await DB.exec(readFileSync(new URL("../worker/migrations/0001_init.sql", import.meta.url), "utf8"));
+for (const f of ["0001_init.sql", "0002_usage.sql"]) await DB.exec(readFileSync(new URL("../worker/migrations/" + f, import.meta.url), "utf8"));
 const env = { GROQ_API_KEY: "k", ADMIN_TOKEN: "test-token", MIN_ASKERS: "3", DB, AI: { run: async (m, i) => ({ data: i.text.map(fakeVec) }) } };
 const sse = (t) => t.match(/[\s\S]{1,200}/g).map((p) => `data: ${JSON.stringify({ choices: [{ delta: { content: p } }] })}\n\n`).join("") + "data: [DONE]\n\n";
 globalThis.fetch = async (url, init) => {
   const body = JSON.parse(init.body), sys = body.messages[0].content;
   if (sys.includes("You write one new entry for Datakul")) return new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify(GOOD) } }] }), { status: 200 });
+  if (!body.stream) return new Response(JSON.stringify({ choices: [{ message: { content: "OK" } }], usage: { prompt_tokens: 12, completion_tokens: 2 } }), { status: 200, headers: { "x-ratelimit-remaining-requests": "990" } });
   const t = sys.includes("short study card") ? JSON.stringify({ title: "Vector search basics", takeaway: "Vector search finds the nearest embeddings to a query.", example: "A bot finds similar help articles.", check: "Why is approximate search used?", points: [{ t: "Speed over exact recall", k: ["speed", "approximate", "fast"] }, { t: "Index such as HNSW", k: ["hnsw", "index", "graph"] }] }) : "**Vector databases** store embeddings and find the nearest ones fast.";
   return new Response(sse(t), { status: 200 });
 };

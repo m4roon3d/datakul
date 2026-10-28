@@ -69,6 +69,26 @@ label.f small{font-weight:400;color:var(--muted)}
 .tabs button{border:1.5px solid var(--line);background:transparent;border-radius:999px;padding:6px 14px;font-weight:700;font-size:14px}
 .tabs button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .tabs button em{font-style:normal;font:500 12px var(--f-mono);opacity:.75;margin-left:4px}
+.st-sum{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.st-sec{display:flex;flex-direction:column;gap:12px;margin-top:22px}
+.st-sec h2{font-size:20px}
+.st-table{width:100%;border-collapse:collapse;font-size:14px}
+.st-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+.st-table th{text-align:left;font:500 11px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.st-table td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.st-table tr:last-child td{border-bottom:0}
+.st-table td small{display:block;color:var(--muted);font-size:12.5px}
+.hl{display:inline-flex;align-items:center;gap:6px;font-weight:700;white-space:nowrap}
+.hl i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.hl.ok i{background:var(--good)}.hl.warn i{background:var(--warn)}.hl.down i{background:var(--bad)}.hl.idle i{background:var(--line)}
+.ubar{height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden;margin-top:5px;min-width:90px}
+.ubar i{display:block;height:100%;background:var(--accent)}
+.ubar.hot i{background:var(--warn)}.ubar.full i{background:var(--bad)}
+.wk{display:flex;align-items:flex-end;gap:8px;height:120px;padding:12px 14px;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+.wk div{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.wk b{display:block;width:100%;max-width:38px;background:var(--accent);border-radius:6px 6px 2px 2px;min-height:2px}
+.wk small{font:11px var(--f-mono);color:var(--muted)}
+.chk-btn{border:1.5px solid var(--line);background:transparent;border-radius:10px;padding:5px 10px;font-weight:700;font-size:13px;white-space:nowrap}
 .grid{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start}
 @media (max-width:860px){.grid{grid-template-columns:1fr}}
 .list{display:flex;flex-direction:column;gap:8px}
@@ -132,11 +152,13 @@ label.f small{font-weight:400;color:var(--muted)}
       <button type="button" data-tab="open" aria-pressed="false">Gathering<em id="n-open"></em></button>
       <button type="button" data-tab="live" aria-pressed="false">Live<em id="n-live"></em></button>
       <button type="button" data-tab="rejected" aria-pressed="false">Rejected<em id="n-rejected"></em></button>
+      <button type="button" data-tab="status" aria-pressed="false">AI status</button>
     </div>
-    <div class="grid">
+    <div class="grid" id="queueGrid">
       <div class="list" id="list"></div>
       <div id="detail"></div>
     </div>
+    <div id="statusView" hidden></div>
   </main>
 </div>
 
@@ -193,7 +215,7 @@ function signOut(msg) {
 }
 
 /* ---- list ---- */
-const groups = () => (data ? data[tab] : []);
+const groups = () => (data && data[tab]) || [];
 function renderList() {
   const g = groups();
   if (!g.find((x) => x.id === openId)) openId = g[0] ? g[0].id : null;
@@ -324,10 +346,74 @@ async function act(what) {
   } catch (e) { if (e.message !== "unauthorised") out(esc(e.message), "bad"); }
   finally { busy = false; document.querySelectorAll("[data-do]").forEach((b) => (b.disabled = false)); }
 }
-function setTab(t) { tab = t; document.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.tab === t)); }
+function setTab(t) {
+  tab = t; document.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.tab === t));
+  $("#queueGrid").hidden = t === "status"; $("#statusView").hidden = t !== "status";
+  if (t === "status") loadStatus();
+}
+
+/* ---- AI status: health and usage of every model today (counts only; no learner text is logged) ---- */
+const ago = (ts) => { if (!ts) return "never"; const m = Math.round((Date.now() - ts) / 60000); return m < 1 ? "just now" : m < 60 ? m + " min ago" : m < 1440 ? Math.round(m / 60) + " h ago" : Math.round(m / 1440) + " d ago"; };
+const fmt = (x) => Number(x || 0).toLocaleString("en-IN");
+const HL = { ok: "Working", warn: "Check", down: "Failing", idle: "No calls today" };
+function bar(used, limit) {
+  if (!limit) return "";
+  const pct = Math.min(100, Math.round((100 * used) / limit));
+  return `<div class="ubar${pct >= 90 ? " full" : pct >= 70 ? " hot" : ""}" role="img" aria-label="${pct}% of the free daily allowance"><i style="width:${pct}%"></i></div>`;
+}
+async function loadStatus() {
+  const v = $("#statusView");
+  v.innerHTML = `<p class="muted">Loading…</p>`;
+  let s;
+  try { s = await api("status"); } catch (e) { if (e.message !== "unauthorised") v.innerHTML = `<p class="msg bad">${esc(e.message)}</p>`; return; }
+  if (s.off) { v.innerHTML = `<p class="msg">${esc(s.error || "AI status needs the D1 database.")}</p>`; return; }
+  const t = s.totals, failed = t.n - t.ok;
+  const mx = Math.max(1, ...s.week.map((d) => d.n));
+  v.innerHTML = `
+    <div class="st-sum">
+      <div class="stat"><b>${fmt(t.n)}</b><span>AI calls today</span></div>
+      <div class="stat"><b>${fmt(failed)}</b><span>failed (${t.n ? Math.round((100 * failed) / t.n) : 0}%)</span></div>
+      <div class="stat"><b>${fmt(t.busy)}</b><span>refused as busy or over quota</span></div>
+      <div class="stat"><b>${fmt(t.fallbacks)}</b><span>answered by a backup provider</span></div>
+      <div class="stat"><b>${fmt(t.tokens)}</b><span>tokens in + out</span></div>
+    </div>
+    <div class="st-sec"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2>Models</h2><span class="sp"></span><button class="btn quiet" type="button" id="checkAll">Check all now</button></div>
+      <div class="st-wrap"><table class="st-table"><thead><tr><th>Model</th><th>Health</th><th>Requests today</th><th>Tokens today</th><th>Speed</th><th>Last answer</th><th></th></tr></thead><tbody>
+      ${s.models.map((m, k) => `<tr>
+        <td><b>${esc(m.modelLabel)}</b><small>${esc(m.label)}</small></td>
+        <td><span class="hl ${m.health.level}"><i aria-hidden="true"></i>${HL[m.health.level]}</span>${m.health.level === "warn" || m.health.level === "down" ? `<small>${esc(m.health.why)}</small>` : ""}<small class="pingres" id="ping-${k}"></small></td>
+        <td>${fmt(m.n)}${m.limit && m.limit.req ? ` <small>of ${fmt(m.limit.req)}${m.limit.approx ? " (approx.)" : ""}${m.limit.shared ? " shared" : ""} free a day</small>${bar(m.n, m.limit.req)}` : ""}${m.remaining && m.remaining.req != null ? `<small>Provider says ${fmt(m.remaining.req)} left (${ago(m.remaining.at)})</small>` : ""}${m.busy ? `<small>${m.busy} refused as busy</small>` : ""}</td>
+        <td>${fmt(m.tin + m.tout)}${m.estimated ? " <small>estimated</small>" : ""}${m.limit && m.limit.tok ? `<small>of ${fmt(m.limit.tok)} free a day</small>${bar(m.tin + m.tout, m.limit.tok)}` : ""}</td>
+        <td>${m.ms ? (m.ms / 1000).toFixed(1) + " s" : "–"}<small>to first word</small></td>
+        <td>${ago(m.last_ok)}${m.fallbacks ? `<small>${m.fallbacks} as backup</small>` : ""}</td>
+        <td>${m.model.startsWith("@cf/baai") ? "" : `<button class="chk-btn" type="button" data-ping="${k}">Check now</button>`}</td></tr>`).join("")}
+      </tbody></table></div>
+      <p class="muted" style="font-size:13px">Free allowances reset at midnight UTC (5:30 am India time). Cloudflare's Workers AI allows 10,000 "neurons" a day shared by all its models, which isn't counted in tokens here. Token counts are the provider's own where it reports them, otherwise estimated from the text length.</p>
+    </div>
+    <div class="st-sec"><h2>What the AI was used for today</h2>
+      <div class="st-sum">${s.modes.length ? s.modes.map((m) => `<div class="stat"><b>${fmt(m.n)}</b><span>${esc({ tutor: "Ask answers", feedback: "Interview feedback", selfcheck: "Check my thinking", codereview: "Code reviews", generate: "Generated problems", cardify: "Personal study cards", draft: "Community drafts", embed: "Matching by meaning", ping: "Status checks" }[m.mode] || m.mode)}${m.n - m.ok ? ` · ${m.n - m.ok} failed` : ""}</span></div>`).join("") : `<p class="muted">No AI calls yet today.</p>`}</div>
+    </div>
+    <div class="st-sec"><h2>Last 7 days</h2>
+      <div class="wk" role="img" aria-label="AI calls per day for the last 7 days">${s.week.map((d) => `<div title="${d.day}: ${d.n} calls, ${d.n - d.ok} failed"><small>${fmt(d.n)}</small><b style="height:${Math.round((80 * d.n) / mx)}%"></b><small>${d.day.slice(5)}</small></div>`).join("") || `<p class="muted">No data yet.</p>`}</div>
+    </div>
+    <div class="st-sec"><h2>Nightly community job</h2>
+      <p>${s.lastJob ? `Last ran ${ago(s.lastJob.at)}: grouped ${fmt(s.lastJob.result && s.lastJob.result.assigned)} questions, drafted ${(s.lastJob.result && s.lastJob.result.drafted || []).length}.` : "Hasn't run yet. It runs at 2 am India time."}</p>
+    </div>`;
+  $("#checkAll").onclick = () => document.querySelectorAll("[data-ping]").forEach((b) => b.click());
+  v.querySelectorAll("[data-ping]").forEach((b) => (b.onclick = async () => {
+    const m = s.models[+b.dataset.ping], out = $("#ping-" + b.dataset.ping);
+    b.disabled = true; out.textContent = "Checking…";
+    try {
+      const r = await api("ping", { provider: m.provider, model: m.model });
+      out.textContent = r.ok ? `Answered in ${(r.ms / 1000).toFixed(1)} s just now` : `Didn't answer: ${r.error}`;
+      out.style.color = r.ok ? "var(--good)" : "var(--bad)";
+    } catch (e) { out.textContent = e.message; }
+    b.disabled = false;
+  }));
+}
 
 document.addEventListener("click", (e) => {
-  const t = e.target.closest("[data-tab]"); if (t) { setTab(t.dataset.tab); openId = null; renderList(); return; }
+  const t = e.target.closest("[data-tab]"); if (t) { setTab(t.dataset.tab); openId = null; if (tab !== "status") renderList(); return; }
   const it = e.target.closest(".item[data-id]"); if (it) { openId = +it.dataset.id; renderList(); return; }
   const d = e.target.closest("[data-do]"); if (d) { act(d.dataset.do); return; }
   const ap = e.target.closest("[data-addpt]"); if (ap) { const box = $(`#q${ap.dataset.addpt}-pts`); box.insertAdjacentHTML("beforeend", ptRow(+ap.dataset.addpt, box.children.length, { t: "", k: [] })); return; }

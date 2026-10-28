@@ -4,6 +4,7 @@
 // Layer 2 (the shared library that grows from learners' questions) lives in community.js.
 
 import { handleCommunity, runJob } from "./community.js";
+import { logUsage, meteredStream, promptTokens, rateHeaders, usageStatus, setMeta, pruneUsage } from "./usage.js";
 
 const PROVIDERS = {
   groq: {
@@ -424,7 +425,7 @@ async function callProvider(id, model, messages, env, maxTokens = LIMITS.maxToke
   });
 }
 
-async function chat(body, env, cors) {
+async function chat(body, env, cors, ctx) {
   const avail = configured(env).map(([id]) => id);
   if (!avail.length) return json({ error: "No AI provider keys are set on the gateway." }, 503, cors);
 
@@ -432,14 +433,17 @@ async function chat(body, env, cors) {
   const order = [first, ...FALLBACK_ORDER.filter((id) => id !== first && avail.includes(id))];
   const messages = buildMessages(body);
   const errors = [];
+  const mode = String(body.mode || "tutor").slice(0, 20), tin = promptTokens(messages);
 
-  for (const id of order) {
+  for (const [k, id] of order.entries()) {
     const p = PROVIDERS[id];
     const model = id === first && p.models.some((m) => m.id === body.model) ? body.model : p.models[0].id;
+    const t0 = Date.now();
     try {
       const r = await callProvider(id, model, messages, env, body.mode === "generate" ? LIMITS.maxTokensGenerate : body.mode === "cardify" ? 700 : LIMITS.maxTokens);
+      const rec = { provider: id, model, mode, ms: Date.now() - t0, tin, fallback: k > 0, ...rateHeaders(r) };
       if (r.ok && r.body) {
-        return new Response(r.body, {
+        return new Response(meteredStream(r.body, env, ctx, rec), {
           status: 200,
           headers: {
             "content-type": "text/event-stream; charset=utf-8",
@@ -452,54 +456,92 @@ async function chat(body, env, cors) {
         });
       }
       errors.push(`${p.label}: HTTP ${r.status}`);
+      ctx && ctx.waitUntil(logUsage(env, { ...rec, ok: false, status: r.status, err: `HTTP ${r.status}` }));
     } catch (e) {
       errors.push(`${p.label}: ${e.message}`);
+      ctx && ctx.waitUntil(logUsage(env, { provider: id, model, mode, ms: Date.now() - t0, tin, fallback: k > 0, ok: false, err: e.message }));
     }
   }
   return json({ error: "All providers are busy or out of free quota. Try again in a minute.", details: errors }, 502, cors);
 }
 
 /* ---------------- one-shot completion (no streaming), used for drafting community cards ---------------- */
-async function complete(messages, env, { maxTokens = 3000 } = {}) {
+async function complete(messages, env, { maxTokens = 3000, mode = "draft", only } = {}) {
   const avail = configured(env).map(([id]) => id);
   const prefer = env.DRAFT_PROVIDER && avail.includes(env.DRAFT_PROVIDER) ? env.DRAFT_PROVIDER : null;
-  const order = [...(prefer ? [prefer] : []), ...FALLBACK_ORDER.filter((id) => id !== prefer && avail.includes(id))];
-  const errors = [];
-  for (const id of order) {
+  const order = only ? [only.provider] : [...(prefer ? [prefer] : []), ...FALLBACK_ORDER.filter((id) => id !== prefer && avail.includes(id))];
+  const errors = [], tin = promptTokens(messages);
+  for (const [k, id] of order.entries()) {
     const p = PROVIDERS[id];
-    const model = id === prefer && env.DRAFT_MODEL ? env.DRAFT_MODEL : p.models[0].id;
+    const model = only ? only.model : id === prefer && env.DRAFT_MODEL ? env.DRAFT_MODEL : p.models[0].id;
+    const t0 = Date.now();
+    const rec = { provider: id, model, mode, tin, fallback: k > 0 };
     try {
-      let text = "";
+      let text = "", usage = null, rl = {};
       if (p.binding) {
         const r = await env.AI.run(model, { messages, temperature: 0.3, max_tokens: maxTokens });
         text = typeof r.response === "string" ? r.response : r.response ? JSON.stringify(r.response) : "";
+        usage = r.usage || null;
       } else {
         const r = await fetch(`${p.base}/chat/completions`, {
           method: "POST",
           headers: { "content-type": "application/json", authorization: `Bearer ${env[p.keyName]}`, ...(p.extraHeaders || {}) },
           body: JSON.stringify({ model, messages, stream: false, temperature: 0.3, max_tokens: maxTokens }),
         });
-        if (!r.ok) { errors.push(`${p.label}: HTTP ${r.status}`); continue; }
+        rl = rateHeaders(r);
+        if (!r.ok) { errors.push(`${p.label}: HTTP ${r.status}`); await logUsage(env, { ...rec, ...rl, ok: false, status: r.status, ms: Date.now() - t0, err: `HTTP ${r.status}` }); continue; }
         const j = await r.json();
         text = (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || "";
+        usage = j.usage || null;
       }
-      if (text.trim()) return { text, provider: id, model };
+      const ms = Date.now() - t0;
+      if (text.trim()) {
+        await logUsage(env, { ...rec, ...rl, ok: true, status: 200, ms, tin: usage && usage.prompt_tokens ? usage.prompt_tokens : tin, tout: usage && usage.completion_tokens ? usage.completion_tokens : Math.ceil(text.length / 4), reported: !!(usage && usage.completion_tokens) });
+        return { text, provider: id, model, ms };
+      }
       errors.push(`${p.label}: empty reply`);
+      await logUsage(env, { ...rec, ...rl, ok: false, status: 200, ms, err: "empty reply" });
     } catch (e) {
       errors.push(`${p.label}: ${e.message}`);
+      await logUsage(env, { ...rec, ok: false, ms: Date.now() - t0, err: e.message });
     }
   }
   throw new Error(order.length ? "No provider could answer: " + errors.join("; ") : "No AI provider keys are set on the gateway.");
 }
-async function embed(texts, env) {
-  const out = await env.AI.run(EMBED_MODEL, { text: texts });
-  return out.data;
+async function embed(texts, env, ctx) {
+  const t0 = Date.now(), rec = { provider: "llama", model: EMBED_MODEL, mode: "embed", tin: Math.ceil(texts.join(" ").length / 4) };
+  try {
+    const out = await env.AI.run(EMBED_MODEL, { text: texts });
+    const done = logUsage(env, { ...rec, ok: true, status: 200, ms: Date.now() - t0 });
+    if (ctx && ctx.waitUntil) ctx.waitUntil(done); else await done;
+    return out.data;
+  } catch (e) {
+    await logUsage(env, { ...rec, ok: false, ms: Date.now() - t0, err: e.message });
+    throw e;
+  }
 }
-const deps = (env) => ({ json, rateLimited, complete, embed: (t) => embed(t, env) });
+// "Check now" on the Status tab: a tiny prompt to one model, to see if it answers and how fast.
+async function ping(env, provider, model) {
+  const p = PROVIDERS[provider];
+  if (!p || !p.models.some((m) => m.id === model)) return { ok: false, error: "Unknown model." };
+  if (!(p.binding ? env.AI : env[p.keyName])) return { ok: false, error: "No key set for this provider." };
+  try {
+    const out = await complete([{ role: "user", content: "Reply with the single word OK." }], env, { maxTokens: 300, mode: "ping", only: { provider, model } });
+    return { ok: true, ms: out.ms, reply: out.text.trim().slice(0, 40) };
+  } catch (e) {
+    return { ok: false, error: e.message.replace(/^No provider could answer: /, "") };
+  }
+}
+const providerList = (env) => configured(env).map(([id, p]) => ({ id, label: p.label, models: p.models }));
+const deps = (env, ctx) => ({
+  json, rateLimited, complete, embed: (t) => embed(t, env, ctx),
+  usageStatus: () => usageStatus(env, [...providerList(env), ...(env.AI ? [{ id: "llama", label: "Embeddings (Cloudflare)", models: [{ id: EMBED_MODEL, label: "BGE small (matching by meaning)" }] }] : [])]),
+  ping: (provider, model) => ping(env, provider, model), setMeta: (k, v) => setMeta(env, k, v), pruneUsage: () => pruneUsage(env),
+});
 
 /* ---------------- router ---------------- */
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const origin = request.headers.get("origin") || "";
     const { ok, headers: cors } = corsHeaders(origin, env);
@@ -508,8 +550,7 @@ export default {
     if (origin && !ok) return json({ error: "Origin not allowed." }, 403, cors);
 
     if (url.pathname === "/api/providers" && request.method === "GET") {
-      const list = configured(env).map(([id, p]) => ({ id, label: p.label, models: p.models }));
-      return json({ providers: list }, 200, cors);
+        return json({ providers: providerList(env) }, 200, cors);
     }
 
     if (url.pathname === "/api/chat" && request.method === "POST") {
@@ -524,7 +565,7 @@ export default {
       if (body.mode === "generate" ? false : body.mode === "codereview" ? !String(body.code || "").trim() : body.mode === "feedback" || body.mode === "selfcheck" || body.mode === "cardify" ? !String(body.answer || "").trim() : !String(body.question || "").trim()) {
         return json({ error: "Nothing to send." }, 400, cors);
       }
-      return chat(body, env, cors);
+      return chat(body, env, cors, ctx);
     }
 
 
@@ -537,12 +578,12 @@ export default {
       const texts = (Array.isArray(body.texts) ? body.texts : []).slice(0, 32).map((t) => clip(String(t), 1500)).filter(Boolean);
       if (!texts.length) return json({ error: "Nothing to embed." }, 400, cors);
       try {
-        return json({ model: EMBED_MODEL, vectors: await embed(texts, env) }, 200, cors);
+        return json({ model: EMBED_MODEL, vectors: await embed(texts, env, ctx) }, 200, cors);
       } catch (e) {
         return json({ error: "Embedding failed: " + e.message }, 502, cors);
       }
     }
-    const l2 = await handleCommunity(request, url, env, cors, deps(env));
+    const l2 = await handleCommunity(request, url, env, cors, deps(env, ctx));
     if (l2) return l2;
 
     if (url.pathname === "/") return json({ name: "Datakul AI gateway", ok: true }, 200, cors);
@@ -551,6 +592,6 @@ export default {
 
   // Nightly: group unanswered questions, draft cards for popular groups, delete old questions.
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(runJob(env, deps(env)).then((r) => { console.log("layer2 job", JSON.stringify(r)); return r; }));
+    ctx.waitUntil(runJob(env, deps(env, ctx)).then((r) => { console.log("layer2 job", JSON.stringify(r)); return r; }));
   },
 };

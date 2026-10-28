@@ -17,6 +17,8 @@ short answers, no jargon).
   questions, group nightly, draft, check, review, publish). `worker/migrations/`: D1 schema.
 - `worker/src/grader.js` is generated from the grader in `web/app.js` by `node tools/sync-grader.mjs`. Never edit it by hand;
   CI fails if it is out of date.
+- `worker/src/usage.js`: one D1 row per AI call (never the text) for the review page's AI status tab; free allowances
+  in `FREE_LIMITS` need updating when providers change them.
 - `tools/deploy.mjs`: the deploy, run by `.github/workflows/deploy.yml` on every merge to main.
 - `tests/`: `gateway.mjs` and `layer2.mjs` (Node 22, D1 on built-in SQLite), `l2ui.py` (Playwright, needs
   `node tests/l2server.mjs 8788` running; screenshots go to `tests/out/`).
@@ -24,7 +26,8 @@ short answers, no jargon).
 ## Commands
 
 - Tests: `node --no-warnings tests/gateway.mjs`, `node --no-warnings tests/layer2.mjs`,
-  then `node tests/l2server.mjs 8788 &` and `python3 tests/l2ui.py`.
+  `node --no-warnings tests/status.mjs`, then `node tests/l2server.mjs 8788 &` and `python3 tests/l2ui.py`,
+  `tests/themes.py`, `tests/teach.py`, `tests/status_ui.py`.
 - After changing the grader in `web/app.js`: `node tools/sync-grader.mjs`.
 - Every interview question needs a model answer `a` that earns all its key points (`tests/teach.py` checks it); add
   answers to existing questions with `node content/add_model_answers.mjs <answers.json>`.
