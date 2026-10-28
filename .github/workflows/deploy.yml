@@ -40,6 +40,7 @@ jobs:
           node tools/sync-grader.mjs --check
           node --no-warnings tests/gateway.mjs > /dev/null
           node --no-warnings tests/layer2.mjs > /dev/null
+          node --no-warnings tests/status.mjs > /dev/null
       - name: Deploy database, gateway and website
         if: steps.gate.outputs.go == 'yes'
         env:

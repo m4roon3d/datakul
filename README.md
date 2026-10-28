@@ -109,6 +109,17 @@ Then open `admin.html` on your site (for example `https://<your-site>/admin.html
 
 Without the D1 block in `wrangler.toml`, these routes switch off and the app behaves as before.
 
+## AI status page (for the people who run Datakul)
+
+The review page (`admin.html`, locked by `ADMIN_TOKEN`) has an **AI status** tab:
+
+- each model's health today (working, check, failing) with the last error, and a **Check now** button that sends it a one-word test prompt;
+- requests and tokens today against each free daily allowance, plus the remaining allowance Groq reports in its replies;
+- calls refused as busy or over quota, and answers given by a backup provider;
+- what the AI was used for (Ask, interview feedback, code reviews and so on), the last 7 days, and the last nightly community job.
+
+The gateway logs one row per AI call in D1 (`worker/migrations/0002_usage.sql`): provider, model, feature, success, timing, token counts and any remaining-allowance headers. It never stores the question or answer text. Rows are deleted after 90 days. Free allowances reset at midnight UTC (5:30 am India time).
+
 ## Changing models or adding a vendor
 
 To turn Meta Llama off, delete the `[ai]` lines in `worker/wrangler.toml`.
@@ -199,6 +210,7 @@ tools/embed-concepts.mjs  builds emb.js
 worker/src/index.js   AI gateway
 worker/src/community.js  layer 2: collect, group, draft, check, review, publish
 worker/src/grader.js  copy of the app's answer checker (generated)
+worker/src/usage.js   AI call logging and the status page data
 worker/migrations/    D1 schema
 worker/wrangler.toml  gateway settings
 tools/sync-grader.mjs copies the grader from app.js into the gateway
