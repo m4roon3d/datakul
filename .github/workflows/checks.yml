@@ -56,6 +56,10 @@ jobs:
         run: |
           set -o pipefail
           python3 tests/themes.py 2>&1 | tee "$RUNNER_TEMP/th.txt" || { grep -E "^FAIL|Error" "$RUNNER_TEMP/th.txt" | head -10 | while read -r l; do echo "::error title=Theme test::$l"; done; exit 1; }
+      - name: Teach-me tests (model answers, lesson, recall)
+        run: |
+          set -o pipefail
+          python3 tests/teach.py 2>&1 | tee "$RUNNER_TEMP/te.txt" || { grep -E "^FAIL|Error" "$RUNNER_TEMP/te.txt" | head -10 | while read -r l; do echo "::error title=Teach test::$l"; done; exit 1; }
       - uses: actions/upload-artifact@v4
         if: always()
         continue-on-error: true   # screenshots are a nice-to-have; the account's artifact storage is shared with Hodlr's APKs

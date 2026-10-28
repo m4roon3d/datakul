@@ -26,6 +26,8 @@ short answers, no jargon).
 - Tests: `node --no-warnings tests/gateway.mjs`, `node --no-warnings tests/layer2.mjs`,
   then `node tests/l2server.mjs 8788 &` and `python3 tests/l2ui.py`.
 - After changing the grader in `web/app.js`: `node tools/sync-grader.mjs`.
+- Every interview question needs a model answer `a` that earns all its key points (`tests/teach.py` checks it); add
+  answers to existing questions with `node content/add_model_answers.mjs <answers.json>`.
 - Brand files: `python3 tools/make_brand.py` (compass mark + Space Grotesk wordmark → `brand/`). Theme test: `python3 tests/themes.py`.
 
 ## Rules
