@@ -79,7 +79,7 @@ Learner asks something the library can't answer
   → gateway masks emails, phone, Aadhaar-like and PAN numbers, stores the question with its embedding
 Every night at 02:00 IST
   → similar questions are grouped by meaning (embeddings, cosine 0.80)
-  → a group asked by 10+ different learners is drafted by the LLM: a concept card + 2 interview questions
+  → a group asked by enough different learners (3 at launch, up to 10 as Datakul grows) is drafted by the LLM: a concept card + 2 interview questions
   → the gateway checks the draft with the app's own grader (same rules as content/validate_batch.js);
     if a check fails, the errors go back to the model once for a repair
   → questions older than 180 days are deleted
@@ -101,7 +101,7 @@ npx wrangler deploy
 Then open `admin.html` on your site (for example `https://<your-site>/admin.html`), enter the gateway address and the token. The token stays in that browser tab only. The page is marked `noindex`; it is useless without the token.
 
 - **Privacy:** no account, IP address or user id is stored. Each question gets a per-day pseudonym (a hash of the address, the day and your secret) so the gateway can count different askers without following anyone across days. The public `/api/community` feed carries only approved cards. Learners can opt out in settings, and the app says so on the Ask screen. If you serve learners in India, this supports your duties under the DPDP Act and Rules (notice, purpose limitation, retention); check the final position with a lawyer before launch.
-- **Tuning** (in `wrangler.toml` `[vars]`): `MIN_ASKERS` (default 10), `DRAFTS_PER_RUN` (default 3), `CLUSTER_SIM` (default 0.8), `RETAIN_DAYS` (default 180), and optionally `DRAFT_PROVIDER` / `DRAFT_MODEL` for the drafting model. GPT-OSS 120B on Groq passes the checks most often.
+- **Tuning** (in `wrangler.toml` `[vars]`): `MIN_ASKERS` (`auto`: 3 different askers while Datakul is small, rising to 10 as it grows; or a fixed number), `DRAFTS_PER_RUN` (default 3), `CLUSTER_SIM` (default 0.8), `RETAIN_DAYS` (default 180), and optionally `DRAFT_PROVIDER` / `DRAFT_MODEL` for the drafting model. GPT-OSS 120B on Groq passes the checks most often.
 - **Cost:** three drafts a night is a few thousand tokens; embeddings are one small call per question. Both fit the free tiers. D1's free plan (5 GB, 5 million reads a day) is far more than this needs.
 - **Withdrawing a card:** reject it from the Live tab. Learners lose it on their next visit.
 - **Run it now:** the review page's "Run grouping now" runs the nightly job on demand.
@@ -115,6 +115,10 @@ To turn Meta Llama off, delete the `[ai]` lines in `worker/wrangler.toml`.
 
 
 Edit the `PROVIDERS` list at the top of `worker/src/index.js`. Any vendor with an OpenAI-compatible `/chat/completions` endpoint needs only a base URL, a key name and model IDs. The settings screen in the app picks up the change automatically.
+
+## Growing the library every week
+
+The library grows by about 10 reviewed topics a week. A scheduled Claude task follows [docs/weekly-content.md](docs/weekly-content.md): it writes the next topics from `content/queue.txt` (wave 2 of the syllabus: GenAI and AI engineering, cloud platforms and certifications, industry packs, advanced topics), plus up to two timely topics or fixes, checks them with the same validator as every other batch, and opens a pull request. Merging it deploys the new topics. New topics show for three weeks under "New in the library" on the Quests home and in the Library.
 
 ## Editing content
 
@@ -181,7 +185,7 @@ web/index.html     page and styles
 web/app.js         Ask tutor, retrieval, interview practice, Library, settings
 web/quests.js      quest engine and Quests home
 web/diagrams.js    concept diagrams
-web/library.js     215 concepts and 400 interview questions
+web/library.js     the concepts and interview questions (225 and 420 on 28 Oct 2026, growing weekly)
 web/problems.js    15 coding problems with solutions
 web/practice.js    Practice tab
 web/pyrunner.js    Pyodide Web Worker runner

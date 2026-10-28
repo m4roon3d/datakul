@@ -121,5 +121,18 @@ for (const [cid, qs] of Object.entries(byC)) {
 ok(agree === total && total > 50, `library topics with sample answers pass the gateway checks: ${agree}/${total}`);
 ok(VAGUE.every((v) => grade(v, { p: [{ t: "x", k: ["hnsw", "ann"] }] }).n === 0), "grader copy loads and scores");
 
+/* ---- "auto" threshold: 3 askers are enough while Datakul is small ---- */
+{
+  const DB2 = new D1Mock();
+  await DB2.exec(readFileSync(new URL("../worker/migrations/0001_init.sql", import.meta.url), "utf8"));
+  const env2 = { ...env, DB: DB2, MIN_ASKERS: "auto" };
+  calls = 0;
+  for (let i = 0; i < 3; i++) await worker.fetch(new Request("https://gw/api/miss", { method: "POST", headers: { "content-type": "application/json", "cf-connecting-ip": "40.0.0." + i }, body: JSON.stringify({ q: vecQs[i] }) }), env2);
+  let p2; await worker.scheduled({}, env2, { waitUntil: (x) => (p2 = x) }); const r2 = await p2;
+  ok(r2.drafted.length === 1, "with MIN_ASKERS=auto, 3 different askers are enough to draft at launch");
+  const q2 = await (await worker.fetch(new Request("https://gw/api/admin/queue", { headers: { authorization: "Bearer " + T } }), env2)).json();
+  ok(q2.minAskers === 3, "the review page shows the current threshold (" + q2.minAskers + ")");
+}
+
 console.log(fails ? `\n${fails} FAILED` : "\nALL LAYER 2 TESTS PASSED");
 process.exit(fails ? 1 : 0);

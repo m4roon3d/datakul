@@ -570,7 +570,10 @@ function renderLib() {
   const mine = typeof myCards === "function" ? myCards().filter((m) => !q || (m.title + " " + m.s).toLowerCase().includes(q)) : [];
   const mineHTML = mine.length ? `<div class="trk mine"><div class="th"><h3>From your questions</h3><span>${mine.length}</span></div><p class="muted" style="font-size:13.5px">Cards the tutor wrote from questions the library didn't cover. Not reviewed yet.</p><div class="clist">${mine.map((m) => `<button class="citem" type="button" ${act({ a: "mycard", id: m.id })}><i class="lvchip lv-M">Q</i><span>${esc(m.title)}</span>${m.done ? '<b class="tick">✓</b>' : ""}</button>`).join("")}</div></div>` : "";
   if (mine.length) any = true;
-  $("#lib").innerHTML = mineHTML + Object.entries(TRACKS).map(([k, v]) => {
+  const fresh = typeof newTopics === "function" ? newTopics().filter(match) : [];
+  const freshHTML = fresh.length ? `<div class="trk mine"><div class="th"><h3>New in the library</h3><span>${fresh.length}</span></div><p class="muted" style="font-size:13.5px">Added in the last three weeks. The library grows every week.</p><div class="clist">${fresh.map((c) => `<button class="citem" type="button" ${act({ a: "concept", id: c.id })}><i class="lvchip lv-${c.lv || "I"}" title="${LV_NAME[c.lv] || ""}">${c.lv || ""}</i><span>${esc(c.title)}</span>${seen.has(c.id) ? '<b class="tick">✓</b>' : ""}</button>`).join("")}</div></div>` : "";
+  if (fresh.length) any = true;
+  $("#lib").innerHTML = freshHTML + mineHTML + Object.entries(TRACKS).map(([k, v]) => {
     const all = C.filter((c) => c.t === k), d = all.filter((c) => seen.has(c.id)).length;
     const shown = all.filter(match);
     if (!shown.length) return "";

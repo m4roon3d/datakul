@@ -18,6 +18,7 @@
         id: k.id, t: x.t, title: s(x.title, 80), mod: "Community picks", lv: ["F", "I", "A"].includes(x.lv) ? x.lv : "I",
         kw: s(x.kw, 300), s: s(x.s, 400), d: s(x.d, 1200), e: s(x.e, 450), c: s(x.c, 300), i: s(x.i, 350),
         r: (Array.isArray(x.r) ? x.r : []).filter((r) => CM[r] && r !== k.id).slice(0, 3), cm: 1, asked: Number(k.asked) || 0,
+        nw: k.approved ? new Date(Number(k.approved)).toISOString().slice(0, 10) : undefined,
       };
       C.push(c); CM[c.id] = c;
       k.questions.forEach((q) => {

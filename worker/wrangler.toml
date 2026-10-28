@@ -9,8 +9,8 @@ compatibility_date = "2026-09-01"
 ALLOWED_ORIGINS = "*"
 # Your site's address, sent to OpenRouter as the referrer (optional).
 SITE_URL = ""
-# Layer 2 tuning (optional): different askers needed before a topic is drafted, and drafts per night.
-MIN_ASKERS = "10"
+# Layer 2 tuning (optional): different askers needed before a topic is drafted ("auto": 3 while small, up to 10 as Datakul grows; or a number), and drafts per night.
+MIN_ASKERS = "auto"
 DRAFTS_PER_RUN = "3"
 # Model used for drafting community cards (optional; defaults to the first provider in the fallback order).
 # DRAFT_PROVIDER = "groq"

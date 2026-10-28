@@ -25,6 +25,14 @@ const cfg = (env, k) => {
   return Number.isFinite(v) && v > 0 ? v : DEF[k];
 };
 const DAY_MS = 86400000;
+// Askers needed before a topic is drafted. MIN_ASKERS = "auto" (or unset) scales with how many people ask questions:
+// 3 while Datakul is small, rising by 1 per 100 visitor-days in the last 30 days, up to 10. A number fixes it.
+async function askersNeeded(env) {
+  const fixed = Number(env.MIN_ASKERS);
+  if (Number.isFinite(fixed) && fixed > 0) return fixed;
+  const r = await env.DB.prepare("SELECT COUNT(DISTINCT asker) AS a FROM misses WHERE created >= ?").bind(now() - 30 * DAY_MS).first();
+  return Math.min(10, Math.max(3, Math.round(((r && r.a) || 0) / 100)));
+}
 const TRACKS = ["de", "da", "ds", "ar"];
 const now = () => Date.now();
 const isoDay = (t = now()) => new Date(t).toISOString().slice(0, 10);
@@ -254,7 +262,7 @@ export async function runJob(env, deps) {
   const del = await env.DB.prepare("DELETE FROM misses WHERE created < ?").bind(cutoff).run();
   await env.DB.prepare("DELETE FROM clusters WHERE status = 'open' AND updated < ?").bind(cutoff).run();
   const grouped = await clusterMisses(env);
-  const ready = (await env.DB.prepare("SELECT * FROM clusters WHERE status = 'open' AND askers >= ? ORDER BY askers DESC LIMIT ?").bind(cfg(env, "minAskers"), cfg(env, "draftsPerRun")).all()).results || [];
+  const ready = (await env.DB.prepare("SELECT * FROM clusters WHERE status = 'open' AND askers >= ? ORDER BY askers DESC LIMIT ?").bind(await askersNeeded(env), cfg(env, "draftsPerRun")).all()).results || [];
   const drafted = [];
   for (const row of ready) {
     try { drafted.push(await draftCluster(env, deps, row)); }
@@ -301,7 +309,7 @@ async function admin(request, url, env, deps) {
     return {
       status: 200,
       out: {
-        minAskers: cfg(env, "minAskers"), stats,
+        minAskers: await askersNeeded(env), stats,
         review: await get("SELECT * FROM clusters WHERE status = 'review' ORDER BY askers DESC, updated DESC LIMIT 100"),
         open: await get("SELECT * FROM clusters WHERE status = 'open' ORDER BY askers DESC, n DESC LIMIT 40"),
         live: await get("SELECT * FROM clusters WHERE status = 'live' ORDER BY updated DESC LIMIT 200"),

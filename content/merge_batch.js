@@ -14,6 +14,9 @@ const have = new Set(C.map((c) => c.id));
 const dup = batch.concepts.filter((c) => have.has(c.id)).map((c) => c.id);
 if (dup.length) { console.error("Already merged: " + dup.join(", ")); process.exit(1); }
 
+// New concepts carry the date they were added (nw), which drives "New in the library" in the app.
+const added = batch.added || new Date().toISOString().slice(0, 10);
+batch.concepts.forEach((c) => { if (!c.nw) c.nw = added; });
 // Every concept carries its syllabus module and level, so the app can group and label it.
 const concepts = C.concat(batch.concepts).map((c) => {
   const t = SYL[c.id];

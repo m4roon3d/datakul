@@ -298,6 +298,22 @@ function sideQuests(ch) {
     .forEach((m) => out.push(`<button class="sq" type="button" ${act({ a: "mycard", id: m.id })}><i class="tdot" style="background:var(--flame)"></i><span><b>${esc(m.title)}</b><small>From your question · personal side quest</small></span>${ARR}</button>`));
   return out.join("");
 }
+/* ---------- new in the library: topics added in the last 3 weeks (weekly batches and community picks) ---------- */
+const NEW_DAYS = 21;
+function newTopics() {
+  const cut = addDays(today(), -NEW_DAYS);
+  return C.filter((c) => c.nw && c.nw >= cut).sort((a, b) => (b.nw > a.nw ? 1 : b.nw < a.nw ? -1 : (b.t === pathTrack()) - (a.t === pathTrack())));
+}
+function newShelf() {
+  const all = newTopics();
+  if (!all.length) return "";
+  // up to 3 from the learner's own path first, then the rest, so the shelf shows the breadth of what's new
+  const mine = all.filter((c) => c.t === pathTrack()).slice(0, 3);
+  const list = mine.concat(all.filter((c) => c.t !== pathTrack()), all.filter((c) => c.t === pathTrack() && !mine.includes(c)));
+  const week = list.filter((c) => c.nw >= addDays(today(), -7)).length;
+  return `<div class="sech"><h3>New in the library</h3><span class="muted">${week ? week + " added this week" : list.length + " added recently"}</span></div>
+    <div class="newshelf">${list.slice(0, 6).map((c) => `<button class="nitem" type="button" ${act({ a: "qstep", id: c.id })}><span class="nmeta"><i class="dot" style="background:var(--${c.t})"></i>${esc(TRACKS[c.t].short)} · ${c.cm ? "Community pick" : "New"}${seen.has(c.id) ? " · ✓" : ""}</span><b>${esc(c.title)}</b><small>${esc(clean(c.mod))}</small></button>`).join("")}</div>`;
+}
 function renderQuests() {
   const t = pathTrack(), chs = chapters(t), info = chapterInfo(chs);
   const ch = currentChapter(info), nq = nextQuest(ch);
@@ -313,6 +329,7 @@ function renderQuests() {
     <div class="card path">${pathHTML(ch, nq)}</div>
     <div class="sech"><h3>Today's quests</h3><span class="muted">resets at midnight</span></div>
     <div class="daily">${dl.map((k) => { const def = DAILY[k], n = Math.min(d[k] || 0, def.goal), ok = d.claimed.includes(k); return `<div class="dq${ok ? " done" : ""}"><b>${def.label}</b><div class="tr"><i style="width:${(100 * n) / def.goal}%"></i></div><small>${ok ? "Done" : n + " of " + def.goal} · +${def.xp} XP</small></div>`; }).join("")}</div>
+    ${newShelf()}
     ${sq ? `<div class="sech"><h3>Side quests</h3></div><div class="side-q">${sq}</div>` : ""}
     <details class="chapters"><summary>All ${chs.length} chapters in this path ${CHEV}</summary><div class="chlist">${info.map((c) => `<button class="ch${c.mod === ch.mod ? " cur" : ""}${c.cleared ? " cleared" : ""}" type="button" ${act({ a: "qch", mod: c.mod })}><b class="cn">${c.cleared ? "✓" : c.unlocked ? c.i + 1 : LOCK}</b><span>${esc(clean(c.mod))}</span><small>${c.done}/${c.ids.length}</small></button>`).join("")}</div></details>
   </div>
