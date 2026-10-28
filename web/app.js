@@ -465,8 +465,95 @@ function resultHTML(g, i, hostId) {
   const how = aiOn()
     ? "Quick check looks for the key ideas, allowing for plurals and common synonyms. For a judgement of correctness and depth, ask the AI interviewer."
     : "Quick check looks for the key ideas, allowing for plurals and common synonyms. A correct answer in unusual wording may score lower.";
-  return `<div class="meter"><div class="tr"><div class="fl" style="width:${g.pct}%"></div></div><b>${g.n} of ${g.res.length}</b></div><ul class="pts">${g.res.map((r) => `<li class="${r.ok ? "ok" : "miss"}"><span class="mk">${r.ok ? "✓" : "+"}</span><span>${r.ok ? "" : "Add: "}${esc(r.t)}</span></li>`).join("")}</ul>${g.words < 30 ? `<p class="muted" style="font-size:14px">${g.words} words so far. In a real round, give a structured answer with one concrete example.</p>` : ""}<p class="muted" style="font-size:12.5px">${how}</p>${aiOn() ? `<div class="acts"><button class="btn quiet" type="button" data-aifb="${i}" data-host="${hostId}">Get AI interviewer feedback</button></div><div class="aifbhost"></div>` : ""}`;
+  const tn = taught.has(i) ? `<p class="muted" style="font-size:13.5px">${g.pct >= 60 ? "Nicely recalled after studying the answer." : "Recalling takes practice. Study it once more, then try again."} This question comes back for review tomorrow.</p>` : "";
+  const tl = g.pct < 60 && Q[i].a ? `<div class="acts"><button class="btn quiet" type="button" data-reveal="${i}">Teach me the answer</button></div>` : "";
+  return tn + `<div class="meter"><div class="tr"><div class="fl" style="width:${g.pct}%"></div></div><b>${g.n} of ${g.res.length}</b></div><ul class="pts">${g.res.map((r) => `<li class="${r.ok ? "ok" : "miss"}"><span class="mk">${r.ok ? "✓" : "+"}</span><span>${r.ok ? "" : "Add: "}${esc(r.t)}</span></li>`).join("")}</ul>${g.words < 30 ? `<p class="muted" style="font-size:14px">${g.words} words so far. In a real round, give a structured answer with one concrete example.</p>` : ""}<p class="muted" style="font-size:12.5px">${how}</p>${tl}${aiOn() ? `<div class="acts"><button class="btn quiet" type="button" data-aifb="${i}" data-host="${hostId}">Get AI interviewer feedback</button></div><div class="aifbhost"></div>` : ""}`;
 }
+/* ---------- teach me the answer: the model answer, point by point, then recall it ---------- */
+const taught = new Set();
+const reEsc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+// Escape text and wrap every keyword occurrence (word start, any ending) in <mark>, without nesting.
+function markText(text, kws) {
+  const spans = [];
+  kws.forEach((k) => {
+    const re = new RegExp("(^|[^a-z0-9])(" + reEsc(String(k).toLowerCase()) + "[a-z]*)", "gi");
+    let m;
+    while ((m = re.exec(text))) { const s = m.index + m[1].length; spans.push([s, s + m[2].length]); if (re.lastIndex === m.index) re.lastIndex++; }
+  });
+  spans.sort((a, b) => a[0] - b[0] || b[1] - a[1]);
+  let out = "", at = 0;
+  spans.forEach(([s, e]) => { if (s < at) return; out += esc(text.slice(at, s)) + "<mark>" + esc(text.slice(s, e)) + "</mark>"; at = e; });
+  return out + esc(text.slice(at));
+}
+function teachHTML(i) {
+  const q = Q[i];
+  if (!q.a) return `<ul class="pts">${q.p.map((p) => `<li><span class="mk">•</span><span>${esc(p.t)}</span></li>`).join("")}</ul>`;
+  const sents = q.a.split(/(?<=[.!?])\s+(?=[A-Z"])/);
+  const steps = q.p.map((p) => {
+    const s = sents.find((x) => p.k.some((k) => kwHits(gNorm(x), k)));
+    return `<li><b>${esc(p.t)}</b>${s ? `<q>${markText(s, p.k)}</q>` : ""}</li>`;
+  }).join("");
+  const all = q.p.flatMap((p) => p.k);
+  return `<div class="teach" tabindex="-1"><span class="eyebrow">How to answer</span>
+    <p class="muted" style="font-size:14px">Make these ${q.p.length} points, in this order. The highlighted words are what Quick check listens for.</p>
+    <ol class="steps">${steps}</ol>
+    <details class="full"><summary>Read the whole model answer ${CHEV}</summary><p>${markText(q.a, all)}</p></details>
+    <p class="muted" style="font-size:13px">Say it in your own words. Interviewers notice memorised answers.</p>
+    <div class="acts"><button class="btn" type="button" data-tryown="${i}">Now try it in your own words</button>${aiOn() ? `<button class="btn quiet" type="button" data-simpler="${i}">Explain it more simply</button>` : ""}</div>
+    ${aiOn() ? `<form class="fuform" data-fu="${i}" autocomplete="off"><label class="sr" for="fu-${i}">Ask about this answer</label><input id="fu-${i}" placeholder="Ask about this answer, e.g. why does the order matter?"><button class="send" type="submit" aria-label="Ask">${ARR}</button></form><div class="teachai"></div>` : ""}
+  </div>`;
+}
+const teachHist = {};
+async function teachAI(i, ask, host) {
+  const q = Q[i];
+  const h = (teachHist[i] = teachHist[i] || []);
+  const box = document.createElement("div");
+  box.className = "aifb";
+  box.innerHTML = `<span class="eyebrow">AI tutor</span><div class="md cursor"><p class="muted">Thinking…</p></div><p class="muted foot3" style="font-size:12.5px"></p>`;
+  host.appendChild(box);
+  const body = box.querySelector(".md");
+  try {
+    const out = await streamChat({
+      mode: "tutor", provider: engine.provider, model: engine.model, level: "new", detail: "brief",
+      question: ask, history: h.slice(-4), focus: CM[q.c].title,
+      context: [{ title: "Interview question: " + q.q, text: "Model answer: " + q.a + "\nKey points a good answer makes: " + q.p.map((p) => p.t).join("; ") }],
+    }, (t) => { body.innerHTML = md(t); });
+    body.classList.remove("cursor");
+    drawMermaid(body);
+    box.querySelector(".foot3").textContent = `Answered by ${out.label} · ${out.model}. The model answer above is the reviewed source.`;
+    h.push({ role: "user", content: ask }, { role: "assistant", content: out.text });
+  } catch (err) {
+    body.classList.remove("cursor");
+    body.innerHTML = `<p class="warnnote">The AI tutor couldn't answer: ${esc(err.message)}</p>`;
+  }
+}
+document.addEventListener("click", (e) => {
+  const tr = e.target.closest("[data-tryown]");
+  if (tr) {
+    const i = +tr.dataset.tryown, box = $("#ans-" + i);
+    taught.add(i);
+    if (typeof questEvent === "function") questEvent("taught", { c: Q[i].c });
+    $("#res-" + i).innerHTML = `<p class="muted" style="font-size:14px">Answer from memory, out loud or typed, then press Quick check. Stuck? Press Teach me the answer again.</p>`;
+    if (box) { box.value = ""; box.focus(); }
+    return;
+  }
+  const sm = e.target.closest("[data-simpler]");
+  if (sm) {
+    const i = +sm.dataset.simpler;
+    sm.disabled = true;
+    teachAI(i, `Explain this model answer more simply, step by step, for someone new to the topic. Interview question: "${Q[i].q}"`, sm.closest(".teach").querySelector(".teachai"));
+  }
+});
+document.addEventListener("submit", (e) => {
+  const f = e.target.closest("[data-fu]");
+  if (!f) return;
+  e.preventDefault();
+  const inp = f.querySelector("input"), v = inp.value.trim();
+  if (!v) return;
+  inp.value = "";
+  teachAI(+f.dataset.fu, v + ` (This is about the interview question: "${Q[+f.dataset.fu].q}")`, f.nextElementSibling);
+});
+
 async function aiFeedback(i, answerText, hostEl, btn) {
   const q = Q[i];
   btn.disabled = true;
@@ -495,7 +582,7 @@ function renderInterview() {
   $("#qlist").innerHTML = list.map(({ q, i }) => `<div class="qrow${openQ === i ? " open" : ""}" id="qr-${i}">
     <button class="qbtn" type="button" data-q="${i}" aria-expanded="${openQ === i}"><i class="dot" style="background:var(--${CM[q.c].t})"></i><span class="qt"><b>${esc(q.q)}</b><small>${LVN[q.l]} · ${esc(CM[q.c].title)}</small></span>${CHEV}</button>
     <div class="qpanel" ${openQ === i ? "" : "hidden"}><textarea class="ans-in" id="ans-${i}" placeholder="Answer as you would out loud…"></textarea>
-    <div class="acts"><button class="btn" type="button" data-check="${i}">Quick check</button><button class="ghostlink" type="button" data-reveal="${i}">${q.a ? "Show key points and a sample answer" : "Show key points"}</button><button class="ghostlink" type="button" ${act({ a: "concept", id: q.c })}>Study the topic</button></div><div id="res-${i}"></div></div></div>`).join("");
+    <div class="acts"><button class="btn" type="button" data-check="${i}">Quick check</button><button class="ghostlink" type="button" data-reveal="${i}">Teach me the answer</button><button class="ghostlink" type="button" ${act({ a: "concept", id: q.c })}>Study the topic</button></div><div id="res-${i}"></div></div></div>`).join("");
 }
 $("#qlist").addEventListener("click", (e) => {
   const qb = e.target.closest("[data-q]");
@@ -513,7 +600,7 @@ $("#qlist").addEventListener("click", (e) => {
     $("#res-" + i).innerHTML = resultHTML(g, i, "ans-" + i);
     if (typeof questEvent === "function") questEvent("answer", { c: Q[i].c, pct: g.pct, i });
   }
-  if (t.dataset.reveal) { const i = +t.dataset.reveal; $("#res-" + i).innerHTML = `<ul class="pts">${Q[i].p.map((p) => `<li><span class="mk">•</span><span>${esc(p.t)}</span></li>`).join("")}</ul>${Q[i].a ? `<div class="sample"><span class="eyebrow">Sample answer</span><p>${esc(Q[i].a)}</p><p class="muted" style="font-size:13px">One good way to answer. Say it in your own words; interviewers notice memorised answers.</p></div>` : ""}`; }
+  if (t.dataset.reveal) { const i = +t.dataset.reveal; $("#res-" + i).innerHTML = teachHTML(i); $("#res-" + i).querySelector(".teach").focus({ preventScroll: true }); }
 });
 document.addEventListener("click", (e) => {
   const b = e.target.closest("[data-aifb]");

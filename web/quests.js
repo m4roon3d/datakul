@@ -148,6 +148,12 @@ function scheduleReview(id, pct) {
 function questEvent(type, d) {
   try {
     if (type === "learn" && d.fresh && CM[d.id]) { award(15, "Learned: " + CM[d.id].title); bumpDaily("step"); }
+    else if (type === "taught" && CM[d.c]) {
+      // studied the model answer: bring the topic back tomorrow so the answer sticks
+      const r = QS.rev[d.c], tmr = addDays(today(), 1);
+      if (!r) QS.rev[d.c] = { n: 0, due: tmr };
+      else if (r.due > tmr) { r.n = 0; r.due = tmr; }
+    }
     else if (type === "answer" && CM[d.c]) {
       const id = d.c, prev = QS.ans[id] || 0;
       QS.ans[id] = Math.max(prev, d.pct);
