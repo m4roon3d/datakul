@@ -111,6 +111,121 @@
    "why": "Tables are addressed as catalog.schema.table, for example main.sales.orders. The metastore sits above catalogs, and the same three-level name works in every workspace attached to that metastore."
   },
   {
+   "id": "dbx-129",
+   "d": "platform",
+   "q": "Where does code run when a job uses serverless compute?",
+   "opts": [
+    "In the serverless compute plane in Databricks' account, in the workspace's region",
+    "On virtual machines in your own cloud account and network",
+    "In the control plane next to the web application",
+    "On the user's laptop through the browser"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "Serverless compute runs in a compute plane that Databricks operates in its own account, in the same region as the workspace. Classic compute runs as virtual machines in your own cloud account. Table data stays in cloud object storage in both cases.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/getting-started/high-level-architecture",
+    "t": "High-level architecture"
+   }
+  },
+  {
+   "id": "dbx-130",
+   "d": "platform",
+   "q": "A team keeps an all-purpose cluster running all day so its scheduled jobs start quickly. What is the main cost problem?",
+   "opts": [
+    "All-purpose compute is charged while idle and at a higher rate than jobs or serverless compute",
+    "All-purpose compute cannot run scheduled jobs at all",
+    "Jobs on all-purpose compute are charged twice",
+    "All-purpose compute cannot use Delta tables"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "All-purpose compute charges for every minute it is up, including idle time, and costs more per DBU than jobs compute. Serverless jobs start in seconds and charge only while running, so there is no reason to keep a cluster warm.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/compute/choose-compute",
+    "t": "Compute selection recommendations"
+   }
+  },
+  {
+   "id": "dbx-131",
+   "d": "platform",
+   "q": "A data scientist needs to work interactively in R. Which compute fits?",
+   "opts": [
+    "Classic all-purpose compute in Dedicated access mode",
+    "Serverless compute for notebooks",
+    "A serverless SQL warehouse",
+    "Classic compute in Standard access mode"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "R is supported on Dedicated access mode (formerly single user), not on Standard access mode or serverless. A SQL warehouse runs only SQL. Set auto termination so the cluster stops when idle.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/compute/configure",
+    "t": "Compute configuration reference"
+   }
+  },
+  {
+   "id": "dbx-132",
+   "d": "platform",
+   "q": "Which statements about SQL warehouse types are true? (Choose two.)",
+   "opts": [
+    "Serverless SQL warehouses usually start in a few seconds",
+    "Pro is a good choice when serverless is not available in the region or custom networking is needed",
+    "Classic SQL warehouses have intelligent workload management",
+    "Pro SQL warehouses run in Databricks' account"
+   ],
+   "ans": [
+    0,
+    1
+   ],
+   "why": "Serverless warehouses start in about 2 to 6 seconds and have intelligent workload management. Pro and Classic run in your own cloud account and take minutes to start; Pro suits regions without serverless or setups needing custom networking.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/compute/sql-warehouse/warehouse-types",
+    "t": "SQL warehouse types"
+   }
+  },
+  {
+   "id": "dbx-133",
+   "d": "platform",
+   "q": "A bad load overwrote rows in a Delta table an hour ago. What Delta Lake feature undoes it without reloading from source?",
+   "opts": [
+    "RESTORE TABLE to the version before the load, found with DESCRIBE HISTORY",
+    "VACUUM the table",
+    "OPTIMIZE the table",
+    "Drop and recreate the table from the latest files"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "Every Delta commit is a version. DESCRIBE HISTORY lists them and RESTORE TABLE ... TO VERSION AS OF returns the table to an earlier one, as long as VACUUM has not removed the older files.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/tables/history",
+    "t": "Work with table history"
+   }
+  },
+  {
+   "id": "dbx-134",
+   "d": "platform",
+   "q": "Which part of the Databricks platform records who can use each table and keeps lineage across workspaces?",
+   "opts": [
+    "Unity Catalog",
+    "Delta Lake's transaction log",
+    "The Spark driver",
+    "The job scheduler"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "Unity Catalog is the governance layer: one metastore of catalogs, schemas and objects shared by attached workspaces, with privileges, lineage and audit logs. Delta Lake's log tracks a table's versions, not who may access it.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/getting-started/concepts",
+    "t": "Databricks components"
+   }
+  },
+  {
    "id": "dbx-010",
    "d": "ingest",
    "q": "A COPY INTO command that loaded 500 files yesterday runs again today. Twenty new files have arrived in the same folder. What happens?",
@@ -795,6 +910,102 @@
    "why": "Lakeflow Jobs can run notebooks, Python scripts, SQL queries and files, dashboards, pipeline updates and more, with dependencies between them. They don't run actions on personal machines."
   },
   {
+   "id": "dbx-135",
+   "d": "jobs",
+   "q": "A cleanup task must run after its upstream tasks finish, whether they succeeded or failed. Which Run if condition fits?",
+   "opts": [
+    "All done",
+    "All succeeded",
+    "None failed",
+    "At least one succeeded"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "All done runs a task once all its dependencies have finished, whatever their result. The default, All succeeded, would mark the cleanup Upstream failed and skip it exactly when something failed.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/jobs/run-if",
+    "t": "Configure task dependencies"
+   }
+  },
+  {
+   "id": "dbx-136",
+   "d": "jobs",
+   "q": "An If/else task compares {{tasks.count.values.n}} with 0 using ==. The upstream task stored 0.0, and the false branch ran. Why?",
+   "opts": [
+    "== and != compare operands as text, so \"0.0\" does not equal \"0\"",
+    "Task values cannot be used in If/else tasks",
+    "The If/else task always takes the false branch on its first run",
+    "Numbers are rounded before comparison"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "In an If/else condition task, == and != compare as strings, while >, >=, < and <= compare as numbers. Use a numeric operator, or make sure both sides are written the same way.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/jobs/tasks/if-else",
+    "t": "Add branching logic with the If/else task"
+   }
+  },
+  {
+   "id": "dbx-137",
+   "d": "jobs",
+   "q": "A vendor uploads files in bursts over several minutes. The job should start once per burst, after the uploads stop. Which file arrival trigger setting does this?",
+   "opts": [
+    "Wait after last change",
+    "Minimum time between triggers",
+    "Max concurrent runs",
+    "Retry interval"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "Wait after last change starts a timer that resets with every new file, so the run starts only once arrivals go quiet. Minimum time between triggers only limits how often runs can start.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/jobs/file-arrival-triggers",
+    "t": "Trigger jobs when new files arrive"
+   }
+  },
+  {
+   "id": "dbx-138",
+   "d": "jobs",
+   "q": "A job has a table update trigger on two silver tables with Trigger when set to All tables are updated. The tables are updated every night, but the job never runs and no error appears. What is the most likely cause?",
+   "opts": [
+    "The job's Run as identity lacks SELECT, USE CATALOG or USE SCHEMA on the tables",
+    "Table update triggers only work on external tables",
+    "The tables must be in the same schema as the job",
+    "All tables are updated only fires once a week"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "The trigger reads the tables' change history as the job's Run as identity. Without SELECT and the USE privileges it fails to evaluate and starts no runs, and the failure is only reported if failure notifications are configured.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/jobs/trigger-table-update",
+    "t": "Trigger jobs when source tables are updated"
+   }
+  },
+  {
+   "id": "dbx-139",
+   "d": "jobs",
+   "q": "A task uses dbutils.jobs.taskValues.set to pass a list to a later task. Which statements are true? (Choose two.)",
+   "opts": [
+    "The value must be JSON-serialisable and at most 48 KiB",
+    "A later task can read it with {{tasks.<task_name>.values.<key>}}",
+    "Task values can be set from SQL tasks",
+    "Task values persist between separate job runs"
+   ],
+   "ans": [
+    0,
+    1
+   ],
+   "why": "Task values are set from Python notebooks, must be JSON-serialisable and no larger than 48 KiB, and are read in later tasks of the same run with a dynamic value reference such as {{tasks.get_list.values.items}}.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/jobs/task-values",
+    "t": "Use task values to pass information between tasks"
+   }
+  },
+  {
    "id": "dbx-070",
    "d": "cicd",
    "q": "Where do you work on a feature branch of a repository inside the Databricks workspace?",
@@ -871,6 +1082,101 @@
    "why": "Bundles describe resources as code, so changes are reviewed and versioned, and one definition deploys consistently to every environment. They don't change how jobs use compute or permissions."
   },
   {
+   "id": "dbx-140",
+   "d": "cicd",
+   "q": "In a Git folder, how do you get your branch reviewed and merged into main?",
+   "opts": [
+    "Commit & Push the branch, then open a pull request in the Git provider",
+    "Click Create pull request in the Git folder dialog",
+    "Run Reset to main and push",
+    "Rebase main onto your branch in the workspace"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "Git folders handle branches, Commit & Push, pull, merge and rebase, but pull requests are created and merged in the Git provider such as GitHub or Azure DevOps.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/repos/git-operations-with-repos",
+    "t": "Create and manage Git folders"
+   }
+  },
+  {
+   "id": "dbx-141",
+   "d": "cicd",
+   "q": "A developer runs databricks bundle deploy without -t. The job appears as \"[dev asha] daily_sales\" and its schedule does not fire. Why?",
+   "opts": [
+    "The default target uses mode: development, which prefixes names per user and pauses schedules",
+    "Bundles cannot deploy schedules",
+    "The deploy failed and created a placeholder job",
+    "Schedules only start after databricks bundle summary"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "Without -t, the CLI uses the target marked default: true. Development mode prefixes resource names with [dev user], tags them, and pauses schedules and triggers so personal copies do not run on their own.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/dev-tools/bundles/deployment-modes",
+    "t": "Bundle deployment modes"
+   }
+  },
+  {
+   "id": "dbx-142",
+   "d": "cicd",
+   "q": "A bundle variable catalog has a default of dev_main, the prod target sets it to main, and the CI system runs databricks bundle deploy -t prod --var=\"catalog=main_v2\". Which value is used?",
+   "opts": [
+    "main_v2",
+    "main",
+    "dev_main",
+    "The deploy fails because the value is set twice"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "The --var option has the highest precedence, then BUNDLE_VAR_ environment variables, then the target's variables, then the default. Here --var wins.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/dev-tools/bundles/variables",
+    "t": "Substitutions and variables"
+   }
+  },
+  {
+   "id": "dbx-143",
+   "d": "cicd",
+   "q": "The prod target overrides a job cluster with only num_workers: 8, using the same job_cluster_key as the top-level definition. What does the deployed cluster look like?",
+   "opts": [
+    "The top-level settings, with num_workers changed to 8",
+    "Only num_workers is set; every other setting is lost",
+    "The top-level cluster is used unchanged",
+    "Two job clusters are created"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "Target resources merge with top-level resources, matched by key (job_cluster_key for job clusters, task_key for tasks). Settings in only one place are kept; where both set a value, the target wins.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/dev-tools/bundles/overrides",
+    "t": "Override with target settings"
+   }
+  },
+  {
+   "id": "dbx-144",
+   "d": "cicd",
+   "q": "Production jobs deployed from CI must not run as the person who merged the change. What should the prod target set?",
+   "opts": [
+    "run_as with the service principal's application ID, and deploy from CI as that service principal",
+    "mode: development",
+    "default: true",
+    "A personal access token of the team lead in databricks.yml"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "run_as sets the identity jobs run as. Using a service principal for both the CI deploy and run_as keeps production independent of any person, and secrets stay in the CI system, never in the repository.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/dev-tools/bundles/run-as",
+    "t": "Specify a run identity for a bundle workflow"
+   }
+  },
+  {
    "id": "dbx-090",
    "d": "tune",
    "q": "In the Spark UI, one stage has 200 tasks: most finish in 10 seconds but three take 15 minutes. What is the most likely cause?",
@@ -945,6 +1251,102 @@
     0
    ],
    "why": "collect brings every row to the driver, which can't hold 300 GB. More workers don't help the driver. Keep the work distributed and write results out, or collect only small aggregates."
+  },
+  {
+   "id": "dbx-145",
+   "d": "tune",
+   "q": "In a stage's Summary Metrics, the 75th percentile task duration is 10 seconds and the Max is 20 minutes. What does this most likely show?",
+   "opts": [
+    "Data skew: a few partitions hold far more data than the rest",
+    "Disk spill on every task",
+    "Too many executors",
+    "A cluster start-up failure"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "A Max far above the 75th percentile means a few tasks do most of the work, usually because a few keys hold most rows. Check AQE's skew join handling, remove junk hot keys, or salt the key.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/optimizations/spark-ui-guide/long-spark-stage-page",
+    "t": "Skew and spill"
+   }
+  },
+  {
+   "id": "dbx-146",
+   "d": "tune",
+   "q": "Which statements about predictive optimization are true? (Choose two.)",
+   "opts": [
+    "It works only on Unity Catalog managed tables",
+    "It can run OPTIMIZE, VACUUM and ANALYZE automatically",
+    "It also maintains external tables if they are Delta",
+    "It runs on the job's own cluster"
+   ],
+   "ans": [
+    0,
+    1
+   ],
+   "why": "Predictive optimization decides when to run OPTIMIZE (including incremental liquid clustering), VACUUM and ANALYZE on Unity Catalog managed tables, using serverless compute. External tables are not covered.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/optimizations/predictive-optimization",
+    "t": "Predictive optimization"
+   }
+  },
+  {
+   "id": "dbx-147",
+   "d": "tune",
+   "q": "You changed a table's liquid clustering keys with ALTER TABLE ... CLUSTER BY. What reclusters the existing data with the new keys?",
+   "opts": [
+    "OPTIMIZE table_name FULL",
+    "ALTER TABLE ... CLUSTER BY NONE",
+    "VACUUM table_name",
+    "Nothing; old data is reclustered automatically at the next query"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "Changing keys does not rewrite data. Plain OPTIMIZE clusters new data incrementally; OPTIMIZE FULL reclusters everything, which can take hours on large tables.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/tables/clustering",
+    "t": "Use liquid clustering for tables"
+   }
+  },
+  {
+   "id": "dbx-148",
+   "d": "tune",
+   "q": "A notebook runs %pip install of a newer version of a package, but the next cell still imports the old version. What is missing?",
+   "opts": [
+    "dbutils.library.restartPython() after the install",
+    "Restarting the whole cluster from the admin console",
+    "Installing it again as a cluster library",
+    "Running the cell twice"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "%pip installs into the notebook's environment but does not restart Python, so already-loaded modules stay. Call dbutils.library.restartPython() after installing, ideally at the top of the notebook, and pin versions with ==.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/libraries/notebooks-python-libraries",
+    "t": "Notebook-scoped Python libraries"
+   }
+  },
+  {
+   "id": "dbx-149",
+   "d": "tune",
+   "q": "A job on classic compute fails before any task runs, and the compute event log shows INIT_SCRIPT_FAILURE. What do you do first?",
+   "opts": [
+    "Read the init script's logs (via cluster log delivery) and fix the script",
+    "Increase spark.sql.shuffle.partitions",
+    "Add more workers",
+    "Enable predictive optimization"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "The termination code says a cluster-scoped init script failed. Its stderr log, delivered with cluster log delivery, shows the failing command. Spark settings and worker counts cannot help because Spark never started.",
+   "more": {
+    "u": "https://docs.databricks.com/gcp/en/compute/troubleshooting/cluster-error-codes",
+    "t": "Classic compute termination error codes"
+   }
   },
   {
    "id": "dbx-110",
@@ -1051,6 +1453,84 @@
     0
    ],
    "why": "ABAC policies use tags on data and conditions on users to apply row filters and column masks centrally, at the catalog or schema level, so new tagged tables are covered automatically instead of configuring each table."
+  },
+  {
+   "id": "dbx-150",
+   "d": "gov",
+   "q": "Which privileges does a user need to create an external table at s3://acme/sales/ in main.sales? (Choose two.)",
+   "opts": [
+    "CREATE EXTERNAL TABLE on the external location that covers the path",
+    "CREATE TABLE on main.sales, with USE CATALOG and USE SCHEMA",
+    "MODIFY on the metastore",
+    "BROWSE on main"
+   ],
+   "ans": [
+    0,
+    1
+   ],
+   "why": "An external table needs CREATE EXTERNAL TABLE on the external location covering its LOCATION, plus the usual CREATE TABLE on the schema with USE CATALOG and USE SCHEMA.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/tables/external",
+    "t": "Work with external tables"
+   }
+  },
+  {
+   "id": "dbx-151",
+   "d": "gov",
+   "q": "An external Delta table should become a Unity Catalog managed table without changing its name or grants. Which statement does this?",
+   "opts": [
+    "ALTER TABLE main.legacy.events SET MANAGED",
+    "ALTER TABLE main.legacy.events SET MANAGED MOVE",
+    "CONVERT TO DELTA main.legacy.events",
+    "DROP TABLE and CREATE TABLE without LOCATION"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "ALTER TABLE ... SET MANAGED copies the data and log into managed storage with a short write pause, keeping the name, history and grants. It needs table ownership and Runtime 17.3 LTS or serverless. MOVE and COPY are for foreign tables only.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/tables/convert-to-managed",
+    "t": "Convert external tables to managed"
+   }
+  },
+  {
+   "id": "dbx-152",
+   "d": "gov",
+   "q": "Contractors must lose access to one table in a schema where their group has SELECT on the whole schema. Which approach works in Unity Catalog?",
+   "opts": [
+    "Revoke SELECT on the schema and grant SELECT only on the tables they may read",
+    "Run DENY SELECT ON TABLE for the contractors group",
+    "Grant contractors MANAGE on the table",
+    "Set the table's owner to the contractors group"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "Unity Catalog has no DENY statement; grants add up and access is removed with REVOKE. Narrow the grant to the allowed tables, or move the sensitive table to a schema the group cannot use.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/manage-privileges",
+    "t": "Manage privileges in Unity Catalog"
+   }
+  },
+  {
+   "id": "dbx-153",
+   "d": "gov",
+   "q": "Who can grant SELECT on main.gold.sales to another group? (Choose two.)",
+   "opts": [
+    "The table's owner",
+    "A user with MANAGE on the table or its schema",
+    "Any user with SELECT on the table",
+    "Any user with USE SCHEMA on main.gold"
+   ],
+   "ans": [
+    0,
+    1
+   ],
+   "why": "Owners of the object or its catalog or schema, metastore admins, and holders of MANAGE can grant privileges. Holding SELECT or USE SCHEMA only lets you use the object.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts",
+    "t": "Unity Catalog permissions model"
+   }
   }
  ]
 }

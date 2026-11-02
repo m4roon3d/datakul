@@ -47,7 +47,18 @@ with sync_playwright() as p:
     ok(bad == 0, "malformed or foreign questions from the network are ignored")
     pg.screenshot(path=f"{OUT}/exam-home.png", full_page=True)
     # study chapter (Data ingestion and loading)
-    ok(pg.locator(".crow [data-cstudy]").count() == 2 and pg.locator("[data-cstudy=ingest]").count() == 1 and pg.locator("[data-cstudy=transform]").count() == 1, "only sections with a chapter have a Study button")
+    ok(pg.locator(".crow [data-cstudy]").count() == 7, "every section has a Study button")
+    # the five newer chapters: section, solved problems, tables
+    for dom, title, nprob, ntab in (("platform", "Databricks Intelligence Platform", 5, 1), ("jobs", "Working with Lakeflow Jobs", 9, 2), ("cicd", "Implementing CI/CD", 7, 2), ("tune", "Troubleshooting, monitoring and optimisation", 9, 1), ("gov", "Governance and security", 9, 3)):
+        pg.click(f"[data-cstudy={dom}]"); pg.wait_for_timeout(200)
+        ok(title in pg.inner_text("#certBoard") and pg.locator(".sprob").count() == nprob and pg.locator(".swrap table").count() == ntab, f"{dom} chapter shows {nprob} solved problems and {ntab} tables")
+        ok(pg.locator(".slinks a").count() >= 7 and pg.evaluate("[...document.querySelectorAll('.slinks a')].every(a => a.href.startsWith('https://docs.databricks.com/'))"), f"{dom} chapter links only Databricks docs")
+        pg.evaluate("document.querySelectorAll('.sprob').forEach(d => d.open = true)"); pg.wait_for_timeout(100)
+        for th in ("light", "dark", "black"):
+            pg.evaluate(f"document.documentElement.setAttribute('data-theme','{th}')"); pg.wait_for_timeout(80)
+            pg.screenshot(path=f"{OUT}/study-{dom}-{th}.png", full_page=True)
+        pg.evaluate("document.documentElement.setAttribute('data-theme','light')")
+        pg.click("[data-cstudyx] >> nth=0"); pg.wait_for_timeout(100)
     pg.click("[data-cstudy=transform]"); pg.wait_for_timeout(200)
     ok("Data transformation and modelling" in pg.inner_text("#certBoard") and pg.locator(".sprob").count() == 10 and pg.locator(".swrap table").count() == 3, "transformation chapter shows 10 solved problems and 3 tables")
     for th in ("light", "dark", "black"):
@@ -143,6 +154,12 @@ with sync_playwright() as p:
     pg.click(".sprob:nth-of-type(3) summary"); pg.wait_for_timeout(100)
     ok(pg.evaluate("document.documentElement.scrollWidth") <= 390, "phone: the transformation chapter fits without sideways scrolling")
     pg.screenshot(path=f"{OUT}/study-transform-phone.png", full_page=True)
+    for dom in ("platform", "jobs", "cicd", "tune", "gov"):
+        pg.click("[data-cstudyx] >> nth=0"); pg.wait_for_timeout(100)
+        pg.click(f"[data-cstudy={dom}]"); pg.wait_for_timeout(200)
+        pg.evaluate("document.querySelectorAll('.sprob').forEach(d => d.open = true)"); pg.wait_for_timeout(100)
+        ok(pg.evaluate("document.documentElement.scrollWidth") <= 390, f"phone: the {dom} chapter fits without sideways scrolling, all problems open")
+        pg.screenshot(path=f"{OUT}/study-{dom}-phone.png", full_page=True)
     pg.screenshot(path=f"{OUT}/study-phone.png", full_page=True)
     pg.click("[data-cstudyx] >> nth=0"); pg.wait_for_timeout(100)
     pg.click("[data-cstart=mock]"); pg.wait_for_timeout(200)
