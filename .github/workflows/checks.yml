@@ -17,6 +17,10 @@ jobs:
         run: node tools/sync-grader.mjs --check
       - name: App scripts parse
         run: for f in web/*.js; do node --check "$f" || exit 1; done
+      - name: No top-level name declared in two scripts
+        run: node tools/check_globals.mjs
+      - name: Exam question banks valid and built
+        run: node content/build_certs.mjs --check
       - name: Gateway tests
         run: |
           set -o pipefail
@@ -68,6 +72,10 @@ jobs:
         run: |
           set -o pipefail
           python3 tests/status_ui.py 2>&1 | tee "$RUNNER_TEMP/su.txt" || { grep -E "^FAIL|Error" "$RUNNER_TEMP/su.txt" | head -10 | while read -r l; do echo "::error title=Status page test::$l"; done; exit 1; }
+      - name: Exam prep tests (diagnostic, practice, mock exam)
+        run: |
+          set -o pipefail
+          python3 tests/exam.py 2>&1 | tee "$RUNNER_TEMP/ex.txt" || { grep -E "^FAIL|Error" "$RUNNER_TEMP/ex.txt" | head -10 | while read -r l; do echo "::error title=Exam prep test::$l"; done; exit 1; }
       - uses: actions/upload-artifact@v4
         if: always()
         continue-on-error: true   # screenshots are a nice-to-have; the account's artifact storage is shared with Hodlr's APKs

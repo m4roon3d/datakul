@@ -16,6 +16,16 @@ automatically.
      concept's text in `web/library.js` directly and say what changed and why in the PR.
 3. If the queue is empty, write timely topics only and propose the next wave of topics in the PR description.
 
+## Exam questions (until the Databricks bank reaches 300)
+
+Also add **20 new Databricks Data Engineer Associate questions** a week to `content/certs/databricks_dea.py`, spread across the 7 sections roughly in the exam's weights, favouring sections with the fewest questions. Rules:
+
+- Original questions only, written from the public exam guide (linked in the file) and Databricks documentation. Never use or ask for real exam questions.
+- One clearly right answer (or exactly the number the question says to choose, with "(Choose two.)" in the text), and wrong options that are plausible, not silly.
+- An explanation of 1–3 sentences that says why the answer is right and, where useful, why a tempting option is wrong.
+- Check the exam guide's date at the top of the Databricks certification page; if a newer guide exists, update the sections and weights and say so in the PR.
+- Run `python3 content/certs/databricks_dea.py && node content/build_certs.mjs` until it passes, and commit `web/certs.js` with it.
+
 ## Research
 
 - Look up anything that changes over time before writing it: product names, versions, limits, prices, exam codes, rules.

@@ -13,6 +13,9 @@ short answers, no jargon).
   with `content/merge_batch.js` (which stamps new concepts with an `nw` date). The syllabus source is
   `content/syllabus.txt`; wave 2 is written in the order of `content/queue.txt`. The weekly update follows
   `docs/weekly-content.md`.
+- `web/certs.js` (generated) and `web/exam.js`: exam prep under Practice. Question banks are written in
+  `content/certs/*.py` (original questions only, from the public exam guide; never real exam content), checked and built
+  with `node content/build_certs.mjs`. Readiness = last 10 answers per exam section, ready at 8+ answered and 75%+.
 - `worker/src/index.js`: AI gateway (providers, prompts, fallback). `worker/src/community.js`: layer 2 (collect unanswered
   questions, group nightly, draft, check, review, publish). `worker/migrations/`: D1 schema.
 - `worker/src/grader.js` is generated from the grader in `web/app.js` by `node tools/sync-grader.mjs`. Never edit it by hand;
@@ -27,10 +30,11 @@ short answers, no jargon).
 
 - Tests: `node --no-warnings tests/gateway.mjs`, `node --no-warnings tests/layer2.mjs`,
   `node --no-warnings tests/status.mjs`, then `node tests/l2server.mjs 8788 &` and `python3 tests/l2ui.py`,
-  `tests/themes.py`, `tests/teach.py`, `tests/status_ui.py`.
+  `tests/themes.py`, `tests/teach.py`, `tests/status_ui.py`, `tests/exam.py`.
 - After changing the grader in `web/app.js`: `node tools/sync-grader.mjs`.
 - Every interview question needs a model answer `a` that earns all its key points (`tests/teach.py` checks it); add
   answers to existing questions with `node content/add_model_answers.mjs <answers.json>`.
+- All app scripts share one global scope: `node tools/check_globals.mjs` fails if a top-level name is declared twice.
 - Brand files: `python3 tools/make_brand.py` (compass mark + Space Grotesk wordmark → `brand/`). Theme test: `python3 tests/themes.py`.
 
 ## Rules

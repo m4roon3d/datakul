@@ -499,6 +499,81 @@ textarea.ans-in:focus{border-color:var(--accent);outline:none}
 .nitem b{font-family:var(--f-display);font-size:16px;line-height:1.25}
 .nitem small{color:var(--muted);font-size:12.5px}
 @media (max-width:899px){.newshelf{grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:minmax(210px,72%);overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;margin-inline:-2px}.nitem{scroll-snap-align:start}}
+/* exam prep */
+.certwrap{display:flex;flex-direction:column;gap:16px}
+.certwrap .card{padding:20px 22px}
+.cplanrow .lab{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:var(--muted)}
+.cplanrow input[type=date]{font:inherit;font-size:15px;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r-ctl);padding:9px 12px;max-width:220px;color-scheme:inherit}
+@media (max-width:640px){.certwrap .card{padding:16px}}
+@media (max-width:480px){.subnav button{padding:7px 11px;font-size:13px;white-space:nowrap}}
+.certhead h1{font-size:clamp(24px,4vw,32px);margin:6px 0 10px}
+.cfacts{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14.5px;color:var(--muted)}
+.cfacts b{color:var(--ink);font-family:var(--f-display)}
+.cdisc{font-size:12.5px;margin-top:10px}
+.cdisc a{color:var(--accent)}
+.cplan{display:flex;flex-direction:column;gap:12px}
+.cplanrow{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.cdays{display:flex;flex-direction:column;align-items:flex-end;line-height:1.1}
+.cdays b{font-family:var(--f-display);font-size:34px;color:var(--flame-ink)}
+.cdays span{font-size:12.5px;color:var(--muted)}
+.crd{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+.crow{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(90px,1fr) auto auto;gap:12px;align-items:center}
+.cname{display:flex;flex-direction:column;min-width:0}
+.cname b{font-size:14.5px;line-height:1.3}
+.cname small{color:var(--muted);font-size:12.5px}
+.cbar{position:relative;height:8px;border-radius:99px;background:var(--surface-2)}
+.cbar i{display:block;height:100%;border-radius:99px;background:var(--lock)}
+.cbar.building i{background:var(--flame)}
+.cbar.ready i{background:var(--good)}
+.cbar em{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);opacity:.35;border-radius:2px}
+.cst{font-size:12.5px;font-weight:700;color:var(--muted);white-space:nowrap}
+.cst.ready{color:var(--good)}.cst.building{color:var(--flame-ink)}
+.cmocks{list-style:none;margin:10px 0 6px;padding:0;display:flex;flex-direction:column;gap:6px}
+.cmocks li{display:flex;gap:12px;align-items:baseline}
+.cmocks b{font-family:var(--f-display);font-size:18px;min-width:52px}
+.cmocks span{color:var(--muted);font-size:13.5px}
+.cq{display:flex;flex-direction:column;gap:14px}
+.cqtop{display:flex;align-items:center;gap:12px}
+.cqtop .eyebrow{flex:1}
+.ctimer{font-family:var(--f-mono);font-weight:700;font-size:15px;background:var(--surface-2);border-radius:999px;padding:4px 12px}
+.ctimer.low{background:var(--flame-soft);color:var(--flame-ink)}
+.cprog{height:4px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.cprog i{display:block;height:100%;background:var(--accent)}
+.cdom{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.cqtext{font-family:var(--f-display);font-size:19px;font-weight:600;line-height:1.35}
+.ccode{margin:0;background:var(--surface-2);border-radius:12px;padding:12px 14px;overflow-x:auto;font-family:var(--f-mono);font-size:13px;line-height:1.5}
+.copts{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.copt{display:flex;gap:12px;align-items:flex-start;border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;cursor:pointer;transition:border-color .15s,background .15s}
+.copt:hover{border-color:var(--accent)}
+.copt input{margin-top:4px;accent-color:var(--accent);flex:none;width:17px;height:17px}
+.copt span{flex:1}
+.copt.on{border-color:var(--accent);background:var(--accent-soft)}
+.copt.right{border-color:var(--good);background:var(--good-soft)}
+.copt.wrong{border-color:var(--flame);background:var(--flame-soft)}
+.copt:has(input:disabled){cursor:default}
+.cmark{font-weight:700}
+.copt.right .cmark{color:var(--good)}.copt.wrong .cmark{color:var(--flame-ink)}
+.cfb{border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;font-size:14.5px}
+.cfb.ok{background:var(--good-soft)}.cfb.no{background:var(--flame-soft)}
+.cmap{display:flex;flex-wrap:wrap;gap:6px;border-top:1px solid var(--line);padding-top:12px}
+.cmap button{width:34px;height:34px;border-radius:9px;border:1.5px solid var(--line);background:none;font-size:12.5px;font-weight:700;color:var(--muted)}
+.cmap button.done{background:var(--accent-soft);border-color:var(--accent-soft);color:var(--accent)}
+.cmap button.cur{border-color:var(--accent);color:var(--ink)}
+.cres{display:flex;flex-direction:column;gap:12px}
+.cscore{display:flex;align-items:baseline;gap:14px}
+.cscore b{font-family:var(--f-display);font-size:48px;line-height:1}
+.cscore span{color:var(--muted)}
+.crevs{display:flex;flex-direction:column;gap:6px}
+.crev{border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.crev summary{display:flex;gap:10px;align-items:flex-start;cursor:pointer;list-style:none;font-size:14.5px}
+.crev summary::-webkit-details-marker{display:none}
+.crev summary span{flex:1}
+.crev summary svg{width:16px;height:16px;flex:none;margin-top:3px}
+.crev.ok .cmark{color:var(--good)}.crev.no .cmark{color:var(--flame-ink)}
+.crev .db{display:flex;flex-direction:column;gap:8px;margin-top:10px;font-size:14.5px}
+.crevopts{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+.crevopts li.right{color:var(--good);font-weight:700}.crevopts li.wrong{color:var(--flame-ink)}
+@media (max-width:640px){.crow{grid-template-columns:minmax(0,1fr) auto;row-gap:6px}.crow .cbar{grid-column:1 / -1;grid-row:2}.crow .ghostlink{grid-column:2;grid-row:1;justify-self:end}.crow .cst{display:none}}
 .chk{display:flex;gap:12px;align-items:flex-start;border:1.5px solid var(--line);border-radius:16px;padding:12px 14px;cursor:pointer;margin-top:12px}
 .chk input{margin-top:5px;accent-color:var(--accent);width:18px;height:18px;flex:none}
 .chk span{display:flex;flex-direction:column;gap:2px;min-width:0}
@@ -655,7 +730,7 @@ textarea.editor:focus{border-color:var(--accent);outline:none}
 </section>
 
 <section class="view" id="view-interview" hidden>
-  <div class="subnav" role="group" aria-label="Practice type"><button type="button" data-sub="interview" aria-pressed="true" id="sub-interview">Interview questions</button><button type="button" data-sub="practice" aria-pressed="false" id="sub-code">Coding</button></div>
+  <div class="subnav" role="group" aria-label="Practice type"><button type="button" data-sub="interview" aria-pressed="true" id="sub-interview">Interview questions</button><button type="button" data-sub="practice" aria-pressed="false" id="sub-code">Coding</button><button type="button" data-sub="cert" aria-pressed="false">Exam prep</button></div>
   <div id="mockArea"></div>
   <div class="target">
     <span class="eyebrow">Preparing for</span>
@@ -680,8 +755,13 @@ textarea.editor:focus{border-color:var(--accent);outline:none}
   </div>
 </section>
 
+<section class="view" id="view-cert" hidden>
+  <div class="subnav" role="group" aria-label="Practice type"><button type="button" data-sub="interview" aria-pressed="false">Interview questions</button><button type="button" data-sub="practice" aria-pressed="false">Coding</button><button type="button" data-sub="cert" aria-pressed="true">Exam prep</button></div>
+  <div id="certBoard"></div>
+</section>
+
 <section class="view" id="view-practice" hidden>
-  <div class="subnav" role="group" aria-label="Practice type"><button type="button" data-sub="interview" aria-pressed="false">Interview questions</button><button type="button" data-sub="practice" aria-pressed="true">Coding</button></div>
+  <div class="subnav" role="group" aria-label="Practice type"><button type="button" data-sub="interview" aria-pressed="false">Interview questions</button><button type="button" data-sub="practice" aria-pressed="true">Coding</button><button type="button" data-sub="cert" aria-pressed="false">Exam prep</button></div>
   <div id="pracBoard" class="view"></div>
 </section>
 
@@ -722,10 +802,12 @@ textarea.editor:focus{border-color:var(--accent);outline:none}
 <script src="library.js"></script>
 <script src="community.js"></script>
 <script src="problems.js"></script>
+<script src="certs.js"></script>
 <script src="diagrams.js"></script>
 <script src="app.js"></script>
 <script src="pyrunner.js"></script>
 <script src="practice.js"></script>
 <script src="quests.js"></script>
+<script src="exam.js"></script>
 </body>
 </html>

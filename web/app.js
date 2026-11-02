@@ -677,14 +677,15 @@ function renderLib() {
 $("#libSearch").addEventListener("input", (e) => { libQuery = e.target.value; renderLib(); });
 
 /* ---------- navigation ---------- */
-const VIEWS = ["quests", "tutor", "interview", "practice", "library"];
+const VIEWS = ["quests", "tutor", "interview", "practice", "cert", "library"];
 function showView(v) {
   if (!VIEWS.includes(v)) v = "quests";
-  const tab = v === "interview" ? "practice" : v;
+  const tab = v === "interview" || v === "cert" ? "practice" : v;
   document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.view === tab)));
   VIEWS.forEach((n) => ($("#view-" + n).hidden = n !== v));
   document.querySelectorAll(".subnav button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.sub === v)));
-  if (v === "interview" || v === "practice") store.set("psub", v);
+  if (v === "interview" || v === "practice" || v === "cert") store.set("psub", v);
+  if (v === "cert" && typeof renderCert === "function") renderCert();
   if (v === "library") renderLib();
   if (v === "practice" && typeof renderPractice === "function") renderPractice();
   if (v === "interview") renderInterview();
