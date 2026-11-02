@@ -256,7 +256,6 @@ function refreshChrome() {
   // phones show the short form (flame + days, level only) so the logo, chips and settings fit on one line
   $("#streakChip").innerHTML = `<span class="chip fire" title="Daily streak" aria-label="${sl}">${FLAME}<span class="short" aria-hidden="true">${n}</span><span class="long" aria-hidden="true">${sl}</span></span>`;
   $("#lvlChip").innerHTML = `<span class="chip lvl" aria-label="Level ${levelOf(QS.xp)}, ${xp} XP">Lv ${levelOf(QS.xp)}<span class="long" aria-hidden="true"> · ${xp} XP</span></span>`;
-  $("#sideFoot").innerHTML = lvlCard();
 }
 
 /* ---------- the Quests home ---------- */

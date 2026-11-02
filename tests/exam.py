@@ -24,8 +24,8 @@ with sync_playwright() as p:
     b = p.chromium.launch(); errs = []
     c = b.new_context(viewport={"width": 1300, "height": 900}); pg = c.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
     pg.goto(B + "/#cert"); pg.wait_for_timeout(900)
-    ok(pg.is_visible("#view-cert") and "Databricks Certified Data Engineer Associate" in pg.inner_text("#certBoard"), "Exam prep opens on the Databricks track")
-    ok(pg.get_attribute("[data-view=practice]", "aria-selected") == "true", "the Practice tab stays selected")
+    ok(pg.is_visible("#view-cert") and "Databricks Certified Data Engineer Associate" in pg.inner_text("#certBoard"), "Certifications opens on the Databricks track")
+    ok(pg.get_attribute("[data-view=cert]", "aria-selected") == "true" and pg.get_attribute("[data-view=practice]", "aria-selected") == "false", "Certifications is its own tab, not part of Practice")
     ok("Not affiliated" in pg.inner_text("#certBoard") or "not affiliated" in pg.inner_text("#certBoard"), "the not-affiliated notice is shown")
     ok(pg.locator(".crow").count() == 7, "all 7 exam sections are listed")
     pg.screenshot(path=f"{OUT}/exam-home.png", full_page=True)

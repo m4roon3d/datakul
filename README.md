@@ -112,7 +112,7 @@ Without the D1 block in `wrangler.toml`, these routes switch off and the app beh
 
 ## Exam prep (certification coaching, beta)
 
-Practice → **Exam prep** coaches learners for a certification exam. The first track is the **Databricks Certified Data Engineer Associate** (exam published 4 May 2026: 45 scored questions, 90 minutes, 7 sections).
+**Certifications** (its own section in the menu) coaches learners for a certification exam. The first track is the **Databricks Certified Data Engineer Associate** (exam published 4 May 2026: 45 scored questions, 90 minutes, 7 sections).
 
 - **Exam date and plan:** the learner sets a date; the app counts down and names today's focus (the not-yet-ready section that matters most for the exam).
 - **Diagnostic:** 2 questions from each section to see where to start.
