@@ -13,3 +13,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - run: |
+          for u in "https://datakul.pages.dev/certs.js" "https://datakul.pages.dev/certs.js?v=$RANDOM" "https://6a4ee47e.datakul.pages.dev/certs.js"; do
+            printf "%s " "$u"; curl -s -D /tmp/h -o /tmp/b "$u"; wc -c < /tmp/b | tr -d '\n'; printf " gov=%s " "$(grep -c 'One policy for every PII column' /tmp/b)"; grep -i -E "^cf-ray|^etag" /tmp/h | tr -d '\r' | tr '\n' ' '; echo
+          done
