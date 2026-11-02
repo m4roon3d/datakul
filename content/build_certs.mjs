@@ -10,6 +10,7 @@ const dir = join(root, "content/certs");
 const errors = [];
 const err = (m) => errors.push(m);
 const certs = [];
+const DOCS = /^https:\/\/docs\.databricks\.com\//;
 
 for (const f of readdirSync(dir).filter((x) => x.endsWith(".json")).sort()) {
   const { cert, questions } = JSON.parse(readFileSync(join(dir, f), "utf8"));
@@ -34,6 +35,23 @@ for (const f of readdirSync(dir).filter((x) => x.endsWith(".json")).sort()) {
     if (q.ans.length === 1 && /\(Choose/.test(q.q)) w("says Choose but has one answer");
     if ((q.why || "").length < 80) w("explanation shorter than 80 characters");
     if (/—/.test(JSON.stringify(q))) w("contains an em dash");
+    if (q.more && !(DOCS.test(q.more.u || "") && q.more.t)) w("more must be a docs.databricks.com link with a title");
+  }
+  // Study chapters: content/certs/study/<cert>.<domain>.json, attached to the section as domain.study
+  const sdir = join(dir, "study");
+  let files = []; try { files = readdirSync(sdir).filter((x) => x.startsWith(cert.id + ".") && x.endsWith(".json")).sort(); } catch {}
+  for (const f2 of files) {
+    const ch = JSON.parse(readFileSync(join(sdir, f2), "utf8"));
+    const w = (s) => err(where(`study ${f2}: ${s}`));
+    const d = cert.domains.find((x) => x.id === ch.dom);
+    if (!d) { w(`unknown section ${ch.dom}`); continue; }
+    for (const k of ["intro", "expects", "ideas", "problems", "mistakes", "links", "checked"]) if (!ch[k] || !ch[k].length) w(`missing ${k}`);
+    (ch.problems || []).forEach((p, i) => {
+      if (!p.t || !p.q || !p.answer || !(p.steps || []).length) w(`problem ${i + 1} needs t, q, steps and answer`);
+    });
+    (ch.links || []).forEach((l, i) => { if (!DOCS.test(l.u || "") || !l.t || !l.why) w(`link ${i + 1} must be a docs.databricks.com link with title and why`); });
+    if (/—/.test(JSON.stringify(ch))) w("contains an em dash");
+    d.study = ch;
   }
   for (const d of cert.domains) if ((per[d.id] || 0) < 2) err(where(`domain ${d.id} has ${per[d.id] || 0} questions; needs at least 2 for the diagnostic`));
   certs.push({ ...cert, questions });

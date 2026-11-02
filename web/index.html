@@ -593,7 +593,35 @@ textarea.ans-in:focus{border-color:var(--accent);outline:none}
 .crev .db{display:flex;flex-direction:column;gap:8px;margin-top:10px;font-size:14.5px}
 .crevopts{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px}
 .crevopts li.right{color:var(--good);font-weight:700}.crevopts li.wrong{color:var(--flame-ink)}
-@media (max-width:640px){.crow{grid-template-columns:minmax(0,1fr) auto;row-gap:6px}.crow .cbar{grid-column:1 / -1;grid-row:2}.crow .ghostlink{grid-column:2;grid-row:1;justify-self:end}.crow .cst{display:none}}
+@media (max-width:640px){.crow{grid-template-columns:minmax(0,1fr) auto;row-gap:6px}.crow .cbar{grid-column:1 / -1;grid-row:2}.crow .cbtns{grid-column:2;grid-row:1;justify-self:end}.crow .cst{display:none}}
+/* study chapters */
+.cbtns{display:flex;gap:14px;justify-content:flex-end}
+.study .card h3{margin:0 0 10px}
+.study .card h1{margin:4px 0 8px}
+.sul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14.5px;line-height:1.5}
+.sidea{margin-top:12px}.sidea:first-of-type{margin-top:0}
+.sidea b{font-size:14.5px}.sidea p{margin:3px 0 0;font-size:14.5px;line-height:1.55}
+.stbl{margin-top:18px}.stbl h4{margin:0 0 8px;font-size:14px}
+.swrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+.swrap table{border-collapse:collapse;width:100%;min-width:520px;font-size:13.5px;line-height:1.45}
+.swrap th,.swrap td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}
+.swrap th{background:var(--surface-2);font-size:12.5px;color:var(--muted)}
+.swrap tr:last-child td{border-bottom:0}
+.sprob{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px}
+.sprob summary{display:flex;gap:10px;align-items:flex-start;cursor:pointer;list-style:none;font-size:14.5px}
+.sprob summary::-webkit-details-marker{display:none}
+.sprob summary>span:nth-child(2){flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
+.sprob summary em{font-style:normal;color:var(--muted);line-height:1.5}
+.sprob summary svg{width:16px;height:16px;flex:none;margin-top:3px}
+.snum{flex:none;width:24px;height:24px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font:700 12.5px/24px var(--f-mono);text-align:center}
+.sprob .db{display:flex;flex-direction:column;gap:10px;margin-top:12px;font-size:14.5px;line-height:1.55}
+.sprob ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.sans{margin:0;background:var(--accent-soft);border-radius:10px;padding:10px 12px}
+.slinks{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-direction:column;gap:10px}
+.slinks li{display:flex;flex-direction:column;gap:2px;font-size:14.5px}
+.slinks span{font-size:13px}
+.study a,.cmore a{color:var(--accent)}
+.cmore{margin:8px 0 0;font-size:13.5px}
 .chk{display:flex;gap:12px;align-items:flex-start;border:1.5px solid var(--line);border-radius:16px;padding:12px 14px;cursor:pointer;margin-top:12px}
 .chk input{margin-top:5px;accent-color:var(--accent);width:18px;height:18px;flex:none}
 .chk span{display:flex;flex-direction:column;gap:2px;min-width:0}
