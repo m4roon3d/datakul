@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Datakul</string>
+    <string name="launch_url">https://datakul.pages.dev/?source=app</string>
+    <string name="web_manifest_url">https://datakul.pages.dev/manifest.webmanifest</string>
+    <string name="asset_statements" translatable="false">[{\"relation\": [\"delegate_permission/common.handle_all_urls\"], \"target\": {\"namespace\": \"web\", \"site\": \"https://datakul.pages.dev\"}}]</string>
+    <string name="shortcut_quests">Quests</string>
+    <string name="shortcut_ask">Ask</string>
+    <string name="shortcut_practice">Practice</string>
+    <string name="shortcut_certs">Certifications</string>
+</resources>

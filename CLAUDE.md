@@ -28,6 +28,10 @@ short answers, no jargon).
   progress sync, delete), `web/account.js` (Settings block, merge, sync), `web/privacy.html`, migration 0003. Synced keys are
   listed in `KEYS` in `web/account.js`; add any new learning data there. Device settings never sync. Learner data off the
   device means `web/privacy.html` must be updated first.
+- `android/`: the Android app, a Trusted Web Activity around the live site (no code; manifest and resources only), package `app.datakul`.
+  `.github/workflows/android.yml` builds the APK (published as a release on main); `android-release.yml` builds the signed Play bundle from
+  secrets. `web/.well-known/assetlinks.json` must list the signing key's fingerprint (`tests/android_static.py` and the build check it).
+  The debug keystore is committed on purpose; the Play upload key lives only in GitHub secrets. See `docs/android.md`.
 - `tools/deploy.mjs`: the deploy, run by `.github/workflows/deploy.yml` on every merge to main.
 - `tests/`: `gateway.mjs` and `layer2.mjs` (Node 22, D1 on built-in SQLite), `l2ui.py` (Playwright, needs
   `node tests/l2server.mjs 8788` running; screenshots go to `tests/out/`).
