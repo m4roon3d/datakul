@@ -51,5 +51,6 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
           ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           EXTRA_ORIGINS: ${{ vars.EXTRA_ORIGINS }}
         run: node tools/deploy.mjs

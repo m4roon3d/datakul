@@ -33,6 +33,10 @@ jobs:
         run: |
           set -o pipefail
           node --no-warnings tests/status.mjs 2>&1 | tee "$RUNNER_TEMP/st.txt" || { grep -E "^FAIL|Error" "$RUNNER_TEMP/st.txt" | head -10 | while read -r l; do echo "::error title=Status test::$l"; done; exit 1; }
+      - name: Accounts tests
+        run: |
+          set -o pipefail
+          node --no-warnings tests/accounts.mjs 2>&1 | tee "$RUNNER_TEMP/ac.txt" || { grep -E "^FAIL|Error" "$RUNNER_TEMP/ac.txt" | head -10 | while read -r l; do echo "::error title=Accounts test::$l"; done; exit 1; }
       - name: Gateway bundles for Cloudflare (dry run, no account needed)
         working-directory: worker
         run: npx --yes wrangler@4.112.0 deploy --dry-run --outdir "$RUNNER_TEMP/dist"
@@ -80,6 +84,10 @@ jobs:
         run: |
           set -o pipefail
           python3 tests/pwa.py 2>&1 | tee "$RUNNER_TEMP/pw.txt" || { grep -E "^FAIL|Error" "$RUNNER_TEMP/pw.txt" | head -10 | while read -r l; do echo "::error title=Installable app test::$l"; done; exit 1; }
+      - name: Accounts UI test
+        run: |
+          set -o pipefail
+          python3 tests/account_ui.py 2>&1 | tee "$RUNNER_TEMP/au.txt" || { grep -E "^FAIL|Error" "$RUNNER_TEMP/au.txt" | head -10 | while read -r l; do echo "::error title=Accounts UI test::$l"; done; exit 1; }
       - uses: actions/upload-artifact@v4
         if: always()
         continue-on-error: true   # screenshots are a nice-to-have; the account's artifact storage is shared with Hodlr's APKs

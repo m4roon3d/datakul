@@ -4,6 +4,7 @@
 // Layer 2 (the shared library that grows from learners' questions) lives in community.js.
 
 import { handleCommunity, runJob } from "./community.js";
+import { handleAccounts, userStats, pruneSessions } from "./accounts.js";
 import { logUsage, meteredStream, promptTokens, rateHeaders, usageStatus, setMeta, pruneUsage } from "./usage.js";
 
 const PROVIDERS = {
@@ -98,7 +99,7 @@ function corsHeaders(origin, env) {
     ok,
     headers: {
       "Access-Control-Allow-Origin": allowed.includes("*") ? "*" : ok ? origin : allowed[0] || "",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
       "Access-Control-Allow-Headers": "content-type, authorization",
       "Access-Control-Expose-Headers": "x-provider, x-model, x-provider-label",
       Vary: "Origin",
@@ -535,8 +536,8 @@ async function ping(env, provider, model) {
 const providerList = (env) => configured(env).map(([id, p]) => ({ id, label: p.label, models: p.models }));
 const deps = (env, ctx) => ({
   json, rateLimited, complete, embed: (t) => embed(t, env, ctx),
-  usageStatus: () => usageStatus(env, [...providerList(env), ...(env.AI ? [{ id: "llama", label: "Embeddings (Cloudflare)", models: [{ id: EMBED_MODEL, label: "BGE small (matching by meaning)" }] }] : [])]),
-  ping: (provider, model) => ping(env, provider, model), setMeta: (k, v) => setMeta(env, k, v), pruneUsage: () => pruneUsage(env),
+  usageStatus: async () => ({ ...(await usageStatus(env, [...providerList(env), ...(env.AI ? [{ id: "llama", label: "Embeddings (Cloudflare)", models: [{ id: EMBED_MODEL, label: "BGE small (matching by meaning)" }] }] : [])])), users: await userStats(env) }),
+  ping: (provider, model) => ping(env, provider, model), setMeta: (k, v) => setMeta(env, k, v), pruneUsage: async () => { await pruneSessions(env); return pruneUsage(env); },
 });
 
 /* ---------------- router ---------------- */
@@ -583,6 +584,8 @@ export default {
         return json({ error: "Embedding failed: " + e.message }, 502, cors);
       }
     }
+    const acct = await handleAccounts(request, url, env, cors);
+    if (acct) return acct;
     const l2 = await handleCommunity(request, url, env, cors, deps(env, ctx));
     if (l2) return l2;
 

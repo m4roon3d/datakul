@@ -61,6 +61,32 @@ Open **Actions** → **Deploy** → **Run workflow**. In about three minutes the
 
 From then on, every merge to `main` deploys automatically.
 
+## Optional: sign-in with Google
+
+Learners can use Datakul with no account. If you want sign-in (progress that follows them between devices, a profile and
+"delete my account"), switch it on once. Nothing shows in the app until you do. The client ID is public, but it is kept as
+a GitHub secret like the others so the deploy handles it.
+
+1. Go to [console.cloud.google.com](https://console.cloud.google.com), sign in, and create a project called **Datakul**.
+2. Open **APIs & Services → OAuth consent screen** (newer accounts call it **Google Auth platform**) and start setup.
+   App name **Datakul**, your email as support and contact email, audience **External**.
+3. In **Branding** (or the same screen), set the app home page to your site address (for example `https://datakul.pages.dev`) and
+   the privacy policy link to the same address plus `/privacy.html`. If it asks for an authorised domain and refuses
+   `pages.dev`, leave that box empty: it is only needed for sensitive permissions, and Datakul only asks for name and email.
+4. Open **Clients → Create client**. Type **Web application**, name **Datakul web**.
+   Under **Authorised JavaScript origins** add your site address, for example `https://datakul.pages.dev` (add your own
+   domain too if you set one up). Leave redirect URIs empty. Create, then copy the **Client ID**. It ends in
+   `.apps.googleusercontent.com`.
+5. Under **Audience**, press **Publish app** so anyone can sign in, not only test users. Only basic sign-in is requested,
+   so Google does not need to review it.
+6. In GitHub, repository **Settings → Secrets and variables → Actions → New repository secret**: name `GOOGLE_CLIENT_ID`,
+   value the Client ID. Run **Deploy** (Actions → Deploy → Run workflow).
+7. Open the app, press the settings icon: **Your account** appears at the top. The deploy summary also says
+   "Sign-in with Google: on".
+
+To switch it off again, delete the secret and redeploy. Existing accounts stay in the database but nobody can reach them
+until it is switched back on. The review page (AI status tab) shows how many learners have signed up, never who they are.
+
 ## Later
 
 - **Your own domain:** add it to the Pages project in Cloudflare (Workers & Pages → datakul → Custom domains), then add a repository **variable** (not secret) named `EXTRA_ORIGINS` with its address, for example `https://datakul.in`, and run Deploy once.

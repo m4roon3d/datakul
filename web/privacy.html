@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy · Datakul</title>
+<meta name="description" content="What Datakul stores, where, and how to delete it.">
+<script>try{var t=JSON.parse(localStorage.getItem("dp_theme"));if(t==="light"||t==="dark"||t==="black")document.documentElement.dataset.theme=t}catch(e){}</script>
+<style>
+:root{--bg:#F2F6F8;--surface:#fff;--ink:#0B2A3A;--muted:#4F6676;--line:#D8E3EA;--accent:#0B6F94}
+@media (prefers-color-scheme:dark){:root:not([data-theme]){--bg:#071C27;--surface:#0E2938;--ink:#E7F1F6;--muted:#A9C3D0;--line:#1E4356;--accent:#5CC3E6}}
+:root[data-theme=dark]{--bg:#071C27;--surface:#0E2938;--ink:#E7F1F6;--muted:#A9C3D0;--line:#1E4356;--accent:#5CC3E6}
+:root[data-theme=black]{--bg:#000;--surface:#0A0F12;--ink:#E7F1F6;--muted:#A9C3D0;--line:#1E2A31;--accent:#5CC3E6}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:720px;margin:0 auto;padding:28px 16px 64px}
+h1{font-size:32px;line-height:1.15;margin:8px 0 4px}h2{font-size:21px;margin:32px 0 6px}
+p,li{color:var(--ink)}.muted{color:var(--muted)}a{color:var(--accent)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:4px 20px 16px;margin-top:16px}
+table{border-collapse:collapse;width:100%;font-size:15.5px}td,th{text-align:left;vertical-align:top;border-top:1px solid var(--line);padding:9px 8px 9px 0}th{border-top:0;color:var(--muted);font-weight:600}
+@media (max-width:560px){td,th{display:block;border:0;padding:2px 0}tr{display:block;border-top:1px solid var(--line);padding:9px 0}th{display:none}}
+</style>
+</head>
+<body>
+<main>
+<p><a href="./">← Back to Datakul</a></p>
+<h1>Privacy</h1>
+<p class="muted">Last updated 2 November 2026. Short version: your learning progress lives in your browser. An account is optional, and it only exists to keep that progress on all your devices.</p>
+
+<h2>Without an account (the default)</h2>
+<ul>
+<li>Your progress, answers, exam readiness, settings and saved cards stay in this browser on this device. We cannot see them.</li>
+<li>There are no ads and no analytics or tracking scripts.</li>
+<li>When you use <b>Ask</b>, the question you type is sent to the Datakul gateway and on to an AI provider (for example Groq or Cloudflare Workers AI) to produce an answer. Don't type anything private. Questions are not tied to your name.</li>
+<li><b>Help grow the library</b> (on by default, can be switched off in Settings): when the library can't answer a question, the question is shared anonymously after emails, phone numbers and ID numbers are masked. No IP address or name is stored with it, and it is deleted after 180 days. Reviewers may turn popular questions into Community picks.</li>
+</ul>
+
+<h2>With an account (optional)</h2>
+<p>You can sign in with Google from Settings. We never see your Google password. Google tells us you are who you say you are, and we keep only this:</p>
+<div class="card"><table>
+<tr><th>What</th><th>Why</th><th>How long</th></tr>
+<tr><td>Your name and email address from your Google account, and a Google account id</td><td>To show who is signed in and to match you when you sign in again</td><td>Until you delete your account</td></tr>
+<tr><td>Your learning progress: XP, quest steps, interview and exam answers, saved cards, coding practice</td><td>To keep it the same on every device you sign in on</td><td>Until you delete your account</td></tr>
+<tr><td>A sign-in session for each device (stored as a one-way hash, not the token itself)</td><td>So you stay signed in</td><td>90 days, or until you sign out</td></tr>
+</table></div>
+<p>We don't store your Google profile picture, your device settings (theme, answer engine), or your Ask questions with your account. We don't sell or share any of this. The people who run Datakul can see how many accounts exist, but not who they are or what is in them.</p>
+<p>Signing in loads Google's sign-in button from Google, so Google can see that you opened the sign-in box. Nothing loads from Google unless you open Settings while signed out and sign-in is switched on.</p>
+
+<h2>Your choices</h2>
+<ul>
+<li><b>Sign out</b> in Settings. Your progress stays on that device.</li>
+<li><b>Delete my account</b> in Settings removes your user record, your sessions and your synced progress from our database straight away. Progress already on your devices is kept until you clear the browser.</li>
+<li>To use Datakul with no account, simply don't sign in.</li>
+<li>If you are in India, this is how we handle your personal data under the DPDP Act: we collect only what is listed above, with your consent when you press sign in, and you can withdraw it any time by deleting your account.</li>
+</ul>
+
+<h2>Where it is kept</h2>
+<p>The app runs on Cloudflare Pages. The gateway and its database (Cloudflare D1) run on Cloudflare Workers. Cloudflare processes requests on our behalf and its servers may be outside your country.</p>
+
+<h2>Questions</h2>
+<p>Contact the person who runs Datakul using the details on the app's store listing or the site where you found it. If this notice changes in a way that affects you, the date at the top changes.</p>
+</main>
+</body>
+</html>

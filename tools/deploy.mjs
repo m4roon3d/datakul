@@ -11,7 +11,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const WRANGLER = ["--yes", "wrangler@4.112.0"];
 const PROJECT = process.env.PAGES_PROJECT || "datakul";
 const DB_NAME = "datakul";
-const SECRET_NAMES = ["GROQ_API_KEY", "GEMINI_API_KEY", "OPENROUTER_API_KEY", "MISTRAL_API_KEY", "ADMIN_TOKEN"];
+const SECRET_NAMES = ["GROQ_API_KEY", "GEMINI_API_KEY", "OPENROUTER_API_KEY", "MISTRAL_API_KEY", "ADMIN_TOKEN", "GOOGLE_CLIENT_ID"];
 const { CLOUDFLARE_API_TOKEN: TOKEN, CLOUDFLARE_ACCOUNT_ID: ACCOUNT } = process.env;
 
 const step = (s) => console.log(`\n▶ ${s}`);
@@ -98,7 +98,7 @@ const gateway = (dep.match(/https:\/\/[a-z0-9.-]+\.workers\.dev/i) || [])[0] || 
 
 step("Gateway secrets");
 const secrets = Object.fromEntries(SECRET_NAMES.filter((n) => process.env[n]).map((n) => [n, process.env[n]]));
-const aiKeys = Object.keys(secrets).filter((n) => n !== "ADMIN_TOKEN");
+const aiKeys = Object.keys(secrets).filter((n) => n !== "ADMIN_TOKEN" && n !== "GOOGLE_CLIENT_ID");
 if (Object.keys(secrets).length) {
   const dir = mkdtempSync(join(tmpdir(), "dk-"));
   const f = join(dir, "secrets.json");
@@ -107,6 +107,7 @@ if (Object.keys(secrets).length) {
 }
 console.log(`set: ${Object.keys(secrets).join(", ") || "none"}`);
 if (!aiKeys.length) console.log("::warning title=No AI key::No AI provider key is set, so Ask uses Meta Llama on Cloudflare only. Add GROQ_API_KEY for faster, better answers.");
+console.log(secrets.GOOGLE_CLIENT_ID ? "Sign-in with Google: on." : "Sign-in with Google: off (add GOOGLE_CLIENT_ID to turn it on).");
 if (!secrets.ADMIN_TOKEN) console.log("::warning title=Review page off::ADMIN_TOKEN isn't set, so the community review page is locked. Add it to turn reviewing on.");
 
 /* 5. Website */

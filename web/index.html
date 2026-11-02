@@ -679,6 +679,14 @@ textarea.editor:focus{border-color:var(--accent);outline:none}
 .codewrap .copy{position:absolute;top:6px;right:10px;background:var(--surface);padding:2px 8px;border-radius:8px}
 @media (prefers-reduced-motion:no-preference){.msg{animation:in .35s cubic-bezier(.2,.8,.3,1.2) both}@keyframes in{from{transform:translateY(8px)}to{transform:none}}.verdict.good{animation:pop .4s cubic-bezier(.2,.8,.3,1.4)}@keyframes pop{from{transform:scale(.96)}to{transform:none}}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* account (Settings) */
+.gbtn{min-height:44px;display:flex;justify-content:flex-start;margin:6px 0 4px}
+.acct .who{display:flex;align-items:center;gap:12px}.acct .who small{display:block;color:var(--muted);font-size:13.5px;overflow-wrap:anywhere}
+.acct .av{width:42px;height:42px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:800;font-size:18px;flex:none}
+.acct .arow{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.btn.sm{padding:9px 16px;font-size:14px;border-radius:12px}.btn.ghost{background:transparent;color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.ghostlink.danger{color:var(--flame-ink)}
+.sheet-card a{color:var(--accent)}
 </style>
 
 </head>
@@ -786,6 +794,18 @@ textarea.editor:focus{border-color:var(--accent);outline:none}
 <div class="sheet" id="sheet" hidden>
   <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
     <span class="eyebrow">Settings</span>
+    <div id="acctWrap" hidden>
+      <h2>Your account</h2>
+      <div id="acctOut"><p class="muted" style="font-size:14.5px">Optional. Sign in with Google to keep your progress on every device and not lose it if you clear this browser. Datakul works fully without it.</p><div id="gBtn" class="gbtn"></div></div>
+      <div id="acctIn" class="acct" hidden>
+        <div class="who"><span class="av" id="acctAvatar" aria-hidden="true"></span><div><b id="acctName"></b><small id="acctEmail"></small></div></div>
+        <p class="muted" id="acctSync" style="font-size:14px;margin:6px 0 10px"></p>
+        <div class="arow"><button class="btn sm" id="acctSyncNow" type="button">Sync now</button><button class="btn sm ghost" id="acctSignOut" type="button">Sign out</button></div>
+        <button class="ghostlink danger" id="acctDelete" type="button">Delete my account</button>
+      </div>
+      <p class="status" id="acctMsg" role="status"></p>
+      <p class="muted" style="font-size:13.5px;margin:4px 0 14px">What is stored and why: <a href="privacy.html" target="_blank" rel="noopener">privacy notice</a>.</p>
+    </div>
     <h2 id="sheetTitle">Appearance</h2>
     <div class="tseg" role="radiogroup" aria-labelledby="sheetTitle" id="themeSeg">
       <label><input type="radio" name="theme" value="auto"><i class="sw sw-auto" aria-hidden="true"></i><span>Auto</span></label>
@@ -816,6 +836,7 @@ textarea.editor:focus{border-color:var(--accent);outline:none}
 <script src="practice.js"></script>
 <script src="quests.js"></script>
 <script src="exam.js"></script>
+<script src="account.js"></script>
 <script src="pwa.js"></script>
 </body>
 </html>
