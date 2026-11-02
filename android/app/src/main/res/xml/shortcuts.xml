@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="ask" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/shortcut_ask" android:shortcutLongLabel="@string/shortcut_ask">
+        <intent android:action="android.intent.action.VIEW" android:data="https://datakul.pages.dev/#tutor" android:targetPackage="app.datakul" android:targetClass="com.google.androidbrowserhelper.trusted.LauncherActivity" />
+    </shortcut>
+    <shortcut android:shortcutId="quests" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/shortcut_quests" android:shortcutLongLabel="@string/shortcut_quests">
+        <intent android:action="android.intent.action.VIEW" android:data="https://datakul.pages.dev/#quests" android:targetPackage="app.datakul" android:targetClass="com.google.androidbrowserhelper.trusted.LauncherActivity" />
+    </shortcut>
+    <shortcut android:shortcutId="practice" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/shortcut_practice" android:shortcutLongLabel="@string/shortcut_practice">
+        <intent android:action="android.intent.action.VIEW" android:data="https://datakul.pages.dev/#practice" android:targetPackage="app.datakul" android:targetClass="com.google.androidbrowserhelper.trusted.LauncherActivity" />
+    </shortcut>
+    <shortcut android:shortcutId="certs" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/shortcut_certs" android:shortcutLongLabel="@string/shortcut_certs">
+        <intent android:action="android.intent.action.VIEW" android:data="https://datakul.pages.dev/#cert" android:targetPackage="app.datakul" android:targetClass="com.google.androidbrowserhelper.trusted.LauncherActivity" />
+    </shortcut>
+</shortcuts>

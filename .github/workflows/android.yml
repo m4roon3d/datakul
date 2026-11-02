@@ -1,0 +1,75 @@
+name: Build Android APK
+
+# Builds the Android app (a Trusted Web Activity around https://datakul.pages.dev), checks it, and on main publishes the APK
+# as a GitHub release so there is always a link to the latest one: releases/latest/download/datakul-debug.apk
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['android/**', 'web/.well-known/**', '.github/workflows/android.yml']
+  pull_request:
+    paths: ['android/**', 'web/.well-known/**', '.github/workflows/android.yml']
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Static checks (package, site address, fingerprint, shortcuts, resources)
+        run: python3 tests/android_static.py
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Prepare Android SDK
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;35.0.0" >/dev/null || true
+      - name: Build debug APK
+        working-directory: android
+        run: |
+          set +e
+          gradle assembleDebug -PversionCode=${{ github.run_number }} --no-daemon --stacktrace > build.log 2>&1
+          code=$?
+          if [ $code -ne 0 ]; then
+            grep -n -i -E "error|wrong|failed|not found|exception|what went" build.log | head -25 | tr '\n' '|' | cut -c1-3500 | while read -r l; do echo "::error title=Gradle failure::$l"; done
+          fi
+          exit $code
+      - name: Check the Play release bundle builds (unsigned here; the upload key is only used by the release workflow)
+        working-directory: android
+        run: gradle bundleRelease -PversionCode=${{ github.run_number }} --no-daemon -q
+      - name: Check the APK, its signing key and the website agree
+        run: |
+          APK=$(ls android/app/build/outputs/apk/debug/*.apk | head -1)
+          SIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          SHA=$("$SIGNER" verify --print-certs "$APK" | grep -i 'SHA-256 digest' | head -1 | awk '{print $NF}' | tr a-f A-F)
+          COLON=$(echo "$SHA" | sed 's/../&:/g; s/:$//')
+          echo "APK signing certificate SHA-256: $COLON"
+          echo "::notice title=APK signing key::$COLON"
+          grep -q "$COLON" web/.well-known/assetlinks.json || { echo "::error title=assetlinks.json::The website's web/.well-known/assetlinks.json doesn't list this APK's signing key ($COLON), so the app would show a browser bar."; exit 1; }
+          "$ANDROID_HOME"/build-tools/*/aapt2 dump badging "$APK" | grep -E "^package:|sdkVersion|targetSdkVersion|application-label:" | head -5
+      - name: Publish the APK as a release (main only)
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp "$(ls android/app/build/outputs/apk/debug/*.apk | head -1)" datakul-debug.apk
+          TAG="apk-${{ github.run_number }}"
+          printf 'Datakul Android app, build %s.\n\nDebug build signed with the fixed Datakul debug key. Install it to try the app; it is not what goes to Google Play (see docs/android.md).\nCommit %s.\n' "${{ github.run_number }}" "$GITHUB_SHA" > notes.md
+          gh release create "$TAG" datakul-debug.apk --title "Android app, build ${{ github.run_number }}" --notes-file notes.md --target "$GITHUB_SHA" --latest
+          echo "::notice title=APK release::https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/datakul-debug.apk"
+      - uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: datakul-debug-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14

@@ -80,6 +80,8 @@ jobs:
         run: |
           set -o pipefail
           python3 tests/exam.py 2>&1 | tee "$RUNNER_TEMP/ex.txt" || { grep -E "^FAIL|Error" "$RUNNER_TEMP/ex.txt" | head -10 | while read -r l; do echo "::error title=Exam prep test::$l"; done; exit 1; }
+      - name: Android project checks
+        run: python3 tests/android_static.py
       - name: Installable app test
         run: |
           set -o pipefail

@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "app.datakul",
+    "sha256_cert_fingerprints": ["BF:23:FC:35:5A:37:94:65:90:13:4A:52:80:19:86:7A:4E:80:B7:9F:66:74:5C:D2:68:FB:1B:E3:30:4F:D2:F5"]
+  }
+}]

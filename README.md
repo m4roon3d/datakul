@@ -110,6 +110,10 @@ Then open `admin.html` on your site (for example `https://<your-site>/admin.html
 
 Without the D1 block in `wrangler.toml`, these routes switch off and the app behaves as before.
 
+## Android app
+
+The website also ships as an Android app (a Trusted Web Activity, `android/`), built by GitHub Actions. How to install the test APK and publish on Google Play: `docs/android.md`.
+
 ## Exam prep (certification coaching, beta)
 
 **Certifications** (its own section in the menu) coaches learners for a certification exam. The first track is the **Databricks Certified Data Engineer Associate** (exam published 4 May 2026: 45 scored questions, 90 minutes, 7 sections).
