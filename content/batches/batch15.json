@@ -1,0 +1,1334 @@
+{
+ "batch": 15,
+ "name": "Wave 2 week 2: insurance and lending, Iceberg upkeep, RAG quality, AWS streaming and exam",
+ "concepts": [
+  {
+   "id": "insurance-data",
+   "t": "de",
+   "title": "Insurance policy and claims data",
+   "mod": "Domain pack: banking and insurance",
+   "lv": "I",
+   "kw": "insurance data model policy premium claims endorsement renewal sum insured exposure earned premium written premium reserves ibnr agents brokers irdai",
+   "s": "Insurance data revolves around policies, the premiums paid for them and the claims made against them. Most analysis joins these three over time, so dates and policy versions matter a lot.",
+   "d": "A policy records who is covered, for what risk, the sum insured, the start and end dates and the premium. Changes during the term are endorsements, and renewals create a new policy term, so a policy has many versions. Written premium is booked when a policy is sold; earned premium is the part that matches time already covered, so a 12-month policy sold today is only one-twelfth earned after a month. Claims have a loss date, a report date, payments and reserves, which are the insurer's estimate of what is still to be paid. IBNR (incurred but not reported) reserves cover losses that have happened but not yet been claimed. In India, insurers are regulated by IRDAI, and sales flow through agents, brokers, banks and online channels.",
+   "e": "A motor policy for Rs 12,000 is sold on 1 April. By 30 June, Rs 3,000 is earned premium. A claim with a loss date of 20 June, reported on 5 July, belongs to the June loss period even though nobody knew about it until July.",
+   "c": "Why is earned premium, not written premium, used when comparing claims to premium for a period?",
+   "i": "Interviewers check that you know policy versions, written versus earned premium, loss date versus report date, and reserves. A good answer models policies as slowly changing data with effective dates.",
+   "r": [
+    "scd",
+    "core-banking-data",
+    "kpi-metrics"
+   ]
+  },
+  {
+   "id": "iceberg-internals",
+   "t": "de",
+   "title": "Apache Iceberg internals: snapshots, manifests and catalogs",
+   "mod": "Advanced engineering",
+   "lv": "A",
+   "kw": "apache iceberg internals metadata json snapshot manifest list manifest file catalog rest catalog commit atomic swap optimistic concurrency time travel hidden partitioning v2 v3 deletion vectors puffin",
+   "s": "An Iceberg table is a tree of metadata files over ordinary data files. A catalog points to the current metadata file, and every change writes a new snapshot, which gives atomic commits and time travel.",
+   "d": "The catalog (for example a REST catalog, AWS Glue or Hive) stores one pointer: the table's current metadata.json. That file holds the schema, partition spec, properties and the list of snapshots. Each snapshot points to a manifest list, which lists manifest files with partition value ranges, and each manifest lists data files with row counts and column min and max values. Query engines use these statistics to skip whole manifests and files before reading any data. A write creates new files and a new metadata.json, then swaps the catalog pointer only if nobody else committed first; otherwise it retries. Format v2 added row-level delete files for merge-on-read; v3 adds deletion vectors stored in Puffin files and row lineage.",
+   "e": "A query for one day of a 3-year events table reads the manifest list, keeps 4 of 1,100 manifests whose date ranges match, and opens 38 data files instead of 40,000.",
+   "c": "What exactly happens in the catalog when two writers try to commit to the same Iceberg table at the same time?",
+   "i": "Senior interviews ask you to walk the metadata tree, explain how a commit stays atomic on object storage, and say how file statistics enable pruning. Knowing what v2 and v3 changed is a plus.",
+   "r": [
+    "table-formats",
+    "table-maintenance",
+    "aws-s3-lake"
+   ]
+  },
+  {
+   "id": "hybrid-search",
+   "t": "ds",
+   "title": "Hybrid search and re-ranking",
+   "mod": "GenAI and AI engineering",
+   "lv": "A",
+   "kw": "hybrid search bm25 keyword lexical dense vector sparse reciprocal rank fusion rrf re-ranking reranker cross-encoder retrieval recall precision top k",
+   "s": "Hybrid search runs keyword search and vector search together and merges the results. A re-ranker then reorders the best candidates so the most relevant passages reach the model first.",
+   "d": "Vector search finds passages with similar meaning even when the words differ, but it can miss exact terms such as product codes, error numbers or names. Keyword search such as BM25 is the reverse: precise on rare words, weak on paraphrase. Hybrid search runs both and fuses the lists, often with reciprocal rank fusion (RRF), which scores each document by its rank in each list so you don't need to compare raw scores. Retrieval is usually tuned for recall, fetching perhaps 50 candidates. A re-ranker, typically a cross-encoder that reads the question and each passage together, then scores them more accurately and keeps the top 5. Re-ranking adds latency and cost, so measure the gain on an evaluation set.",
+   "e": "Searching help articles for \"error E-4012 on refund\" with vectors alone returned general refund pages. Adding BM25 with RRF put the E-4012 article first, and a re-ranker on the top 40 raised hit rate on 200 test questions from 72% to 88%.",
+   "c": "Why does vector search alone often fail on queries that contain codes, IDs or rare names?",
+   "i": "Expect to explain BM25 versus dense retrieval, how fusion works without comparable scores, and what a cross-encoder re-ranker costs and buys you, with numbers from an evaluation set.",
+   "r": [
+    "vector-databases",
+    "rag-evaluation",
+    "chunking-strategies"
+   ]
+  },
+  {
+   "id": "aws-kinesis-msk",
+   "t": "de",
+   "title": "Streaming on AWS: Kinesis and MSK",
+   "mod": "Cloud platforms: AWS",
+   "lv": "I",
+   "kw": "aws streaming kinesis data streams shards partition key on-demand provisioned enhanced fan-out amazon data firehose msk managed kafka express brokers msk serverless msk connect",
+   "s": "AWS offers two main streaming services: Kinesis Data Streams, a native AWS stream, and Amazon MSK, managed Apache Kafka. Amazon Data Firehose delivers streams into S3, Redshift and other stores.",
+   "d": "Kinesis Data Streams splits a stream into shards; a partition key picks the shard, and order is kept within each shard. In provisioned mode each shard takes about 1 MB/s or 1,000 records a second of writes, while on-demand mode scales capacity for you. Data is kept for 24 hours by default and up to 365 days. Enhanced fan-out gives each consumer its own read throughput. MSK runs Kafka brokers for you, with topics and partitions, so existing Kafka clients, Kafka Connect (MSK Connect) and the wider Kafka ecosystem work unchanged; Express brokers and MSK Serverless reduce the capacity and storage you manage. Firehose needs no consumer code: it buffers, optionally transforms and writes to S3, Redshift or OpenSearch. Check current limits in the AWS docs.",
+   "e": "A ride app sends 4,000 GPS events a second of about 500 bytes each, roughly 2 MB/s. A provisioned Kinesis stream needs at least 4 shards for the record rate, keyed by trip_id so each trip stays in order.",
+   "c": "When would you choose MSK over Kinesis Data Streams for a new pipeline?",
+   "i": "Expect to size shards or partitions from throughput, explain ordering by key, and compare Kinesis, MSK and Firehose on effort, ecosystem and cost.",
+   "r": [
+    "kafka-basics",
+    "stream-processing",
+    "aws-data-services"
+   ]
+  },
+  {
+   "id": "regulatory-reporting",
+   "t": "de",
+   "title": "Regulatory reporting for banks",
+   "mod": "Domain pack: banking and insurance",
+   "lv": "A",
+   "kw": "regulatory reporting rbi returns cims centralised information management system xbrl adf automated data flow crr slr form a basel capital alm lcr data lineage reconciliation submission",
+   "s": "Banks send the regulator a steady stream of returns: balances, capital, liquidity, loans, frauds and more. Data teams build the pipelines that produce these numbers on time, reconciled and traceable.",
+   "d": "In India, banks submit returns to the RBI, which has moved many of them from its older XBRL portal to CIMS, its next-generation data warehouse, for example Form A for CRR. RBI's Automated Data Flow (ADF) approach expects returns to be generated from bank systems without manual edits. Returns cover areas such as CRR and SLR, Basel capital adequacy, liquidity measures like LCR, asset quality and large exposures, on daily, fortnightly, monthly or quarterly cycles. A good reporting pipeline pulls from core banking and other source systems into a governed layer, maps each field to the return's definitions, reconciles totals with the general ledger, keeps full lineage and versioned logic, and records sign-offs. Late or wrong returns can bring penalties, so controls matter as much as speed.",
+   "e": "A fortnightly return shows deposits Rs 40 crore below the GL. Lineage traces it to a new deposit product that was never mapped to a reporting line. Adding the mapping and a reconciliation check stops it happening again.",
+   "c": "Why do regulators push banks towards automated data flow instead of spreadsheets for returns?",
+   "i": "Senior banking interviews ask how you would design a reporting layer: source mapping, reconciliation with the GL, lineage, change control, deadlines and how you would handle a late correction.",
+   "r": [
+    "core-banking-data",
+    "data-quality",
+    "governance"
+   ]
+  },
+  {
+   "id": "table-maintenance",
+   "t": "de",
+   "title": "Table maintenance: compaction, expiry and clustering",
+   "mod": "Advanced engineering",
+   "lv": "A",
+   "kw": "table maintenance compaction rewrite data files optimize small files expire snapshots vacuum orphan files rewrite manifests liquid clustering z-order delete files merge on read",
+   "s": "Lakehouse tables need regular upkeep. Compaction merges small files, snapshot expiry and vacuum remove old files, and clustering keeps related rows together so queries stay fast and storage stays cheap.",
+   "d": "Streaming and frequent small writes leave thousands of tiny files, and merge-on-read updates pile up delete files, so reads slow down. Compaction rewrites them into larger files of a target size, for example with Iceberg's rewrite_data_files procedure or Delta's OPTIMIZE. Every commit also keeps old files for time travel, so storage grows until you expire old snapshots in Iceberg or VACUUM in Delta, which deletes files no longer referenced after a retention period. Remove orphan files left by failed jobs, and rewrite manifests when metadata gets fragmented. Clustering, such as sort orders, Z-ordering or Delta liquid clustering, groups rows on common filter columns. Schedule maintenance per table, avoid clashing with writers, and keep retention longer than your longest-running query and time-travel need.",
+   "e": "A streaming orders table had 210,000 files averaging 2 MB. Nightly compaction to about 256 MB files and 7-day snapshot expiry cut storage by 35% and the daily dashboard query from 90 to 12 seconds.",
+   "c": "What can go wrong if you set snapshot or vacuum retention too short?",
+   "i": "Expect to explain why small files and delete files hurt, which jobs you would schedule and how often, and how you avoid breaking readers, writers and time travel.",
+   "r": [
+    "small-files",
+    "iceberg-internals",
+    "clustering-zorder"
+   ]
+  },
+  {
+   "id": "rag-evaluation",
+   "t": "ds",
+   "title": "Evaluating RAG systems",
+   "mod": "GenAI and AI engineering",
+   "lv": "A",
+   "kw": "rag evaluation retrieval metrics hit rate recall at k mrr context precision faithfulness groundedness answer relevance llm as judge ragas golden set regression",
+   "s": "Evaluating a RAG system means checking two things separately: did retrieval find the right passages, and did the model answer correctly using only them. Measuring both tells you what to fix.",
+   "d": "Start with a set of real questions, each with the passages that answer it and a reference answer. Retrieval metrics include hit rate or recall at k (was a right passage in the top k), MRR (how high it ranked) and context precision (how much retrieved text was relevant). Generation metrics include faithfulness or groundedness (is every claim supported by the retrieved text), answer relevance and correctness against the reference. Scoring is done by people for a sample and often by an LLM judge for scale, checked against human labels; tools such as Ragas package common metrics. Run the suite on every change to prompts, chunking, models or indexes, track latency and cost alongside quality, and add failed production questions to the set.",
+   "e": "A policy bot scores 91% hit rate at 5 but only 70% faithfulness. Reading 30 failures shows the model mixing two policy versions, so the team adds a date filter to retrieval and faithfulness rises to 89%.",
+   "c": "If answers are wrong, how do you tell whether retrieval or generation is the problem?",
+   "i": "Interviewers want separate retrieval and generation metrics, a real evaluation set, a judge you have checked against humans, and a habit of running the suite before every release.",
+   "r": [
+    "llm-evaluation",
+    "rag",
+    "hybrid-search"
+   ]
+  },
+  {
+   "id": "aws-de-cert",
+   "t": "de",
+   "title": "Preparing for the AWS Data Engineer Associate exam",
+   "mod": "Cloud platforms: AWS",
+   "lv": "I",
+   "kw": "aws certified data engineer associate dea-c01 exam preparation domains ingestion transformation data store management operations support security governance practice questions certification",
+   "s": "The AWS Certified Data Engineer Associate exam (DEA-C01) tests whether you can build and run data pipelines on AWS. It is scenario based, so practice choosing services, not memorising lists.",
+   "d": "As of November 2026, AWS lists the exam as 130 minutes with 65 multiple-choice or multiple-response questions, 15 of them unscored, a pass mark of 720 out of 1,000, and a cost of 150 US dollars; check the official page before booking. The four domains are data ingestion and transformation (the largest, about a third), data store management, data operations and support, and data security and governance. Expect questions on Glue, EMR, Kinesis, MSK, DMS, Lambda, Step Functions, MWAA, S3, Redshift, Athena, Lake Formation, IAM, KMS and CloudWatch. A good plan is the official exam guide and practice set, then hands-on builds: a batch pipeline into S3 and Athena, a stream into Firehose, and Lake Formation permissions. The certificate lasts three years.",
+   "e": "A learner spends 6 weeks: two on the exam guide and a pipeline from DMS into S3 and Glue, two on Kinesis, Redshift and Lake Formation labs, and two on timed practice sets, reviewing every wrong answer against the AWS docs.",
+   "c": "Which part of the AWS Data Engineer Associate exam carries the most weight, and how would you practise for it?",
+   "i": "A certificate helps you pass CV filters, but interviewers then ask about something you built. Pair the exam with one small AWS project you can explain end to end, including costs and security.",
+   "r": [
+    "aws-data-services",
+    "aws-kinesis-msk",
+    "portfolio"
+   ]
+  },
+  {
+   "id": "loan-portfolio",
+   "t": "de",
+   "title": "Loan portfolio analytics: NPAs and vintages",
+   "mod": "Domain pack: banking and insurance",
+   "lv": "I",
+   "kw": "loan portfolio analytics npa non performing asset days past due dpd sma-0 sma-1 sma-2 gross npa net npa provisioning vintage analysis roll rates ecl expected credit loss stages",
+   "s": "Loan portfolio analytics tracks how borrowers repay over time: how many loans fall overdue, how many become non-performing assets (NPAs), and how each month's batch of new loans performs as it ages.",
+   "d": "Each loan's days past due (DPD) drives its status. Under RBI rules, accounts showing early stress are flagged as SMA-0 (up to 30 days overdue), SMA-1 (31 to 60) and SMA-2 (61 to 90), and a loan overdue for more than 90 days is an NPA. Gross NPA ratio divides NPAs by total advances; net NPA subtracts provisions. Vintage analysis groups loans by the month they were disbursed and plots the share that hit 30+ or 90+ DPD after each month on book, so you can compare cohorts fairly. Roll rates show how balances move between DPD buckets each month. RBI's expected credit loss (ECL) framework, due from April 2027, adds forward-looking provisions in three stages, keeping 90 days overdue as a backstop for the credit-impaired stage.",
+   "e": "Personal loans disbursed in January show 2.1% at 30+ DPD after 6 months on book, against 1.2% for the October cohort. The gap traces to a new online channel with weaker income checks.",
+   "c": "Why compare loan cohorts by months on book rather than by calendar month?",
+   "i": "Expect to define DPD buckets, SMA and NPA, explain vintage curves and roll rates, and say what data you need: disbursals, schedules, repayments and daily balances.",
+   "r": [
+    "credit-scoring",
+    "cohort",
+    "core-banking-data"
+   ]
+  },
+  {
+   "id": "spark-aqe",
+   "t": "de",
+   "title": "Spark query planning and adaptive execution",
+   "mod": "Advanced engineering",
+   "lv": "A",
+   "kw": "spark query planning catalyst optimizer logical plan physical plan explain adaptive query execution aqe coalesce shuffle partitions skew join broadcast conversion runtime statistics",
+   "s": "Spark turns your code into a logical plan, optimises it with Catalyst and picks a physical plan. Adaptive query execution (AQE) then adjusts that plan at run time using real statistics from finished stages.",
+   "d": "Catalyst parses SQL or DataFrame code into a logical plan, applies rules such as pushing filters and pruning columns, then chooses physical operators, for example a sort-merge or broadcast hash join. EXPLAIN shows these plans. Estimates before running are often wrong, so AQE, on by default since Spark 3.2, re-plans after each shuffle stage using actual sizes. It coalesces many small shuffle partitions into fewer, right-sized ones, switches a sort-merge join to a broadcast join when one side turns out small, and splits skewed partitions so one hot key doesn't stall the job. Settings live under spark.sql.adaptive, such as coalescePartitions.enabled and skewJoin.enabled. Read the final plan in the Spark UI, since it can differ from the first.",
+   "e": "A join of 800 million orders with a filtered list of 3,000 merchants was planned as sort-merge. With AQE, Spark saw the filtered side was 2 MB after the first stage, switched to a broadcast join, and the job fell from 11 to 3 minutes.",
+   "c": "Why can the final Spark plan in the UI differ from what EXPLAIN printed before the job ran?",
+   "i": "Expect to read a physical plan, explain what AQE changes at run time and why, and say when you would still tune shuffle partitions, salting or broadcast hints by hand.",
+   "r": [
+    "spark-tuning",
+    "spark-joins",
+    "spark-shuffle"
+   ]
+  }
+ ],
+ "questions": [
+  {
+   "r": [
+    "de",
+    "da"
+   ],
+   "l": "m",
+   "d": [
+    "fin"
+   ],
+   "c": "insurance-data",
+   "tg": [
+    "sql",
+    "data modeling"
+   ],
+   "q": "Explain written premium and earned premium, and why the difference matters for analysis.",
+   "p": [
+    {
+     "t": "Written premium is booked when the policy is sold",
+     "k": [
+      "written premium",
+      "booked",
+      "sold",
+      "issued"
+     ]
+    },
+    {
+     "t": "Earned premium matches time already covered",
+     "k": [
+      "earned premium",
+      "time covered",
+      "elapsed",
+      "pro rata",
+      "pro-rata"
+     ]
+    },
+    {
+     "t": "Claims are compared with earned premium for a period",
+     "k": [
+      "loss ratio",
+      "claims",
+      "same period",
+      "matching"
+     ]
+    },
+    {
+     "t": "Unearned premium is held for future cover",
+     "k": [
+      "unearned",
+      "future cover",
+      "remaining term",
+      "liability"
+     ]
+    }
+   ],
+   "a": "Written premium is the full premium booked when a policy is sold or issued. Earned premium is the share matching time already covered, worked out pro rata: a 12-month policy is half earned after six months. The rest is unearned premium, held as a liability for future cover. Claims for a period are compared with earned premium for the same period, so the loss ratio isn't distorted by a burst of new sales."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "fin"
+   ],
+   "c": "insurance-data",
+   "tg": [
+    "sql",
+    "data modeling"
+   ],
+   "q": "How would you model insurance policies and claims in a warehouse so analysts can answer questions as of any date?",
+   "p": [
+    {
+     "t": "Policy versions with effective dates for endorsements and renewals",
+     "k": [
+      "effective date",
+      "endorsement",
+      "policy version",
+      "valid from",
+      "scd"
+     ]
+    },
+    {
+     "t": "Claims keep loss date and report date separately",
+     "k": [
+      "loss date",
+      "report date",
+      "reported",
+      "occurrence"
+     ]
+    },
+    {
+     "t": "Claim payments and reserve changes as transactions",
+     "k": [
+      "reserve",
+      "payment",
+      "claim transaction",
+      "movement"
+     ]
+    },
+    {
+     "t": "Snapshots or as-of queries for development over time",
+     "k": [
+      "as of",
+      "as-of",
+      "snapshot",
+      "development",
+      "triangle"
+     ]
+    }
+   ],
+   "a": "I would keep a policy table with one row per policy version, using valid from and effective date columns, so endorsements and renewals create new versions like an SCD type 2 dimension. Claims would store both the loss date and the report date. Payments and reserve changes would be claim transactions, not overwritten totals. That supports as-of queries and monthly snapshots, so actuaries can build development triangles."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "iceberg-internals",
+   "tg": [
+    "iceberg"
+   ],
+   "q": "Walk me through what Iceberg reads to answer a query, from the catalog down to the data files.",
+   "p": [
+    {
+     "t": "The catalog points to the current metadata file",
+     "k": [
+      "catalog",
+      "metadata.json",
+      "metadata file",
+      "pointer"
+     ]
+    },
+    {
+     "t": "Metadata lists snapshots and the current one",
+     "k": [
+      "snapshot",
+      "current snapshot",
+      "schema",
+      "partition spec"
+     ]
+    },
+    {
+     "t": "Manifest list and manifests describe data files",
+     "k": [
+      "manifest list",
+      "manifest"
+     ]
+    },
+    {
+     "t": "Column statistics let the engine skip files",
+     "k": [
+      "min and max",
+      "statistics",
+      "stats",
+      "prune",
+      "skip"
+     ]
+    }
+   ],
+   "a": "The engine asks the catalog for the table's pointer to its current metadata.json file. That metadata file holds the schema, partition spec and the list of snapshots, including the current snapshot. The snapshot points to a manifest list, which names manifest files with partition ranges, and each manifest lists data files with row counts and min and max values per column. Using those statistics the engine can prune and skip manifests and files before reading any Parquet."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "iceberg-internals",
+   "tg": [
+    "iceberg"
+   ],
+   "q": "How does Iceberg keep commits atomic on object storage, and what happens when two jobs write at once?",
+   "p": [
+    {
+     "t": "Writers create new files, never edit old ones",
+     "k": [
+      "new files",
+      "immutable",
+      "never edit",
+      "new metadata"
+     ]
+    },
+    {
+     "t": "The catalog pointer is swapped atomically",
+     "k": [
+      "atomic",
+      "swap",
+      "compare-and-swap",
+      "pointer"
+     ]
+    },
+    {
+     "t": "Optimistic concurrency: the loser retries",
+     "k": [
+      "optimistic",
+      "retry",
+      "conflict",
+      "rebase"
+     ]
+    },
+    {
+     "t": "Readers see a consistent snapshot throughout",
+     "k": [
+      "consistent",
+      "snapshot isolation",
+      "isolation",
+      "readers"
+     ]
+    }
+   ],
+   "a": "Writers only add new files: data files, manifests and a new metadata file, so nothing existing is edited and files stay immutable. The commit is an atomic swap of the catalog pointer from the old metadata to the new one, which only succeeds if the pointer hasn't moved. With optimistic concurrency, if another job committed first there is a conflict; the losing writer checks its changes still apply, rebuilds metadata on top and will retry. Readers keep a consistent snapshot, so they never see half a write."
+  },
+  {
+   "r": [
+    "ds",
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "saas",
+    "any"
+   ],
+   "c": "hybrid-search",
+   "tg": [
+    "python",
+    "machine learning"
+   ],
+   "q": "What is hybrid search, and how do you combine keyword and vector results?",
+   "p": [
+    {
+     "t": "Keyword search such as BM25 catches exact terms",
+     "k": [
+      "bm25",
+      "keyword",
+      "lexical",
+      "exact term"
+     ]
+    },
+    {
+     "t": "Vector search catches meaning and paraphrase",
+     "k": [
+      "vector",
+      "embedding",
+      "semantic",
+      "paraphrase"
+     ]
+    },
+    {
+     "t": "Fuse the lists with reciprocal rank fusion",
+     "k": [
+      "reciprocal rank fusion",
+      "rrf",
+      "fusion",
+      "fuse",
+      "rank"
+     ]
+    },
+    {
+     "t": "Raw scores from the two aren't comparable",
+     "k": [
+      "not comparable",
+      "different scales",
+      "normalis",
+      "normaliz",
+      "raw score"
+     ]
+    }
+   ],
+   "a": "Hybrid search runs keyword search such as BM25, which catches exact terms like product codes, alongside vector search over embeddings, which catches meaning and paraphrase. The two return raw scores on different scales that are not comparable, so I would fuse the lists with reciprocal rank fusion (RRF), scoring each document by its rank in each list and adding them up."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "s",
+   "d": [
+    "saas"
+   ],
+   "c": "hybrid-search",
+   "tg": [
+    "python",
+    "machine learning"
+   ],
+   "q": "Would you add a re-ranker to your RAG pipeline? How do you decide?",
+   "p": [
+    {
+     "t": "A cross-encoder reads question and passage together",
+     "k": [
+      "cross-encoder",
+      "cross encoder",
+      "together",
+      "jointly"
+     ]
+    },
+    {
+     "t": "Retrieve many candidates, re-rank to a few",
+     "k": [
+      "candidates",
+      "top 50",
+      "top k",
+      "shortlist",
+      "recall"
+     ]
+    },
+    {
+     "t": "It adds latency and cost",
+     "k": [
+      "latency",
+      "cost",
+      "slower",
+      "milliseconds"
+     ]
+    },
+    {
+     "t": "Decide by measuring on an evaluation set",
+     "k": [
+      "evaluation set",
+      "hit rate",
+      "measure",
+      "golden",
+      "a/b"
+     ]
+    }
+   ],
+   "a": "A re-ranker is usually a cross-encoder that reads the question and each passage together, so it judges relevance better than comparing embeddings. I would retrieve many candidates, say the top 50 for recall, then re-rank to the best 5. It adds latency, often tens to hundreds of milliseconds, and cost per query. I would decide by measuring hit rate and answer quality on an evaluation set with and without it."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "aws-kinesis-msk",
+   "tg": [
+    "aws",
+    "kafka"
+   ],
+   "q": "Compare Kinesis Data Streams, Amazon MSK and Amazon Data Firehose. When would you use each?",
+   "p": [
+    {
+     "t": "Kinesis: AWS-native stream with shards",
+     "k": [
+      "kinesis data streams",
+      "shard",
+      "aws-native",
+      "native"
+     ]
+    },
+    {
+     "t": "MSK: managed Kafka for the Kafka ecosystem",
+     "k": [
+      "msk",
+      "managed kafka",
+      "kafka connect",
+      "kafka client"
+     ]
+    },
+    {
+     "t": "Firehose delivers into S3 or Redshift without code",
+     "k": [
+      "firehose",
+      "deliver",
+      "no consumer code",
+      "buffer"
+     ]
+    },
+    {
+     "t": "Order is kept per shard or partition key",
+     "k": [
+      "partition key",
+      "ordering",
+      "order",
+      "per shard"
+     ]
+    }
+   ],
+   "a": "Kinesis Data Streams is the AWS-native option: you scale with shards or on-demand mode and it integrates tightly with Lambda and other services. MSK is managed Kafka, best when the team already uses Kafka clients, Kafka Connect or needs portability. Firehose is for delivery: it will buffer and deliver records into S3, Redshift or OpenSearch with no consumer code. In both streams, order is kept per shard or partition, chosen by the partition key."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "log",
+    "any"
+   ],
+   "c": "aws-kinesis-msk",
+   "tg": [
+    "aws",
+    "kafka"
+   ],
+   "q": "A Kinesis consumer is falling behind and some shards are hot. What would you check and change?",
+   "p": [
+    {
+     "t": "A skewed partition key creates hot shards",
+     "k": [
+      "hot shard",
+      "partition key",
+      "skew",
+      "uneven"
+     ]
+    },
+    {
+     "t": "Add shards or switch to on-demand mode",
+     "k": [
+      "reshard",
+      "split shard",
+      "on-demand",
+      "more shards",
+      "add shards"
+     ]
+    },
+    {
+     "t": "Enhanced fan-out for many consumers",
+     "k": [
+      "enhanced fan-out",
+      "fan-out",
+      "dedicated throughput"
+     ]
+    },
+    {
+     "t": "Watch iterator age and throttling metrics",
+     "k": [
+      "iterator age",
+      "throttl",
+      "cloudwatch",
+      "lag"
+     ]
+    }
+   ],
+   "a": "I would check CloudWatch for iterator age and write throttling to see how far behind the consumer is. Hot shards usually mean a skewed partition key, for example one big customer, so I would spread keys more evenly or add a suffix. Then I would split shard capacity or move to on-demand mode, and if several consumers share reads, give them enhanced fan-out for dedicated throughput."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "fin"
+   ],
+   "c": "regulatory-reporting",
+   "tg": [
+    "sql",
+    "governance"
+   ],
+   "q": "How would you design a data pipeline that produces regulatory returns for a bank?",
+   "p": [
+    {
+     "t": "Pull from core banking and other sources into a governed layer",
+     "k": [
+      "core banking",
+      "source system",
+      "governed",
+      "staging"
+     ]
+    },
+    {
+     "t": "Map every field to the return's definitions",
+     "k": [
+      "mapping",
+      "definition",
+      "reporting line",
+      "taxonomy"
+     ]
+    },
+    {
+     "t": "Reconcile totals with the general ledger",
+     "k": [
+      "reconcile",
+      "reconciliation",
+      "general ledger",
+      "gl"
+     ]
+    },
+    {
+     "t": "Keep lineage, versioned logic and sign-offs",
+     "k": [
+      "lineage",
+      "audit trail",
+      "versioned",
+      "sign-off",
+      "change control"
+     ]
+    },
+    {
+     "t": "No manual edits: automated data flow",
+     "k": [
+      "automated",
+      "no manual",
+      "adf",
+      "spreadsheet"
+     ]
+    }
+   ],
+   "a": "I would pull data from core banking and other source system extracts into a governed staging layer. Each return field gets a documented mapping to the regulator's definition and reporting line. Before submission every return must reconcile with the general ledger, with breaks investigated. I would keep lineage from source to cell, versioned logic under change control, and a sign-off record. The whole flow is automated with no manual spreadsheet edits, in line with RBI's ADF expectations."
+  },
+  {
+   "r": [
+    "de",
+    "da"
+   ],
+   "l": "m",
+   "d": [
+    "fin"
+   ],
+   "c": "regulatory-reporting",
+   "tg": [
+    "sql",
+    "governance"
+   ],
+   "q": "After a return is submitted, you find a number was wrong. What do you do?",
+   "p": [
+    {
+     "t": "Find the root cause through lineage",
+     "k": [
+      "root cause",
+      "lineage",
+      "trace"
+     ]
+    },
+    {
+     "t": "Tell compliance and resubmit a corrected return",
+     "k": [
+      "compliance",
+      "resubmit",
+      "revised return",
+      "correction"
+     ]
+    },
+    {
+     "t": "Add a control or check to stop it recurring",
+     "k": [
+      "control",
+      "check",
+      "validation rule",
+      "test"
+     ]
+    },
+    {
+     "t": "Assess whether other returns or periods are affected",
+     "k": [
+      "other returns",
+      "other periods",
+      "impact",
+      "affected"
+     ]
+    }
+   ],
+   "a": "First I would trace the figure through lineage to find the root cause, for example a product with no mapping. I would tell compliance at once, since they own contact with the regulator, and prepare a revised return to resubmit as a correction. I would check the impact on other returns and other periods that use the same logic. Finally I would add a validation rule or reconciliation control so it can't recur."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "table-maintenance",
+   "tg": [
+    "iceberg",
+    "delta"
+   ],
+   "q": "Your lakehouse table queries are getting slower every week. Which maintenance jobs would you run?",
+   "p": [
+    {
+     "t": "Compaction of small files into larger ones",
+     "k": [
+      "compaction",
+      "compact",
+      "rewrite_data_files",
+      "optimize",
+      "small files"
+     ]
+    },
+    {
+     "t": "Expire snapshots or vacuum old files",
+     "k": [
+      "expire snapshots",
+      "expire_snapshots",
+      "vacuum",
+      "retention"
+     ]
+    },
+    {
+     "t": "Remove orphan files and tidy manifests",
+     "k": [
+      "orphan",
+      "rewrite manifests",
+      "manifest"
+     ]
+    },
+    {
+     "t": "Cluster or sort on common filter columns",
+     "k": [
+      "clustering",
+      "z-order",
+      "liquid clustering",
+      "sort order"
+     ]
+    }
+   ],
+   "a": "I would schedule compaction to merge small files into files of a few hundred MB, using rewrite_data_files in Iceberg or OPTIMIZE in Delta. Then expire snapshots or run vacuum with a retention that still covers time travel needs. I would remove orphan files from failed jobs and rewrite manifests if metadata is fragmented. Finally I would add clustering, such as a sort order, Z-order or liquid clustering, on the columns queries filter by."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "table-maintenance",
+   "tg": [
+    "iceberg",
+    "delta"
+   ],
+   "q": "What risks come with snapshot expiry and vacuum, and how do you set retention safely?",
+   "p": [
+    {
+     "t": "Running queries can lose files they still need",
+     "k": [
+      "running query",
+      "long-running",
+      "file not found",
+      "still reading"
+     ]
+    },
+    {
+     "t": "Time travel and rollback stop working past retention",
+     "k": [
+      "time travel",
+      "rollback",
+      "older version",
+      "restore"
+     ]
+    },
+    {
+     "t": "Streaming readers or CDC consumers can break",
+     "k": [
+      "streaming reader",
+      "cdc",
+      "downstream",
+      "consumer",
+      "checkpoint"
+     ]
+    },
+    {
+     "t": "Set retention above the longest need and test it",
+     "k": [
+      "longest",
+      "buffer",
+      "retention period",
+      "audit",
+      "7 days"
+     ]
+    }
+   ],
+   "a": "If retention is too short, a long-running query can fail with file not found because the files it is still reading were deleted. Time travel and rollback past the retention period stop working, which may break audit or restore plans. Streaming readers and CDC consumers that read changes from a checkpoint can also break. I set the retention period above the longest of these needs, for example 7 days plus a buffer, and test it before tightening."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "saas",
+    "any"
+   ],
+   "c": "rag-evaluation",
+   "tg": [
+    "python",
+    "machine learning"
+   ],
+   "q": "How would you evaluate a RAG system before launch?",
+   "p": [
+    {
+     "t": "Build a set of real questions with expected passages and answers",
+     "k": [
+      "evaluation set",
+      "golden set",
+      "real questions",
+      "reference answer"
+     ]
+    },
+    {
+     "t": "Measure retrieval with hit rate or recall at k",
+     "k": [
+      "hit rate",
+      "recall at k",
+      "recall@k",
+      "mrr",
+      "context precision"
+     ]
+    },
+    {
+     "t": "Measure faithfulness of answers to retrieved text",
+     "k": [
+      "faithfulness",
+      "grounded",
+      "groundedness",
+      "hallucination",
+      "supported"
+     ]
+    },
+    {
+     "t": "Use an LLM judge checked against human labels",
+     "k": [
+      "llm judge",
+      "llm-as-judge",
+      "human label",
+      "human review"
+     ]
+    }
+   ],
+   "a": "I would build an evaluation set of 200 or so real questions, each with the expected passages and a reference answer. For retrieval I would measure hit rate and recall at k, plus MRR. For generation I would measure faithfulness, whether every claim is supported by the retrieved text, and correctness against the reference. An LLM judge scores at scale, but I would first check it agrees with human labels on a sample."
+  },
+  {
+   "r": [
+    "ds",
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "saas"
+   ],
+   "c": "rag-evaluation",
+   "tg": [
+    "python",
+    "mlops"
+   ],
+   "q": "Answer quality dropped after a release. How would you find out what broke?",
+   "p": [
+    {
+     "t": "Compare retrieval metrics before and after",
+     "k": [
+      "retrieval metric",
+      "hit rate",
+      "recall",
+      "before and after"
+     ]
+    },
+    {
+     "t": "Compare faithfulness and correctness separately",
+     "k": [
+      "faithfulness",
+      "correctness",
+      "generation"
+     ]
+    },
+    {
+     "t": "List what changed: prompt, model, chunking, index",
+     "k": [
+      "prompt",
+      "model version",
+      "chunking",
+      "index",
+      "embedding model"
+     ]
+    },
+    {
+     "t": "Run the regression suite on every change",
+     "k": [
+      "regression",
+      "suite",
+      "every change",
+      "ci",
+      "release gate"
+     ]
+    }
+   ],
+   "a": "I would rerun the evaluation set and compare retrieval metrics before and after, such as hit rate and recall at 5. Then I'd compare faithfulness and correctness separately, to see whether generation got worse even with good passages. Next I'd list what changed: the prompt, model version, chunking, the index or the embedding model, and test each. To stop it recurring I'd run the regression suite on every change as a release gate in CI."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "j",
+   "d": [
+    "any"
+   ],
+   "c": "aws-de-cert",
+   "tg": [
+    "aws"
+   ],
+   "q": "You are preparing for the AWS Data Engineer Associate exam. What does it cover and how would you prepare?",
+   "p": [
+    {
+     "t": "Four domains led by ingestion and transformation",
+     "k": [
+      "ingestion and transformation",
+      "ingestion",
+      "four domains",
+      "domain"
+     ]
+    },
+    {
+     "t": "Also store management, operations and security",
+     "k": [
+      "data store",
+      "operations",
+      "security and governance",
+      "governance"
+     ]
+    },
+    {
+     "t": "Use the official exam guide and practice questions",
+     "k": [
+      "exam guide",
+      "practice question",
+      "practice set",
+      "official"
+     ]
+    },
+    {
+     "t": "Hands-on labs building real pipelines",
+     "k": [
+      "hands-on",
+      "lab",
+      "build",
+      "project"
+     ]
+    }
+   ],
+   "a": "The exam has four domains: data ingestion and transformation is the largest, then data store management, data operations and support, and data security and governance. I would start from the official exam guide and practice questions to find gaps. Then I'd do hands-on labs, building a small batch pipeline with Glue, S3 and Athena and a stream with Kinesis, because the questions are scenarios. I'd finish with timed practice sets."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "aws-de-cert",
+   "tg": [
+    "aws"
+   ],
+   "q": "An exam scenario asks for the cheapest way to run ad hoc SQL over Parquet files in S3 with no servers. What do you pick and why?",
+   "p": [
+    {
+     "t": "Athena for serverless SQL over S3",
+     "k": [
+      "athena",
+      "serverless sql"
+     ]
+    },
+    {
+     "t": "Tables defined in the Glue Data Catalog",
+     "k": [
+      "glue data catalog",
+      "data catalog",
+      "crawler",
+      "catalog"
+     ]
+    },
+    {
+     "t": "Pay per data scanned, so partition and use columnar files",
+     "k": [
+      "data scanned",
+      "per tb",
+      "partition",
+      "columnar"
+     ]
+    },
+    {
+     "t": "Redshift or EMR would add cost for occasional queries",
+     "k": [
+      "redshift",
+      "emr",
+      "cluster",
+      "always on"
+     ]
+    }
+   ],
+   "a": "I would pick Athena, which runs serverless SQL directly over S3. The tables would be defined in the Glue Data Catalog, for example by a crawler. Athena charges per TB of data scanned, so Parquet's columnar layout plus partitioning keeps the cost low. A Redshift or EMR cluster would cost more for occasional ad hoc queries because it is always on or needs managing."
+  },
+  {
+   "r": [
+    "de",
+    "da"
+   ],
+   "l": "j",
+   "d": [
+    "fin"
+   ],
+   "c": "loan-portfolio",
+   "tg": [
+    "sql"
+   ],
+   "q": "What do days past due, SMA and NPA mean for a loan in India?",
+   "p": [
+    {
+     "t": "Days past due counts how long a payment is overdue",
+     "k": [
+      "days past due",
+      "dpd",
+      "overdue"
+     ]
+    },
+    {
+     "t": "SMA-0, 1 and 2 flag early stress up to 90 days",
+     "k": [
+      "sma-0",
+      "sma-1",
+      "sma-2",
+      "special mention",
+      "sma"
+     ]
+    },
+    {
+     "t": "Over 90 days overdue becomes an NPA",
+     "k": [
+      "90 days",
+      "npa",
+      "non-performing"
+     ]
+    },
+    {
+     "t": "NPAs need provisions and stop income recognition",
+     "k": [
+      "provision",
+      "income recognition",
+      "interest income",
+      "net npa"
+     ]
+    }
+   ],
+   "a": "Days past due (DPD) counts how many days a payment is overdue. Under RBI rules, early stress is flagged as SMA-0 up to 30 days, SMA-1 from 31 to 60 and SMA-2 from 61 to 90. A loan overdue for more than 90 days becomes an NPA, a non-performing asset. The bank then stops income recognition of unpaid interest and sets aside a provision; gross NPA minus provisions gives net NPA."
+  },
+  {
+   "r": [
+    "da",
+    "de",
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "fin"
+   ],
+   "c": "loan-portfolio",
+   "tg": [
+    "sql",
+    "statistics"
+   ],
+   "q": "How would you build a vintage analysis for a personal loan book?",
+   "p": [
+    {
+     "t": "Group loans by disbursal month into cohorts",
+     "k": [
+      "disbursal month",
+      "disbursement",
+      "vintage",
+      "cohort"
+     ]
+    },
+    {
+     "t": "Measure by months on book, not calendar month",
+     "k": [
+      "months on book",
+      "mob",
+      "loan age",
+      "age"
+     ]
+    },
+    {
+     "t": "Track share reaching 30+ or 90+ DPD",
+     "k": [
+      "30+",
+      "90+",
+      "dpd",
+      "delinquen",
+      "bad rate"
+     ]
+    },
+    {
+     "t": "Compare curves to spot weaker cohorts and causes",
+     "k": [
+      "compare",
+      "curve",
+      "channel",
+      "underwriting",
+      "policy change"
+     ]
+    }
+   ],
+   "a": "I would group loans into cohorts by disbursal month, the vintage. For each cohort I'd measure performance by months on book, so a loan's age lines up across cohorts rather than calendar month. The metric is the share of balance or count reaching 30+ or 90+ DPD at each month on book. Plotting each vintage as a curve lets me compare cohorts and trace weaker ones to a cause such as a new channel or underwriting policy change."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "spark-aqe",
+   "tg": [
+    "spark",
+    "pyspark"
+   ],
+   "q": "What does adaptive query execution change in a running Spark job?",
+   "p": [
+    {
+     "t": "Re-plans at run time using real stage statistics",
+     "k": [
+      "run time",
+      "runtime",
+      "statistics",
+      "after each stage",
+      "re-plan"
+     ]
+    },
+    {
+     "t": "Coalesces small shuffle partitions",
+     "k": [
+      "coalesce",
+      "shuffle partition",
+      "small partitions"
+     ]
+    },
+    {
+     "t": "Switches sort-merge joins to broadcast joins",
+     "k": [
+      "broadcast",
+      "sort-merge",
+      "sort merge"
+     ]
+    },
+    {
+     "t": "Splits skewed partitions in joins",
+     "k": [
+      "skew",
+      "split",
+      "hot key"
+     ]
+    }
+   ],
+   "a": "Adaptive query execution re-plans the query at run time, using real statistics collected after each stage's shuffle instead of estimates. It can coalesce many small shuffle partitions into fewer, right-sized ones. It can switch a sort-merge join to a broadcast join when one side turns out small. And it can split skewed partitions so a hot key doesn't leave one task running long after the rest."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "spark-aqe",
+   "tg": [
+    "spark"
+   ],
+   "q": "How do you read a Spark physical plan to find why a query is slow?",
+   "p": [
+    {
+     "t": "Use EXPLAIN or the SQL tab in the Spark UI",
+     "k": [
+      "explain",
+      "spark ui",
+      "sql tab",
+      "physical plan"
+     ]
+    },
+    {
+     "t": "Look for exchanges, which are shuffles",
+     "k": [
+      "exchange",
+      "shuffle"
+     ]
+    },
+    {
+     "t": "Check the join strategy chosen",
+     "k": [
+      "sortmergejoin",
+      "broadcasthashjoin",
+      "join strategy",
+      "broadcast"
+     ]
+    },
+    {
+     "t": "Check filters and columns pushed to the scan",
+     "k": [
+      "pushedfilters",
+      "pushed filters",
+      "pushdown",
+      "column pruning",
+      "partition filters"
+     ]
+    }
+   ],
+   "a": "I run EXPLAIN, or better open the SQL tab in the Spark UI, which shows the final physical plan after AQE. I look for Exchange nodes, since each one is a shuffle, and ask whether it is needed. I check the join strategy: SortMergeJoin where a BroadcastHashJoin would do suggests stale size estimates. Then I check the scan for PushedFilters, partition filters and column pruning, to make sure Spark isn't reading more than it should."
+  }
+ ],
+ "searchChecks": [
+  [
+   "earned premium vs written premium",
+   "insurance-data"
+  ],
+  [
+   "how does iceberg metadata work",
+   "iceberg-internals"
+  ],
+  [
+   "combine bm25 and vector search",
+   "hybrid-search"
+  ],
+  [
+   "kinesis or msk for streaming on aws",
+   "aws-kinesis-msk"
+  ],
+  [
+   "rbi returns submission cims",
+   "regulatory-reporting"
+  ],
+  [
+   "too many small files compaction vacuum",
+   "table-maintenance"
+  ],
+  [
+   "how to measure rag faithfulness",
+   "rag-evaluation"
+  ],
+  [
+   "dea-c01 exam preparation",
+   "aws-de-cert"
+  ],
+  [
+   "sma and npa days past due",
+   "loan-portfolio"
+  ],
+  [
+   "spark adaptive query execution skew",
+   "spark-aqe"
+  ]
+ ],
+ "added": "2026-11-02"
+}
