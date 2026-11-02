@@ -6,6 +6,12 @@
 <meta name="theme-color" content="#F2F6F8" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#071C27" media="(prefers-color-scheme: dark)">
 <script>/* apply the saved theme before first paint */try{var t=JSON.parse(localStorage.getItem("dp_theme"));if(t==="light"||t==="dark"||t==="black")document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/datakul-apple-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Datakul">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="description" content="Datakul: quest-based learning for data engineering, analysis, science and architecture careers, with an AI tutor and interview practice.">
 <title>Datakul</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='64' height='64' role='img' aria-label='Datakul'%3E%3Ctitle%3EDatakul%3C/title%3E%3Crect width='100' height='100' rx='26' fill='%230B2A3A'/%3E%3Ccircle cx='50' cy='50' r='31' fill='none' stroke='%235CC3E6' stroke-width='4.5'/%3E%3Cpath d='M50 14V20M50 80V86M14 50H20M80 50H86' stroke='%235CC3E6' stroke-width='4.5' stroke-linecap='round'/%3E%3Cpath d='M50 22L59 50H41Z' fill='%23FF8A2A'/%3E%3Cpath d='M50 78L59 50H41Z' fill='%23FFFFFF'/%3E%3Ccircle cx='50' cy='50' r='4.5' fill='%230B2A3A'/%3E%3C/svg%3E">
@@ -794,6 +800,7 @@ textarea.editor:focus{border-color:var(--accent);outline:none}
     <label class="lab" id="genWrap" hidden>Model for generating practice problems<select id="genSel"></select><span class="hint2">Writing a problem that passes the automatic checks takes a strong model. GPT-OSS 120B and Llama 3.3 70B pass more often than small models.</span></label>
     <label class="lab">Answer length<select id="lenSheet"><option value="detailed">Standard: takeaway, a few points, a diagram when it helps</option><option value="brief">Brief: one idea and one example</option></select></label>
     <label class="chk" id="shareWrap" hidden><input type="checkbox" id="shareChk"><span><b>Help grow the library</b><small>Share questions the library can't answer, anonymously. Emails, phone numbers and ID numbers are removed first, and questions are deleted after 180 days. Reviewers turn popular ones into Community picks for everyone.</small></span></label>
+    <div id="installWrap" hidden><h2 style="margin-top:8px">Install the app</h2><p class="muted" id="installTip" style="font-size:14.5px"></p><button class="btn wide" id="installBtn" type="button">Install Datakul</button></div>
     <p class="status" id="gwStatus"></p>
     <button class="btn wide" id="sheetDone" type="button">Done</button>
   </div>
@@ -809,5 +816,6 @@ textarea.editor:focus{border-color:var(--accent);outline:none}
 <script src="practice.js"></script>
 <script src="quests.js"></script>
 <script src="exam.js"></script>
+<script src="pwa.js"></script>
 </body>
 </html>

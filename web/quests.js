@@ -343,7 +343,7 @@ function renderQuests() {
     ${lvlCard()}
     <div class="card askbox"><b>Ask anything</b><form id="qAsk" autocomplete="off"><label for="qAskIn" class="sr">Your question</label><input id="qAskIn" placeholder="How does Kafka keep order?"><button class="send" type="submit" aria-label="Ask">${ARR}</button></form>
       <div class="seg">${["What is a watermark?", "Plan my interview prep"].map((q) => `<button class="pill" type="button" ${act({ a: "ask", q })} style="font-size:13px;padding:6px 11px">${esc(q)}</button>`).join("")}</div></div>
-    <div class="card badges"><b class="h">Badges</b><div class="bgrid">${earned.map((b) => `<span class="badge ${b.cls}" title="${esc(b.name)}">${b.short}</span>`).join("")}<span class="badge next" title="Next badge">?</span></div><small class="muted">${nextB ? "Next: " + esc(nextB.name) : "You've earned every badge!"}</small></div>
+    <div class="card badges"><b class="h">Badges</b><div class="bgrid">${earned.map((b) => `<span class="badge ${b.cls}" title="${esc(b.name)}">${b.short}</span>`).join("")}${earned.length ? '<span class="badge next" title="Next badge">?</span>' : ""}</div><small class="muted">${nextB ? "Next: " + esc(nextB.name) : "You've earned every badge!"}</small></div>
   </aside>`;
 }
 document.addEventListener("change", (e) => {

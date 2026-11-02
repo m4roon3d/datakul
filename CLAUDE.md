@@ -7,7 +7,8 @@ short answers, no jargon).
 ## Layout
 
 - `web/`: the app, served as static files. Scripts load in this order: config.js, library.js, community.js, problems.js,
-  diagrams.js, app.js, pyrunner.js, practice.js, quests.js. `admin.html` is the community review page.
+  diagrams.js, app.js, pyrunner.js, practice.js, quests.js, exam.js, pwa.js (install, offline, shortcuts). `sw.js` is the
+  offline service worker (network first; bump `CACHE` if the saved-file strategy changes) and `manifest.webmanifest` the install details. `admin.html` is the community review page.
 - `web/library.js`: the concepts (`C`) and interview questions (`Q`), 225 and 420 as of 28 Oct 2026 and growing weekly.
   Content is written in `content/batches/batchNN.py`, checked with `node content/validate_batch.js <batch.json>` and merged
   with `content/merge_batch.js` (which stamps new concepts with an `nw` date). The syllabus source is
@@ -30,7 +31,7 @@ short answers, no jargon).
 
 - Tests: `node --no-warnings tests/gateway.mjs`, `node --no-warnings tests/layer2.mjs`,
   `node --no-warnings tests/status.mjs`, then `node tests/l2server.mjs 8788 &` and `python3 tests/l2ui.py`,
-  `tests/themes.py`, `tests/teach.py`, `tests/status_ui.py`, `tests/exam.py`.
+  `tests/themes.py`, `tests/teach.py`, `tests/status_ui.py`, `tests/exam.py`, `tests/pwa.py`.
 - After changing the grader in `web/app.js`: `node tools/sync-grader.mjs`.
 - Every interview question needs a model answer `a` that earns all its key points (`tests/teach.py` checks it); add
   answers to existing questions with `node content/add_model_answers.mjs <answers.json>`.
