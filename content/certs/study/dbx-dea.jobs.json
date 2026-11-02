@@ -1,0 +1,336 @@
+{
+ "cert": "dbx-dea",
+ "dom": "jobs",
+ "intro": "Lakeflow Jobs is how Databricks runs work in order and on time, and it is 16% of the exam. You need to build a task graph, choose the right task type for each step, control the flow with dependencies, retries, branches and loops, and start the job with the right trigger. Work the solved problems with the answer hidden, then practise.",
+ "expects": [
+  "Build a task graph: notebook, SQL, dashboard and pipeline tasks connected by dependencies.",
+  "Control the flow with Run if conditions, retries, If/else branches and For each loops.",
+  "Pass values between tasks with task values and dynamic value references.",
+  "Schedule a job with a time-based schedule, a file arrival trigger or a table update trigger.",
+  "Decide when a time-based trigger fits and when a data-driven trigger fits, based on when the data really arrives.",
+  "Fix a failed run with a repair run instead of starting again."
+ ],
+ "ideas": [
+  {
+   "t": "A job is a graph of tasks",
+   "b": "Each task does one step, and Depends on draws the arrows. Tasks with no dependency between them run in parallel; a task waits for everything it depends on. Keep tasks small enough that a failure points to one step and a repair reruns little."
+  },
+  {
+   "t": "Pick the task type for the step",
+   "b": "A notebook task runs a notebook. A SQL task runs a query, a .sql file or an alert on a serverless or pro SQL warehouse. A dashboard task refreshes a published AI/BI dashboard and can email a snapshot to subscribers. A pipeline task starts one update of a Lakeflow pipeline, optionally a full refresh. A Run Job task starts another job, which lets you split a large flow into reusable jobs."
+  },
+  {
+   "t": "Run if: when a task starts",
+   "b": "The default is All succeeded. Others are At least one succeeded, None failed, All done, At least one failed and All failed. A task whose condition is not met is marked Upstream failed (for the success conditions) or Excluded (for the failure conditions). All done is the usual choice for a cleanup or notification step that must always run."
+  },
+  {
+   "t": "Retries, timeouts and repairs",
+   "b": "Task retries are off by default (max_retries is 0). Set the number of retries and the interval between them for steps that fail for passing reasons, such as a network error. A timeout marks a task Timed Out, and it applies to each retry. A repair run reruns only the failed tasks and the tasks that depend on them, with the current settings and any parameter changes you make. Reruns can write duplicate output, so make tasks safe to repeat with overwrite or MERGE."
+  },
+  {
+   "t": "Passing values between tasks",
+   "b": "A Python notebook sets a value with dbutils.jobs.taskValues.set(key, value); it must be JSON-serialisable and at most 48 KiB. Later tasks read it with a dynamic value reference such as {{tasks.validate.values.bad_rows}} in a parameter. References like {{job.run_id}}, {{job.start_time.iso_date}} and {{job.parameters.region}} fill in run details."
+  },
+  {
+   "t": "If/else and For each",
+   "b": "An If/else condition task compares two operands and sends the flow down its true or false branch. == and != compare as text, so 12.0 == 12 is false; >, >=, < and <= compare as numbers. A For each task runs one nested task once per input in a JSON array, reading the current item as {{input}}. Concurrency (1 by default, up to 100) sets how many run at once. A For each cannot contain another For each."
+  },
+  {
+   "t": "Triggers: time or data",
+   "b": "A schedule runs at fixed times. A file arrival trigger checks a Unity Catalog volume or external location about once a minute and starts a run when new files appear. A table update trigger starts a run when one or all of up to 25 Unity Catalog tables change. Continuous keeps one run going all the time. Use a schedule when the data arrives at a known time or the business wants a fixed time; use a data-driven trigger when arrival times vary."
+  },
+  {
+   "t": "Concurrency and queueing",
+   "b": "A job runs one run at a time by default (max_concurrent_runs is 1). With queueing on, which is the default for jobs created in the UI since April 2024, a run that cannot start waits in a queue for up to 48 hours instead of being skipped. A pipeline can run only one update at a time, so a job with a pipeline task is capped at one run."
+  }
+ ],
+ "tables": [
+  {
+   "title": "Run if conditions (default: All succeeded)",
+   "head": [
+    "Condition",
+    "API value",
+    "The task runs when",
+    "If not met"
+   ],
+   "rows": [
+    [
+     "All succeeded",
+     "ALL_SUCCESS",
+     "Every dependency ran and succeeded",
+     "Upstream failed"
+    ],
+    [
+     "At least one succeeded",
+     "AT_LEAST_ONE_SUCCESS",
+     "At least one dependency succeeded",
+     "Upstream failed"
+    ],
+    [
+     "None failed",
+     "NONE_FAILED",
+     "No dependency failed, and at least one ran",
+     "Upstream failed"
+    ],
+    [
+     "All done",
+     "ALL_DONE",
+     "All dependencies finished, whatever their result",
+     "Always runs"
+    ],
+    [
+     "At least one failed",
+     "AT_LEAST_ONE_FAILED",
+     "At least one dependency failed",
+     "Excluded"
+    ],
+    [
+     "All failed",
+     "ALL_FAILED",
+     "Every dependency failed",
+     "Excluded"
+    ]
+   ]
+  },
+  {
+   "title": "Triggers compared (our summary of the docs)",
+   "head": [
+    "Trigger",
+    "Starts a run when",
+    "Settings to know",
+    "Watch out for"
+   ],
+   "rows": [
+    [
+     "Scheduled",
+     "A set time arrives (cron schedule)",
+     "Schedule and time zone; Pause",
+     "Runs even if the data has not arrived"
+    ],
+    [
+     "File arrival",
+     "New files appear in a UC volume or external location (checked about every minute)",
+     "Minimum time between triggers; Wait after last change (both 60 seconds or more)",
+     "Overwriting a file with the same name does not trigger; without file events, 50 jobs per workspace and 10,000 files per location"
+    ],
+    [
+     "Table update",
+     "Any or all of up to 25 Unity Catalog tables change",
+     "Trigger when: Any or All; the same two timers",
+     "The Run as identity needs SELECT, USE CATALOG and USE SCHEMA, or the trigger silently fails to evaluate"
+    ],
+    [
+     "Continuous",
+     "The previous run ends, so one run is always going",
+     "Retries use exponential backoff",
+     "Cannot be combined with other triggers"
+    ],
+    [
+     "None (manual)",
+     "Someone clicks Run now, or a tool calls the API",
+     "Job parameters at run time",
+     "Nothing runs unless asked"
+    ]
+   ]
+  }
+ ],
+ "problems": [
+  {
+   "t": "Build the task graph",
+   "q": "A nightly flow must: ingest raw files, then build silver_orders and silver_customers (independent of each other), then build gold_sales from both, then refresh the sales dashboard. Design the job.",
+   "steps": [
+    "List the steps and their inputs. silver_orders and silver_customers both need only the ingest step, so they do not depend on each other and can run in parallel.",
+    "Draw the arrows: ingest, then the two silver tasks both depending on ingest, then gold_sales depending on both silver tasks, then the dashboard task depending on gold_sales.",
+    "Choose a task type per step. If the medallion steps are a Lakeflow pipeline, one pipeline task can replace the three table tasks, and the pipeline works out the order inside itself.",
+    "Use a dashboard task for the refresh. It needs a published dashboard and a serverless or pro SQL warehouse, and it can email subscribers a snapshot.",
+    "Leave every Run if at All succeeded, the default: gold must not build from half-finished silver."
+   ],
+   "answer": "ingest, then silver_orders and silver_customers in parallel, then gold_sales (depends on both), then a dashboard task. All with Run if All succeeded.",
+   "code": "tasks:\n  - task_key: ingest\n    notebook_task: {notebook_path: ../src/ingest.py}\n  - task_key: silver_orders\n    depends_on: [{task_key: ingest}]\n    notebook_task: {notebook_path: ../src/silver_orders.py}\n  - task_key: silver_customers\n    depends_on: [{task_key: ingest}]\n    notebook_task: {notebook_path: ../src/silver_customers.py}\n  - task_key: gold_sales\n    depends_on: [{task_key: silver_orders}, {task_key: silver_customers}]\n    sql_task:\n      warehouse_id: ${var.warehouse_id}\n      file: {path: ../src/gold_sales.sql}\n  - task_key: refresh_dashboard\n    depends_on: [{task_key: gold_sales}]\n    dashboard_task: {dashboard_id: ${var.sales_dashboard_id}}"
+  },
+  {
+   "t": "A cleanup step that always runs",
+   "q": "The job above writes temporary files to a volume. A cleanup task must delete them whether the run succeeds or fails, and an alert task must post to the support channel only if something failed. Set their Run if conditions.",
+   "steps": [
+    "With the default All succeeded, the cleanup task would be marked Upstream failed and skipped whenever anything fails, which is exactly when cleanup matters.",
+    "All done runs the task once all its dependencies have finished, whatever their result. Use it for cleanup.",
+    "At least one failed runs the task only if a dependency failed. If nothing failed, the task is Excluded, which is not an error.",
+    "Make both tasks depend on the last real step, and on any branch that might fail earlier, so they see every failure."
+   ],
+   "answer": "Cleanup: Run if All done. Alert: Run if At least one failed.",
+   "code": "  - task_key: cleanup\n    depends_on: [{task_key: refresh_dashboard}]\n    run_if: ALL_DONE\n    notebook_task: {notebook_path: ../src/cleanup.py}\n  - task_key: alert_support\n    depends_on: [{task_key: refresh_dashboard}]\n    run_if: AT_LEAST_ONE_FAILED\n    notebook_task: {notebook_path: ../src/alert.py}"
+  },
+  {
+   "t": "Retries for a flaky source",
+   "q": "An ingestion task calls a partner API. About once a week it fails with a short network error, and once it hung for six hours. What do you set on the task?",
+   "steps": [
+    "Retries are off by default (max_retries is 0). Set a small number, such as 3, for errors that pass on their own.",
+    "Add an interval between attempts (min_retry_interval_millis), for example 2 minutes, so a busy service has time to recover. Without it, the retry starts straight away.",
+    "Set a timeout, such as 30 minutes, so a hung call fails instead of holding the job for hours. The timeout applies to each retry.",
+    "A timed-out task is not retried unless retry_on_timeout is true, which is false by default. Turn it on only if a timeout is likely to be temporary too.",
+    "Make the task safe to repeat: write with MERGE or overwrite a partition, so a retry after a partial write does not create duplicates.",
+    "Add a duration Warning so a slow-but-alive run raises a notification before it reaches the timeout."
+   ],
+   "answer": "max_retries 3 with a 2-minute interval, a 30-minute timeout (retry_on_timeout only if timeouts are transient), an idempotent write, and a duration warning.",
+   "code": "  - task_key: pull_partner_api\n    max_retries: 3\n    min_retry_interval_millis: 120000\n    timeout_seconds: 1800\n    retry_on_timeout: true\n    notebook_task: {notebook_path: ../src/pull_api.py}"
+  },
+  {
+   "t": "Repair instead of rerun",
+   "q": "A 7-task run failed at task 5 after 2 hours, because the date parameter was wrong. Tasks 6 and 7 depend on task 5. Tasks 1 to 4 succeeded. How do you finish the run?",
+   "steps": [
+    "Run now would start all 7 tasks again and repeat 2 hours of work.",
+    "Repair run reruns the unsuccessful tasks and the tasks that depend on them: here 5, 6 and 7. The Repair job run dialog lists them before you confirm.",
+    "In the same dialog, change the date parameter. The new value overrides the old one for the rerun.",
+    "Reruns use the current job and task settings, so fix the notebook or settings first if the bug was there.",
+    "Repair needs a job with two or more tasks; a single-task job is simply run again.",
+    "Check that task 5 can safely run twice: it may have written some data before it failed."
+   ],
+   "answer": "Use Repair run with the corrected date parameter. Only tasks 5, 6 and 7 rerun; tasks 1 to 4 keep their results.",
+   "code": null
+  },
+  {
+   "t": "Branch on a validation result",
+   "q": "A validate task counts rows that break the rules. If the count is above zero, the job must run a quarantine task; otherwise it must publish to gold. Build this without editing the job each time.",
+   "steps": [
+    "In the validate notebook, store the count as a task value: dbutils.jobs.taskValues.set(\"bad_rows\", n). Values must be JSON-serialisable and at most 48 KiB.",
+    "Add an If/else condition task that depends on validate. Left operand: {{tasks.validate.values.bad_rows}}. Operator: >. Right operand: 0.",
+    "Use > rather than != for numbers. == and != compare as text, so \"0.0\" != \"0\" would be true even when nothing is wrong.",
+    "Make quarantine depend on the condition task with outcome true, and publish depend on it with outcome false. Only one branch runs.",
+    "If the task that sets bad_rows is disabled, the condition task fails, so keep validate enabled."
+   ],
+   "answer": "validate sets a task value; an If/else task tests {{tasks.validate.values.bad_rows}} > 0; quarantine hangs off true, publish off false.",
+   "code": "# in the validate notebook\nn = spark.table(\"main.silver.orders_rejects\").count()\ndbutils.jobs.taskValues.set(key=\"bad_rows\", value=n)\n\n# job definition\n  - task_key: check\n    depends_on: [{task_key: validate}]\n    condition_task:\n      op: GREATER_THAN\n      left: \"{{tasks.validate.values.bad_rows}}\"\n      right: \"0\"\n  - task_key: quarantine\n    depends_on: [{task_key: check, outcome: \"true\"}]\n    notebook_task: {notebook_path: ../src/quarantine.py}\n  - task_key: publish\n    depends_on: [{task_key: check, outcome: \"false\"}]\n    notebook_task: {notebook_path: ../src/publish.py}"
+  },
+  {
+   "t": "Loop over a list of countries",
+   "q": "The same load notebook must run for each country in a list that changes every month (today 30 countries). At most 5 should run at once because the source database is small.",
+   "steps": [
+    "Creating 30 notebook tasks by hand means editing the job whenever the list changes. A For each task runs one nested task once per input instead.",
+    "Produce the list in an earlier task and pass it as a task value, for example a JSON array of country codes. The Inputs box itself also accepts a literal JSON array (up to 5,000 characters).",
+    "Set the For each inputs to {{tasks.get_countries.values.countries}} and concurrency to 5 (the default is 1; the maximum is 100).",
+    "In the nested notebook task, pass {{input}} as a parameter, for example country = {{input}}. For a list of objects, {{input.code}} picks one field.",
+    "Retries go on the nested task, so one failed country can retry without the others. A For each cannot contain another For each.",
+    "Downstream tasks depend on the For each task, not the nested task, and can read each iteration's task values as a list."
+   ],
+   "answer": "get_countries sets the list as a task value; a For each task with inputs {{tasks.get_countries.values.countries}} and concurrency 5 runs the load notebook with country = {{input}}.",
+   "code": "  - task_key: load_countries\n    depends_on: [{task_key: get_countries}]\n    for_each_task:\n      inputs: \"{{tasks.get_countries.values.countries}}\"\n      concurrency: 5\n      task:\n        task_key: load_one_country\n        max_retries: 2\n        notebook_task:\n          notebook_path: ../src/load_country.py\n          base_parameters: {country: \"{{input}}\"}"
+  },
+  {
+   "t": "Run when files arrive",
+   "q": "A vendor uploads 20 to 40 CSV files to /Volumes/main/landing/vendor/ at random times, in bursts over about 10 minutes. The job should process each burst once, soon after it ends, and never run more often than every 15 minutes.",
+   "steps": [
+    "A schedule either runs too early (half the burst) or too late. A file arrival trigger on the volume path fits.",
+    "Set Wait after last change to about 300 seconds: the timer resets with each new file, so the run starts once the burst has gone quiet.",
+    "Set Minimum time between triggers to 900 seconds so runs are at least 15 minutes apart. Both settings must be 60 seconds or more.",
+    "The trigger only starts the job; it does not tell the job which files are new. Read them with Auto Loader and trigger(availableNow=True), which processes each file once and keeps its own checkpoint.",
+    "Overwriting a file with the same name does not count as a new file. Ask the vendor for unique file names.",
+    "Without file events on the location, a workspace can have only 50 jobs with file arrival triggers and the location can hold up to 10,000 files. Turn on file events on the external location for larger setups.",
+    "The job needs READ on the location, and you need CAN MANAGE on the job."
+   ],
+   "answer": "A file arrival trigger on the volume path, Wait after last change 300 s, Minimum time between triggers 900 s, and Auto Loader with availableNow inside the job.",
+   "code": "trigger:\n  file_arrival:\n    url: /Volumes/main/landing/vendor/\n    wait_after_last_change_seconds: 300\n    min_time_between_triggers_seconds: 900\n\n# inside the job\n(spark.readStream.format(\"cloudFiles\")\n   .option(\"cloudFiles.format\", \"csv\")\n   .option(\"cloudFiles.schemaLocation\", ckpt)\n   .load(\"/Volumes/main/landing/vendor/\")\n   .writeStream.option(\"checkpointLocation\", ckpt)\n   .trigger(availableNow=True)\n   .toTable(\"main.bronze.vendor\"))"
+  },
+  {
+   "t": "Run when upstream tables are ready",
+   "q": "A gold job reads main.silver.orders (owned by one team) and main.silver.payments (owned by another). Each finishes somewhere between 1 am and 4 am. Today the gold job runs at 5 am to be safe. Make it run as soon as both are ready.",
+   "steps": [
+    "A 5 am schedule wastes hours on good days and still fails on a late day. A table update trigger starts the job when the data changes.",
+    "Add both tables and set Trigger when to All tables are updated, so the job waits for both. Any table is updated would start it after the first one.",
+    "Each team may write several commits in a row. Set Wait after last change, such as 600 seconds, so the run starts after the writes settle.",
+    "The job's Run as identity needs SELECT on both tables plus USE CATALOG and USE SCHEMA. Without them the trigger fails to evaluate and the job never runs, with no error shown unless you set failure notifications.",
+    "Inside the job, {{job.trigger.table_update.updated_tables}} lists the tables that changed, and each table's version and commit time are available too, which helps with incremental reads.",
+    "A trigger watches up to 25 tables. More than 10 needs file events on every table."
+   ],
+   "answer": "A table update trigger on both tables with Trigger when All tables are updated, a wait-after-last-change timer, SELECT and USE privileges for the Run as identity, and failure notifications.",
+   "code": "trigger:\n  table_update:\n    table_names: [main.silver.orders, main.silver.payments]\n    condition: ALL_UPDATED\n    wait_after_last_change_seconds: 600"
+  },
+  {
+   "t": "Time-based or data-driven?",
+   "q": "Choose a trigger for each: (a) a finance report that must be in inboxes at 8 am every working day; (b) partner files that arrive any time between midnight and noon; (c) a gold table that should refresh whenever its silver source changes; (d) a fraud model that must score events within seconds.",
+   "steps": [
+    "(a) The business wants a fixed time, and the source data is complete well before. A schedule, with a duration warning so a slow run is caught before 8 am.",
+    "(b) Arrival time varies by hours. A file arrival trigger runs as soon as the files land.",
+    "(c) The dependency is on another table, not a time. A table update trigger, or, if both live in the same Lakeflow pipeline, let the pipeline handle the order.",
+    "(d) Seconds of delay rules out starting a new run for each change. Use a continuous job (or a continuous pipeline) with Structured Streaming.",
+    "Rule of thumb: if you are adding \"safety margin\" hours to a schedule, a data-driven trigger is the better fit."
+   ],
+   "answer": "(a) Scheduled. (b) File arrival. (c) Table update. (d) Continuous.",
+   "code": null
+  }
+ ],
+ "mistakes": [
+  "Leaving a cleanup or alert task on the default All succeeded, so it is skipped exactly when something fails.",
+  "Expecting retries by default. max_retries is 0 unless you set it.",
+  "Expecting a timed-out task to retry. retry_on_timeout is false by default.",
+  "Using Run now after a failure in a long job instead of Repair run, which reruns only the failed and dependent tasks.",
+  "Comparing numbers with == or != in an If/else task; they compare as text.",
+  "Hard-coding 30 tasks instead of one For each task, or nesting a For each inside another.",
+  "Relying on the trigger to say which files are new instead of using Auto Loader inside the job.",
+  "Forgetting that overwriting a file with the same name does not fire a file arrival trigger.",
+  "Choosing Any table is updated when the job needs all its sources, so it runs on half-ready data.",
+  "Forgetting SELECT and USE privileges for the job's Run as identity, so a table update trigger never fires."
+ ],
+ "links": [
+  {
+   "u": "https://docs.databricks.com/aws/en/jobs/configure-task",
+   "t": "Configure and edit tasks in Lakeflow Jobs",
+   "why": "Task types, retries, timeouts and duration warnings."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/jobs/run-if",
+   "t": "Configure task dependencies",
+   "why": "Every Run if condition and how Excluded and Upstream failed are counted."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/jobs/tasks/if-else",
+   "t": "Add branching logic with the If/else task",
+   "why": "Operators, operand types and the true and false branches."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/jobs/tasks/for-each",
+   "t": "Use a For each task to run another task in a loop",
+   "why": "Inputs, concurrency, {{input}} and the limits on nesting."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/jobs/task-values",
+   "t": "Use task values to pass information between tasks",
+   "why": "set and get, the 48 KiB limit and debugValue."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/jobs/dynamic-value-references",
+   "t": "Dynamic value references",
+   "why": "The {{ }} references for job, run, parameters and task values."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/jobs/repair-job-failures",
+   "t": "Troubleshoot and repair job failures",
+   "why": "What a repair run reruns and how to change parameters."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/jobs/triggers",
+   "t": "Automate jobs with schedules and triggers",
+   "why": "Every trigger type, pausing, and concurrency."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/jobs/file-arrival-triggers",
+   "t": "Trigger jobs when new files arrive",
+   "why": "Locations, the two timers and the limits with and without file events."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/jobs/trigger-table-update",
+   "t": "Trigger jobs when source tables are updated",
+   "why": "Any or All, the privileges needed and the updated_tables parameters."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/jobs/tasks/dashboard",
+   "t": "Dashboard task for jobs",
+   "why": "Refreshing a published dashboard and emailing subscribers."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/jobs/tasks/pipeline",
+   "t": "Pipeline task for jobs",
+   "why": "Running a pipeline update, full refresh, and the one-update limit."
+  }
+ ],
+ "checked": "Checked against the exam guide of 6 August 2026, the Databricks docs (AWS) and the Jobs API reference on 2 November 2026. The YAML in the solved problems follows the bundle format; check field names against your CLI version."
+}
