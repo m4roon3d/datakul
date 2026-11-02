@@ -2809,7 +2809,7 @@
    "vector-databases"
   ],
   "pack": "genai",
-  "status": "new",
+  "status": "existing",
   "order": 219
  },
  {
@@ -2823,7 +2823,7 @@
    "llm-evaluation"
   ],
   "pack": "genai",
-  "status": "new",
+  "status": "existing",
   "order": 220
  },
  {
@@ -3199,7 +3199,7 @@
    "kafka-basics"
   ],
   "pack": "cloud",
-  "status": "new",
+  "status": "existing",
   "order": 249
  },
  {
@@ -3212,7 +3212,7 @@
    "aws-data-services"
   ],
   "pack": "cloud",
-  "status": "new",
+  "status": "existing",
   "order": 250
  },
  {
@@ -3587,7 +3587,7 @@
   "level": "I",
   "prereqs": [],
   "pack": "industry",
-  "status": "new",
+  "status": "existing",
   "order": 279
  },
  {
@@ -3600,7 +3600,7 @@
    "core-banking-data"
   ],
   "pack": "industry",
-  "status": "new",
+  "status": "existing",
   "order": 280
  },
  {
@@ -3613,7 +3613,7 @@
    "credit-scoring"
   ],
   "pack": "industry",
-  "status": "new",
+  "status": "existing",
   "order": 281
  },
  {
@@ -3923,7 +3923,7 @@
    "table-formats"
   ],
   "pack": "advanced",
-  "status": "new",
+  "status": "existing",
   "order": 305
  },
  {
@@ -3936,7 +3936,7 @@
    "table-formats"
   ],
   "pack": "advanced",
-  "status": "new",
+  "status": "existing",
   "order": 306
  },
  {
@@ -3949,7 +3949,7 @@
    "spark-tuning"
   ],
   "pack": "advanced",
-  "status": "new",
+  "status": "existing",
   "order": 307
  },
  {
