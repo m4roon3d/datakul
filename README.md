@@ -109,6 +109,19 @@ Then open `admin.html` on your site (for example `https://<your-site>/admin.html
 
 Without the D1 block in `wrangler.toml`, these routes switch off and the app behaves as before.
 
+## Exam prep (certification coaching, beta)
+
+Practice → **Exam prep** coaches learners for a certification exam. The first track is the **Databricks Certified Data Engineer Associate** (exam published 4 May 2026: 45 scored questions, 90 minutes, 7 sections).
+
+- **Exam date and plan:** the learner sets a date; the app counts down and names today's focus (the not-yet-ready section that matters most for the exam).
+- **Diagnostic:** 2 questions from each section to see where to start.
+- **Practice by section:** 10 questions at a time, unseen and previously missed first, with the right answer and an explanation after each.
+- **Mock exam:** full length in the exam's section mix, timed, with no answers shown until you submit; then a score per section and a full review.
+- **Readiness:** each section is Ready once the learner has answered 8 or more of its questions recently with 75% or more of their last 10 right. Book the exam when every section is ready.
+- Options are shuffled each time; XP is earned for sets and mocks; progress is stored in the browser (`dp_cert`).
+
+Questions are original, written from the public exam guide and vendor documentation, never from real exams (vendors treat exam content as confidential and can revoke learners' certifications for using it). The app says it is independent and not affiliated with the vendor. Banks live in `content/certs/*.py` and are checked and built into `web/certs.js` by `node content/build_certs.mjs` (schema, answer indexes, "(Choose two.)" wording, explanation length, at least 2 questions per section).
+
 ## AI status page (for the people who run Datakul)
 
 The review page (`admin.html`, locked by `ADMIN_TOKEN`) has an **AI status** tab:
