@@ -28,6 +28,23 @@ with sync_playwright() as p:
     ok(pg.get_attribute("[data-view=cert]", "aria-selected") == "true" and pg.get_attribute("[data-view=practice]", "aria-selected") == "false", "Certifications is its own tab, not part of Practice")
     ok("Not affiliated" in pg.inner_text("#certBoard") or "not affiliated" in pg.inner_text("#certBoard"), "the not-affiliated notice is shown")
     ok(pg.locator(".crow").count() == 7, "all 7 exam sections are listed")
+    # fresh questions written nightly by the gateway
+    import urllib.request
+    base = pg.evaluate("certOf().questions.length")
+    ids = json.loads(urllib.request.urlopen(B + "/__certq?n=3").read())
+    pg.reload(); pg.wait_for_timeout(1500)
+    ok(pg.evaluate("certOf().questions.length") == base + 3, f"3 fresh questions from the gateway join the bank ({base} to {base + 3})")
+    ok("added in the last 7 days" in pg.inner_text("#certBoard") and "AI-written" in pg.inner_text("#certBoard"), "the home says how many are new and that they are AI-written")
+    c2 = b.new_context(viewport={"width": 1300, "height": 900}); pg2 = c2.new_page()
+    pg2.goto(B + "/#cert"); pg2.wait_for_timeout(1500)
+    c2.set_offline(True); pg2.reload(); pg2.wait_for_timeout(1200)
+    ok(pg2.evaluate("certOf().questions.length") == base + 3, "offline, the fresh questions are still there (cached)")
+    c2.close()
+    urllib.request.urlopen(B + "/__certq?withdraw=" + ids[0]).read()
+    pg.reload(); pg.wait_for_timeout(1500); pg.reload(); pg.wait_for_timeout(1200)
+    ok(pg.evaluate("certOf().questions.length") == base + 2, "a question the owner withdrew is gone on the next visit")
+    bad = pg.evaluate("(() => { const c = certOf(), n = c.questions.length; certqAdd(c, [{ id: 'dbx-dea-n-x', d: 'ingest', q: 'x'.repeat(40), opts: ['a','b','c','d'], ans: [9], why: 'y'.repeat(90) }, { id: 'other-n-1', d: 'ingest', q: 'x'.repeat(40), opts: ['a','b','c','d'], ans: [0], why: 'y'.repeat(90) }, { id: 'dbx-dea-n-y', d: 'nope', q: 'x'.repeat(40), opts: ['a','b','c','d'], ans: [0], why: 'y'.repeat(90) }]); return c.questions.length - n; })()")
+    ok(bad == 0, "malformed or foreign questions from the network are ignored")
     pg.screenshot(path=f"{OUT}/exam-home.png", full_page=True)
     # exam date
     pg.fill("#cDate", pg.evaluate("addDays(today(), 30)")); pg.dispatch_event("#cDate", "change"); pg.wait_for_timeout(200)

@@ -8,6 +8,7 @@ def ok(c, m):
     global fails
     print(("ok   " if c else "FAIL ") + m)
     if not c: fails += 1
+urllib.request.urlopen(B + "/__certq?n=2").read()  # two fresh certification questions to show
 # a few AI calls so there is something to show
 for q in ["what is change data capture", "explain window functions"]:
     r = urllib.request.Request(B + "/api/chat", data=json.dumps({"mode": "tutor", "provider": "groq", "question": q}).encode(), headers={"content-type": "application/json"}, method="POST")
@@ -30,6 +31,25 @@ with sync_playwright() as p:
         if tag == "phone":
             ok(pg.evaluate("document.documentElement.scrollWidth") <= 390, "phone: the page doesn't scroll sideways (the table scrolls in its box)")
         pg.screenshot(path=f"{OUT}/status-{tag}.png", full_page=True)
+        # certification questions tab: switch, count, and withdraw
+        pg.click("[data-tab=certq]"); pg.wait_for_timeout(800)
+        ok(pg.is_visible("#certqView") and not pg.is_visible("#queueGrid") and not pg.is_visible("#statusView"), f"{tag}: Certification questions tab opens on its own")
+        ok("Fresh questions every night" in pg.inner_text("#certqView") and pg.is_checked("#cqOn"), f"{tag}: the nightly writer shows as On")
+        ok(pg.locator("[data-wd]").count() >= 2, f"{tag}: the latest added questions are listed")
+        pg.once("dialog", lambda d: d.accept()); pg.locator("[data-wd]").first.click(); pg.wait_for_timeout(700)
+        nres = pg.locator("[data-wd][data-restore='1']").count()
+        ok(nres >= 1, f"{tag}: a withdrawn question shows Restore")
+        pg.locator("[data-wd][data-restore='1']").first.click(); pg.wait_for_timeout(600)
+        ok(pg.locator("[data-wd][data-restore='1']").count() == nres - 1, f"{tag}: and Restore brings it back")
+        pg.select_option("#cqN", "3"); pg.wait_for_timeout(600)
+        ok(pg.input_value("#cqN") == "3", f"{tag}: the per-section number is saved and shown again")
+        pg.uncheck("#cqOn"); pg.wait_for_timeout(600)
+        ok(not pg.is_checked("#cqOn") and "Paused" in pg.inner_text("#certqView"), f"{tag}: pausing is saved")
+        pg.check("#cqOn"); pg.wait_for_timeout(600)
+        ok(pg.is_checked("#cqOn"), f"{tag}: and can be switched back on")
+        if tag == "phone":
+            ok(pg.evaluate("document.documentElement.scrollWidth") <= 390, "phone: the tab doesn't scroll sideways")
+        pg.screenshot(path=f"{OUT}/certq-{tag}.png", full_page=True)
         pg.click("[data-tab=review]"); pg.wait_for_timeout(200)
         ok(pg.is_visible("#queueGrid"), f"{tag}: switching back shows the review queue")
         c.close()

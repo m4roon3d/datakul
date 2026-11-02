@@ -123,6 +123,12 @@ Without the D1 block in `wrangler.toml`, these routes switch off and the app beh
 
 Questions are original, written from the public exam guide and vendor documentation, never from real exams (vendors treat exam content as confidential and can revoke learners' certifications for using it). The app says it is independent and not affiliated with the vendor. Banks live in `content/certs/*.py` and are checked and built into `web/certs.js` by `node content/build_certs.mjs` (schema, answer indexes, "(Choose two.)" wording, explanation length, at least 2 questions per section).
 
+### Fresh questions every day (no deployment)
+
+The bank above is the starting set. Each night (2 am India time, with the community job) the gateway writes new original questions for every exam section (default 5 each), `worker/src/certq.js`. A question is stored only if it passes the format rules, is not a near-copy of an existing one, and a second AI call, which answers it without seeing the key, agrees with the key. Learners' apps fetch the list from `GET /api/certq?cert=<id>` when they open Certifications, keep it for offline use, and label these questions "AI-written, checked automatically". Nothing about the learner is sent.
+
+Owner controls: review page (`/admin.html`) → **Certification questions**: pause or resume, questions per section (1 to 10), "Write some now", and Withdraw or Restore on any question. Settings live in the D1 `meta` table, so changes apply immediately. Migration `0004_cert_questions.sql` creates the table; the deploy applies it. `worker/src/certs-meta.js` is generated from the banks by `node content/build_certs.mjs` (CI checks it).
+
 ## AI status page (for the people who run Datakul)
 
 The review page (`admin.html`, locked by `ADMIN_TOKEN`) has an **AI status** tab:

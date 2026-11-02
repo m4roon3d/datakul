@@ -10,6 +10,7 @@
 // Needs a D1 database bound as DB and the Workers AI binding (for embeddings). Without DB these routes switch off.
 
 import { grade } from "./grader.js";
+import { runCertJob, publicQuestions, adminOverview, saveSettings, withdraw } from "./certq.js";
 
 const DEF = {
   minAskers: 10,       // different askers needed before a topic is drafted
@@ -321,6 +322,15 @@ async function admin(request, url, env, deps) {
     };
   }
   if (path === "run" && request.method === "POST") return { status: 200, out: await runJob(env, deps) };
+  if (path.startsWith("certq")) {
+    if (path === "certq" && request.method === "GET") return { status: 200, out: await adminOverview(env) };
+    let body = {};
+    if (request.method === "POST") { try { body = await request.json(); } catch { return { status: 400, out: { error: "Request body must be JSON." } }; } }
+    if (path === "certq" && request.method === "POST") return { status: 200, out: await saveSettings(env, body) };
+    if (path === "certq/run" && request.method === "POST") return { status: 200, out: await runCertJob(env, deps, { force: true }) };
+    if (path === "certq/withdraw" && request.method === "POST") return { status: 200, out: await withdraw(env, body.id, body.restore === true) };
+    return { status: 404, out: { error: "Not found." } };
+  }
   if (path === "status" && request.method === "GET" && deps.usageStatus) return { status: 200, out: await deps.usageStatus() };
   if (path === "ping" && request.method === "POST" && deps.ping) {
     let body;
@@ -395,6 +405,16 @@ export async function handleCommunity(request, url, env, cors, deps) {
   if (p === "/api/community" && request.method === "GET") {
     try { return send({ status: 200, out: await community(env) }, { "cache-control": "public, max-age=300" }); }
     catch (e) { return deps.json({ cards: [], error: e.message }, 200, cors); }
+  }
+  if (p === "/api/certq" && request.method === "GET") {
+    const cert = String(url.searchParams.get("cert") || "").slice(0, 40);
+    try {
+      const out = await publicQuestions(env, cert), etag = out.etag;
+      if (etag && request.headers.get("if-none-match") === etag) return new Response(null, { status: 304, headers: { ...cors, etag, "cache-control": "no-cache" } });
+      const { etag: _e, ...body } = out;
+      return send({ status: 200, out: body }, { "cache-control": "no-cache", ...(etag ? { etag } : {}) });
+    }
+    catch (e) { return deps.json({ questions: [], error: e.message }, 200, cors); }
   }
   if (p.startsWith("/api/admin/")) {
     try { return send(await admin(request, url, env, deps), { "cache-control": "no-store" }); }
