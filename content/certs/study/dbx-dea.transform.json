@@ -1,0 +1,358 @@
+{
+ "cert": "dbx-dea",
+ "dom": "transform",
+ "intro": "This is the largest section, 22% of the exam. It takes a bronze table to silver and gold: cleaning, joining, reshaping, de-duplicating and aggregating with PySpark or SQL, tuning a few Spark settings, picking the right gold object for BI, and keeping the data trustworthy with quality rules. Work the solved problems with the answer hidden, then practise.",
+ "expects": [
+  "Clean a bronze table with PySpark or SQL: handle nulls, fix data types, and save the result as a silver table.",
+  "Combine DataFrames with inner, left, broadcast, multi-key and cross joins, and with union and union all.",
+  "Reshape data: add, drop, split and rename columns, filter rows, and explode arrays.",
+  "Remove duplicates and aggregate with counts, approximate distinct counts, means and summaries.",
+  "Tune basic Spark settings (shuffle partitions, default parallelism, executor and driver memory, the auto-broadcast threshold), then measure again.",
+  "Explain the gold-layer objects in Unity Catalog (tables, views, materialized views, streaming tables) and build them for BI teams.",
+  "Apply data quality checks and validation rules to keep silver and gold reliable."
+ ],
+ "ideas": [
+  {
+   "t": "Bronze, silver, gold",
+   "b": "Bronze keeps the raw data as it arrived, so you can rebuild. Silver is cleaned and conformed: right types, nulls handled, duplicates removed, keys you can join on. Gold is shaped for a use: aggregates, business models and the objects BI tools read. Layers are usually schemas or catalogs in Unity Catalog."
+  },
+  {
+   "t": "Cleaning is mostly types and nulls",
+   "b": "Serverless compute runs with ANSI mode on, so cast('N/A' AS INT) raises an error instead of quietly returning NULL. try_cast returns NULL for a value that does not fit, which lets you keep the row and count the failures. Fill nulls with fillna (df.na.fill) when a default is correct, drop them with dropna when the row is useless, and never fill a null key."
+  },
+  {
+   "t": "Joins: keys, row counts and shuffles",
+   "b": "Join on every column of the key (a multi-key join), and check row counts before and after: a left join should never lose rows from the left side, and a jump in rows means the right side has duplicate keys. Joining on a list of column names keeps one copy of each key column. A broadcast join copies a small table to every executor, so the large table is not shuffled. A cross join pairs every row with every row; use it only on purpose."
+  },
+  {
+   "t": "union matches by position",
+   "b": "DataFrame union and SQL UNION ALL append rows and keep duplicates; SQL UNION also removes duplicates, which costs a shuffle. union matches columns by position, so the same columns in a different order land in the wrong place. unionByName matches by name, and allowMissingColumns=True fills a missing column with NULL."
+  },
+  {
+   "t": "Duplicates: say which row wins",
+   "b": "dropDuplicates([\"order_id\"]) keeps one row per key but does not promise which one. When the latest version must win, number the rows with row_number() over a window partitioned by the key and ordered by the update time, then keep row 1. In SQL, QUALIFY does this in one statement."
+  },
+  {
+   "t": "Spark settings: few, measured, and set in the right place",
+   "b": "spark.sql.shuffle.partitions (200 by default, auto on serverless) sets partitions after joins and aggregations. Adaptive query execution is on by default: it merges small shuffle partitions, splits skewed ones and can switch to a broadcast join at run time. Executor and driver memory belong to the compute configuration, not a running session. Serverless lets you set only a short list of properties. Change one thing, then measure again in the Spark UI or the query profile."
+  },
+  {
+   "t": "Gold objects for BI",
+   "b": "A table stores data you change yourself (INSERT, MERGE). A view stores only its query and runs it every time it is read. A materialized view stores the result and is refreshed, incrementally when it can, which suits aggregates and joins that dashboards hit often. A streaming table processes each new row once, which suits append-only data. Metric views keep KPI definitions in one place."
+  },
+  {
+   "t": "Quality rules",
+   "b": "In pipelines, expectations check each row: warn (the default) keeps bad rows and counts them, DROP ROW removes them, FAIL UPDATE stops the update. On ordinary Delta tables, NOT NULL and CHECK constraints reject bad writes. To keep bad rows for inspection, split the data with WHERE filters into a silver table and a quarantine table."
+  }
+ ],
+ "tables": [
+  {
+   "title": "Gold objects in Unity Catalog (our summary of the docs)",
+   "head": [
+    "Object",
+    "Stores data?",
+    "How it stays current",
+    "Good for"
+   ],
+   "rows": [
+    [
+     "Table",
+     "Yes",
+     "You write to it: INSERT, UPDATE, DELETE, MERGE",
+     "Data you manage yourself, such as SCD dimensions"
+    ],
+    [
+     "View",
+     "No, only the query",
+     "Runs its query every time it is read",
+     "A stable interface over tables without copying data"
+    ],
+    [
+     "Materialized view",
+     "Yes, the query result",
+     "Refreshed on a schedule, on source change or in a pipeline; incremental when possible (needs serverless)",
+     "Aggregates and joins that dashboards read often"
+    ],
+    [
+     "Streaming table",
+     "Yes",
+     "Each new source row processed once by its pipeline",
+     "Append-only data: ingestion, events, low latency"
+    ],
+    [
+     "Temporary view",
+     "No",
+     "Lives for the notebook session, or a single query in Databricks SQL",
+     "Scratch steps inside one notebook"
+    ],
+    [
+     "Metric view",
+     "No",
+     "Metrics defined once in YAML, queried with SQL",
+     "The same KPI definition across every dashboard"
+    ]
+   ]
+  },
+  {
+   "title": "Expectation actions (pipelines and standalone streaming tables or materialized views)",
+   "head": [
+    "Action",
+    "SQL",
+    "Python",
+    "Bad rows",
+    "Metrics"
+   ],
+   "rows": [
+    [
+     "Warn (default)",
+     "CONSTRAINT c EXPECT (cond)",
+     "@dp.expect",
+     "Kept in the target",
+     "Counted"
+    ],
+    [
+     "Drop",
+     "... ON VIOLATION DROP ROW",
+     "@dp.expect_or_drop",
+     "Removed before writing",
+     "Counted"
+    ],
+    [
+     "Fail",
+     "... ON VIOLATION FAIL UPDATE",
+     "@dp.expect_or_fail",
+     "The update stops and its table write rolls back",
+     "None, because the update failed"
+    ]
+   ]
+  },
+  {
+   "title": "Spark settings named in the exam guide",
+   "head": [
+    "Setting",
+    "What it controls",
+    "Where to set it"
+   ],
+   "rows": [
+    [
+     "spark.sql.shuffle.partitions",
+     "Partitions after a join or aggregation (200; auto on serverless)",
+     "Session (spark.conf.set or SET), compute, pipeline"
+    ],
+    [
+     "spark.default.parallelism",
+     "Default partitions for RDD operations such as parallelize",
+     "Compute configuration, before the cluster starts"
+    ],
+    [
+     "spark.executor.memory, spark.driver.memory",
+     "Memory for each executor and for the driver",
+     "Compute configuration; not settable on serverless"
+    ],
+    [
+     "spark.sql.autoBroadcastJoinThreshold",
+     "Largest table Spark broadcasts on its own when planning (10 MB in Apache Spark; -1 turns it off)",
+     "Session or compute. AQE also has its own run-time threshold (30 MB on Databricks)"
+    ]
+   ]
+  }
+ ],
+ "problems": [
+  {
+   "t": "Bronze to silver: types and nulls",
+   "q": "main.bronze.orders has every column as a string. quantity contains values like \"3\", \"\" and \"N/A\"; order_ts is text; some rows have no order_id. Build main.silver.orders on serverless compute.",
+   "steps": [
+    "Decide per column what a bad value means. A row with no order_id cannot be joined or de-duplicated, so drop it. A blank or unreadable quantity becomes NULL, and then 0 only if the business agrees that missing means none.",
+    "Serverless runs with ANSI mode on, so cast('N/A' AS INT) fails the whole query. Use try_cast, which returns NULL for values that do not fit.",
+    "Trim text before casting, and parse timestamps with an explicit format so a different locale does not guess wrong.",
+    "Count the rows that failed to cast, and keep the count in a check or a log. Silent NULLs are how bad data reaches gold.",
+    "Write the result as a managed Delta table with saveAsTable (or CREATE TABLE AS SELECT) under the silver schema."
+   ],
+   "answer": "Filter out null order_id, try_cast quantity and amount, parse order_ts with to_timestamp and a format, fill quantity with 0 only if agreed, and save as main.silver.orders.",
+   "code": "SELECT order_id,\n       coalesce(try_cast(trim(quantity) AS INT), 0) AS quantity,\n       try_cast(amount AS DECIMAL(12,2)) AS amount,\n       to_timestamp(order_ts, 'yyyy-MM-dd HH:mm:ss') AS order_ts\nFROM main.bronze.orders\nWHERE order_id IS NOT NULL"
+  },
+  {
+   "t": "A multi-key left join that grew",
+   "q": "Orders (1,000,000 rows) are left-joined to prices on product_id and region. The result has 1,240,000 rows, and the result has two product_id columns. Explain both and fix them.",
+   "steps": [
+    "A left join keeps every left row, so it can never have fewer than 1,000,000 rows. More rows means some (product_id, region) pairs appear more than once in prices.",
+    "Check it: group prices by the join key and look for counts above 1. Often the table holds price history, so you must also pick the price that was valid at the order date, or keep only the current row.",
+    "Join on every column of the key. Joining on product_id alone would multiply rows across regions.",
+    "Two product_id columns appear when you join with an expression such as o.product_id == p.product_id. Joining on a list of column names keeps a single copy of each key."
+   ],
+   "answer": "prices has duplicate keys; de-duplicate it (or filter to the valid price) before joining, join on [\"product_id\", \"region\"], and confirm the row count equals the left side.",
+   "code": "dup = prices.groupBy(\"product_id\", \"region\").count().filter(\"count > 1\")\n\nsilver = orders.join(prices_current, [\"product_id\", \"region\"], \"left\")\nassert silver.count() == orders.count()"
+  },
+  {
+   "t": "Broadcast and cross joins",
+   "q": "A 5 TB sales table joins a 25 MB store table. The plan shows a sort merge join with a large shuffle. Separately, you need one row for every store for every day of 2026, including days with no sales.",
+   "steps": [
+    "Spark broadcasts a table on its own only below spark.sql.autoBroadcastJoinThreshold (10 MB in Apache Spark; check the value in your workspace). At 25 MB the planner does not, although adaptive query execution may switch at run time if the measured size is under its own threshold.",
+    "Make it explicit: broadcast(stores) in PySpark or a /*+ BROADCAST(s) */ hint in SQL. Each executor gets a full copy, and the 5 TB table joins without a shuffle.",
+    "Do not raise the threshold carelessly: a broadcast table must fit in driver and executor memory, and a table that grows later can cause out-of-memory errors.",
+    "For the daily grid, cross join the 365 dates with the stores (365 times the number of stores), then left join the sales on store and date and fill missing totals with 0."
+   ],
+   "answer": "Broadcast the store table with a hint. Build the grid with dates CROSS JOIN stores, then LEFT JOIN sales so days without sales show 0.",
+   "code": "from pyspark.sql.functions import broadcast, sequence, explode, to_date, lit\n\njoined = sales.join(broadcast(stores), \"store_id\")\n\ndays = spark.range(1).select(explode(sequence(to_date(lit(\"2026-01-01\")), to_date(lit(\"2026-12-31\")))).alias(\"day\"))\ngrid = days.crossJoin(stores.select(\"store_id\"))"
+  },
+  {
+   "t": "Combining two feeds",
+   "q": "Two regions send orders. North has columns (order_id, amount, region); South has (region, order_id, amount, coupon). Combine them into one DataFrame.",
+   "steps": [
+    "north.union(south) matches by position. The columns are in a different order, and South has an extra column, so it either fails or puts values in the wrong columns.",
+    "unionByName matches by column name. allowMissingColumns=True fills coupon with NULL for North rows.",
+    "union (and SQL UNION ALL) keeps duplicates. If an order can arrive in both feeds, de-duplicate afterwards on the key rather than using SQL UNION, which compares whole rows and costs a shuffle."
+   ],
+   "answer": "north.unionByName(south, allowMissingColumns=True), then de-duplicate on order_id if the feeds overlap.",
+   "code": "allorders = north.unionByName(south, allowMissingColumns=True)"
+  },
+  {
+   "t": "Reshaping: split, rename, drop, explode",
+   "q": "Each bronze order row has customer_name like \"Asha Rao\", a column named ord_dt, an unused column _raw, and an items array that is empty for cancelled orders. Produce one row per item with first_name and last_name, and keep cancelled orders visible.",
+   "steps": [
+    "split(customer_name, ' ') returns an array; take element 0 and element 1 (or use element_at, which is 1-based). Names with more than two parts need a rule, so agree on one.",
+    "withColumnRenamed(\"ord_dt\", \"order_date\") renames; drop(\"_raw\", \"customer_name\") removes columns you no longer need.",
+    "explode turns each array element into a row but drops rows whose array is empty or NULL, so cancelled orders vanish. explode_outer keeps them with a NULL item.",
+    "Filter rows with filter or where. Put filters early so less data moves through the joins that follow."
+   ],
+   "answer": "Split the name, rename ord_dt, drop the spare columns, and use explode_outer on items so cancelled orders stay as one row with a NULL item.",
+   "code": "from pyspark.sql.functions import split, col, explode_outer\n\nout = (orders\n  .withColumn(\"parts\", split(col(\"customer_name\"), \" \"))\n  .withColumn(\"first_name\", col(\"parts\")[0])\n  .withColumn(\"last_name\", col(\"parts\")[1])\n  .withColumnRenamed(\"ord_dt\", \"order_date\")\n  .withColumn(\"item\", explode_outer(\"items\"))\n  .drop(\"parts\", \"_raw\", \"customer_name\", \"items\"))"
+  },
+  {
+   "t": "Keep the latest version of each order",
+   "q": "Bronze has several versions of each order_id, each with an updated_at. Silver must hold only the latest version.",
+   "steps": [
+    "dropDuplicates([\"order_id\"]) keeps one row per order, but which one is not guaranteed. It is right for exact retries, wrong for versions.",
+    "Number the versions: row_number() over a window partitioned by order_id and ordered by updated_at descending. Keep row 1.",
+    "row_number gives exactly one winner even when two versions share a timestamp. Add a second sort column, such as the file name or an ingest sequence, so the choice is repeatable.",
+    "In SQL, QUALIFY filters on the window result without a subquery.",
+    "If silver is loaded incrementally, MERGE the latest row per key into it instead of rewriting the table."
+   ],
+   "answer": "Filter on row_number() = 1 over PARTITION BY order_id ORDER BY updated_at DESC, using QUALIFY in SQL.",
+   "code": "SELECT *\nFROM main.bronze.orders\nQUALIFY row_number() OVER (PARTITION BY order_id ORDER BY updated_at DESC, _ingest_seq DESC) = 1"
+  },
+  {
+   "t": "Aggregations for a daily report",
+   "q": "For each day, report orders, orders with a coupon, average order value, and the number of distinct customers. Events run to billions of rows and a 2% error on distinct customers is acceptable. Also get a quick profile of the amount column.",
+   "steps": [
+    "count(*) counts rows; count(coupon) counts only non-null coupons. Using one for the other is a common mistake.",
+    "avg ignores NULLs. If missing amounts should count as 0, fill them first; otherwise say in the report that NULLs are excluded.",
+    "approx_count_distinct estimates with HyperLogLog++. Its rsd argument sets the allowed error (0.05 by default); smaller is more accurate and uses more memory. An exact count(DISTINCT) is much more expensive on billions of rows.",
+    "df.describe(\"amount\") gives count, mean, stddev, min and max; df.summary() adds percentiles. Both are quick checks, not report columns."
+   ],
+   "answer": "groupBy the day with count(*), count(coupon), avg(amount) and approx_count_distinct(customer_id, 0.02); profile amount with summary().",
+   "code": "from pyspark.sql import functions as F\n\ndaily = (events.groupBy(F.to_date(\"ts\").alias(\"day\"))\n  .agg(F.count(\"*\").alias(\"orders\"),\n       F.count(\"coupon\").alias(\"with_coupon\"),\n       F.avg(\"amount\").alias(\"avg_value\"),\n       F.approx_count_distinct(\"customer_id\", 0.02).alias(\"customers\")))\n\nevents.select(\"amount\").summary().show()"
+  },
+  {
+   "t": "Tuning a slow join, then measuring again",
+   "q": "A nightly job on a classic cluster joins two large tables and writes hundreds of tiny files; the Spark UI shows a few tasks running far longer than the rest. Which settings do you look at, and where do you change them?",
+   "steps": [
+    "Measure first: note the run time and look at the stage with the long tasks in the Spark UI (task durations, shuffle read, spill).",
+    "Check that adaptive query execution is on (it is by default). It merges small shuffle partitions, which reduces tiny files, and splits skewed partitions in sort merge joins.",
+    "spark.sql.shuffle.partitions is the starting count for shuffles. Setting it to auto lets Databricks choose from the data size. Change it in the session with spark.conf.set or SET.",
+    "If one side is small, broadcast it and the shuffle disappears. Watch the threshold and the memory it needs.",
+    "Spill or out-of-memory errors point to memory. spark.executor.memory and spark.driver.memory are compute settings, so change the cluster configuration (or pick a larger node) and restart. On serverless you cannot set them.",
+    "Change one setting at a time and run again; keep the change only if the numbers improve."
+   ],
+   "answer": "Confirm AQE is on, tune spark.sql.shuffle.partitions (or auto) in the session, broadcast a small side, fix memory in the compute configuration, and re-measure after each change.",
+   "code": "spark.conf.set(\"spark.sql.shuffle.partitions\", \"auto\")\nspark.conf.get(\"spark.sql.shuffle.partitions\")\n\n-- SQL\nSET spark.sql.shuffle.partitions = 400;"
+  },
+  {
+   "t": "Choosing gold objects for a BI team",
+   "q": "The BI team needs (a) daily revenue by region, read by 50 dashboards; (b) a cleaned customer list where analysts should see the latest data with no copy; (c) a live feed of payment events; (d) a hand-maintained table of regional targets. Which object for each?",
+   "steps": [
+    "(a) is an aggregate read often: a materialized view. It stores the result and refreshes incrementally when the query and sources allow, which needs serverless; on classic compute every refresh recomputes fully.",
+    "Schedule it in the definition (SCHEDULE EVERY 1 HOURS, or TRIGGER ON UPDATE to refresh when sources change), or refresh it from a pipeline.",
+    "(b) wants no copy and always-current results: a view. It runs its query on every read, so keep it simple or point it at a materialized view.",
+    "(c) is append-only and arrives continuously: a streaming table, which processes each new event once.",
+    "(d) is edited by people: a regular managed table that you update with INSERT or MERGE.",
+    "Grant the BI group SELECT on the gold objects plus USE CATALOG and USE SCHEMA, rather than on the silver tables underneath."
+   ],
+   "answer": "(a) Materialized view on a schedule. (b) View. (c) Streaming table. (d) Managed table. Grant SELECT on these to the BI group.",
+   "code": "CREATE MATERIALIZED VIEW main.gold.daily_revenue\nSCHEDULE EVERY 1 HOURS\nAS SELECT order_date, region, sum(amount) AS revenue\nFROM main.silver.orders\nGROUP BY order_date, region;"
+  },
+  {
+   "t": "Quality rules: warn, drop, fail or quarantine",
+   "q": "A pipeline builds silver_payments. Rules: amount must be positive (bad rows should be removed but counted), currency must be present (keep the rows but track how many lack it), and payment_id must never be null (stop everything if it is). Analysts also want to see the removed rows.",
+   "steps": [
+    "Positive amount: ON VIOLATION DROP ROW. Rows are removed and the count shows in the pipeline's data quality metrics.",
+    "Currency present: an expectation with no ON VIOLATION clause. That is warn, the default: rows stay and are counted.",
+    "payment_id not null: ON VIOLATION FAIL UPDATE. The update stops and its write rolls back; no metrics are recorded because the update failed, so read the error in the event log.",
+    "Dropped rows are gone from silver. To let analysts see them, add a separate quarantine table that selects the rows failing the rule. Write each table in its own flow rather than splitting inside one foreachBatch.",
+    "Outside pipelines, Delta CHECK and NOT NULL constraints reject a write that breaks them."
+   ],
+   "answer": "DROP ROW for amount, a plain EXPECT for currency, FAIL UPDATE for payment_id, plus a quarantine table built from the inverse of the amount rule.",
+   "code": "CREATE OR REFRESH STREAMING TABLE silver_payments (\n  CONSTRAINT positive_amount EXPECT (amount > 0) ON VIOLATION DROP ROW,\n  CONSTRAINT has_currency EXPECT (currency IS NOT NULL),\n  CONSTRAINT has_id EXPECT (payment_id IS NOT NULL) ON VIOLATION FAIL UPDATE\n) AS SELECT * FROM STREAM(bronze_payments);\n\nCREATE OR REFRESH STREAMING TABLE quarantine_payments\nAS SELECT * FROM STREAM(bronze_payments) WHERE NOT (amount > 0);"
+  }
+ ],
+ "mistakes": [
+  "Using cast on dirty text on serverless, where ANSI mode makes one bad value fail the whole query. Use try_cast and count the NULLs it creates.",
+  "Filling a null key with a default value, which joins unrelated rows together.",
+  "Not checking row counts after a left join, so duplicate keys on the right silently multiply rows.",
+  "Using union on DataFrames whose columns are in a different order. Use unionByName.",
+  "Using explode where empty arrays matter; those rows disappear. Use explode_outer.",
+  "Using dropDuplicates when the latest version must win. Use row_number over a window, or QUALIFY.",
+  "Mixing up count(*) and count(column), or forgetting that avg ignores NULLs.",
+  "Changing several Spark settings at once, or trying to set executor memory from a notebook session.",
+  "Pointing 50 dashboards at a heavy view that recomputes on every read, instead of a materialized view.",
+  "Expecting FAIL UPDATE to record quality metrics, or DROP ROW to keep the dropped rows somewhere."
+ ],
+ "links": [
+  {
+   "u": "https://docs.databricks.com/aws/en/sql/language-manual/functions/try_cast",
+   "t": "try_cast function",
+   "why": "What try_cast returns when a value does not fit, compared with cast."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/transform/join",
+   "t": "Work with joins on Databricks",
+   "why": "Join types for batch and streaming, and stream-static joins."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-hints",
+   "t": "Hints",
+   "why": "BROADCAST and other join hints in SQL."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/optimizations/aqe",
+   "t": "Adaptive query execution",
+   "why": "What AQE changes at run time, its settings and their defaults."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/spark/conf",
+   "t": "Set Spark configuration properties",
+   "why": "Where to set a property, and the short list serverless allows."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/data-engineering/tables-views",
+   "t": "Tables and views in Databricks",
+   "why": "Tables, views, materialized views and streaming tables side by side."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/views",
+   "t": "What is a view?",
+   "why": "View types, temporary view scope, and the permissions a reader needs."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/optimizations/incremental-refresh",
+   "t": "Incremental refresh for materialized views",
+   "why": "When a refresh is incremental, and how to see which method ran."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/ldp/concepts/streaming-tables",
+   "t": "Streaming tables",
+   "why": "Append-only sources, processing each row once, and the join caveat."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/ldp/expectations",
+   "t": "Manage data quality with pipeline expectations",
+   "why": "Warn, drop and fail, and where the metrics appear."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/transform/validate",
+   "t": "Clean and validate data",
+   "why": "CHECK and NOT NULL constraints and the quarantine pattern."
+  }
+ ],
+ "checked": "Checked against the exam guide of 6 August 2026 and the Databricks docs (AWS) on 2 November 2026. The Apache Spark default for spark.sql.autoBroadcastJoinThreshold (10 MB) and the PySpark function details come from Spark itself; check them in a free Databricks workspace."
+}
