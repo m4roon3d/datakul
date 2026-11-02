@@ -690,7 +690,7 @@ function showView(v) {
   document.querySelectorAll(".subnav button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.sub === v)));
   if (v === "interview" || v === "practice") store.set("psub", v);
   closePMenu();
-  if (v === "cert" && typeof renderCert === "function") renderCert();
+  if (v === "cert" && typeof renderCert === "function") { renderCert(); if (typeof certqRefresh === "function") certqRefresh(); }
   if (v === "library") renderLib();
   if (v === "practice" && typeof renderPractice === "function") renderPractice();
   if (v === "interview") renderInterview();

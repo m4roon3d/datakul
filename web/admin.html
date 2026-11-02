@@ -152,6 +152,7 @@ label.f small{font-weight:400;color:var(--muted)}
       <button type="button" data-tab="open" aria-pressed="false">Gathering<em id="n-open"></em></button>
       <button type="button" data-tab="live" aria-pressed="false">Live<em id="n-live"></em></button>
       <button type="button" data-tab="rejected" aria-pressed="false">Rejected<em id="n-rejected"></em></button>
+      <button type="button" data-tab="certq" aria-pressed="false">Certification questions</button>
       <button type="button" data-tab="status" aria-pressed="false">AI status</button>
     </div>
     <div class="grid" id="queueGrid">
@@ -159,6 +160,7 @@ label.f small{font-weight:400;color:var(--muted)}
       <div id="detail"></div>
     </div>
     <div id="statusView" hidden></div>
+    <div id="certqView" hidden></div>
   </main>
 </div>
 
@@ -348,8 +350,9 @@ async function act(what) {
 }
 function setTab(t) {
   tab = t; document.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.tab === t));
-  $("#queueGrid").hidden = t === "status"; $("#statusView").hidden = t !== "status";
+  $("#queueGrid").hidden = t === "status" || t === "certq"; $("#statusView").hidden = t !== "status"; $("#certqView").hidden = t !== "certq";
   if (t === "status") loadStatus();
+  if (t === "certq") loadCertq();
 }
 
 /* ---- AI status: health and usage of every model today (counts only; no learner text is logged) ---- */
@@ -413,8 +416,47 @@ async function loadStatus() {
   }));
 }
 
+/* ---- certification questions: the nightly writer's switch, daily count, and what it has added ---- */
+async function loadCertq() {
+  const v = $("#certqView");
+  v.innerHTML = `<p class="muted">Loading…</p>`;
+  let o;
+  try { o = await api("certq"); } catch (e) { if (e.message !== "unauthorised") v.innerHTML = `<p class="msg bad">${esc(e.message)}</p>`; return; }
+  const st = o.settings, nm = {}; o.certs.forEach((c) => c.domains.forEach((d) => (nm[c.id + "/" + d.id] = d.name)));
+  v.innerHTML = `
+    <div class="st-sec"><h2>Fresh questions every night</h2>
+      <p>Each night at 2 am India time the gateway writes new original practice questions for every exam section, checks them (format rules, no repeats, and a second AI pass that answers each one without seeing the key), and adds the ones that pass. Learners get them the next time they open Certifications. No deployment is needed.</p>
+      <div class="st-sum" style="align-items:center">
+        <label class="f" style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="cqOn" ${st.on ? "checked" : ""}> <b>${st.on ? "On" : "Paused"}</b></label>
+        <label class="f" style="flex-direction:row;align-items:center;gap:10px">Questions per section each night <select id="cqN">${[1, 2, 3, 5, 7, 10].map((n) => `<option ${n === st.perSection ? "selected" : ""}>${n}</option>`).join("")}</select></label>
+        <button class="btn quiet" type="button" id="cqRun">Write some now</button>
+      </div>
+      <p class="muted" id="cqMsg" role="status" style="font-size:13px">${st.on ? "" : "Paused: nothing is written tonight. Questions already live stay live."} ${o.last ? `Last night's run ${ago(o.last.at)} added ${o.last.added}.` : "It hasn't run yet."} ${o.today} added in the last 24 hours.</p>
+    </div>
+    ${o.certs.map((c) => `<div class="st-sec"><h2>${esc(c.name)}</h2><div class="st-wrap"><table class="st-table"><thead><tr><th>Section</th><th>Built in</th><th>Written nightly</th></tr></thead><tbody>
+      ${c.domains.map((d) => `<tr><td>${esc(d.name)}</td><td>${d.fixed}</td><td>${d.live}</td></tr>`).join("")}</tbody></table></div></div>`).join("")}
+    <div class="st-sec"><h2>Latest added</h2>
+      ${o.recent.length ? `<div class="st-wrap"><table class="st-table"><thead><tr><th>Question</th><th>Section</th><th></th></tr></thead><tbody>${o.recent.map((r) => `<tr${r.status === "withdrawn" ? ' style="opacity:.55"' : ""}><td><details><summary>${esc(r.q)}</summary><ol type="A">${r.opts.map((x, i) => `<li${r.ans.includes(i) ? " style='font-weight:700'" : ""}>${esc(x)}</li>`).join("")}</ol><p>${esc(r.why)}</p><small>${esc(r.model || "")} · ${ago(r.created)}</small></details></td><td>${esc(nm[r.cert + "/" + r.dom] || r.dom)}</td><td><button class="chk-btn" type="button" data-wd="${esc(r.id)}" data-restore="${r.status === "withdrawn" ? 1 : 0}">${r.status === "withdrawn" ? "Restore" : "Withdraw"}</button></td></tr>`).join("")}</tbody></table></div>` : `<p class="muted">Nothing yet. The first batch arrives after tonight's run, or use "Write some now".</p>`}
+    </div>`;
+  const save = async () => {
+    try { await api("certq", { on: $("#cqOn").checked, perSection: +$("#cqN").value }); await loadCertq(); }
+    catch (e) { $("#cqMsg").textContent = "Couldn't save: " + e.message; }
+  };
+  $("#cqOn").onchange = save; $("#cqN").onchange = save;
+  $("#cqRun").onclick = async () => {
+    const b = $("#cqRun"); b.disabled = true; b.textContent = "Writing… (about a minute)";
+    try { const r = await api("certq/run", {}); await loadCertq(); $("#cqMsg").textContent = `Added ${r.added || 0} just now.`; }
+    catch (e) { b.disabled = false; b.textContent = "Write some now"; $("#cqMsg").textContent = "Run failed: " + e.message; }
+  };
+  v.querySelectorAll("[data-wd]").forEach((b) => (b.onclick = async () => {
+    if (b.dataset.restore !== "1" && !confirm("Withdraw this question from every learner's app?")) return;
+    b.disabled = true;
+    try { await api("certq/withdraw", { id: b.dataset.wd, restore: b.dataset.restore === "1" }); await loadCertq(); } catch (e) { b.disabled = false; }
+  }));
+}
+
 document.addEventListener("click", (e) => {
-  const t = e.target.closest("[data-tab]"); if (t) { setTab(t.dataset.tab); openId = null; if (tab !== "status") renderList(); return; }
+  const t = e.target.closest("[data-tab]"); if (t) { setTab(t.dataset.tab); openId = null; if (tab !== "status" && tab !== "certq") renderList(); return; }
   const it = e.target.closest(".item[data-id]"); if (it) { openId = +it.dataset.id; renderList(); return; }
   const d = e.target.closest("[data-do]"); if (d) { act(d.dataset.do); return; }
   const ap = e.target.closest("[data-addpt]"); if (ap) { const box = $(`#q${ap.dataset.addpt}-pts`); box.insertAdjacentHTML("beforeend", ptRow(+ap.dataset.addpt, box.children.length, { t: "", k: [] })); return; }

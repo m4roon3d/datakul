@@ -9,7 +9,7 @@ import worker from "../worker/src/index.js";
 
 const PORT = +(process.argv[2] || 8788), WEB = new URL("../web/", import.meta.url).pathname;
 const DB = new D1Mock();
-for (const f of ["0001_init.sql", "0002_usage.sql", "0003_accounts.sql"]) await DB.exec(readFileSync(new URL("../worker/migrations/" + f, import.meta.url), "utf8"));
+for (const f of ["0001_init.sql", "0002_usage.sql", "0003_accounts.sql", "0004_cert_questions.sql"]) await DB.exec(readFileSync(new URL("../worker/migrations/" + f, import.meta.url), "utf8"));
 const env = { GROQ_API_KEY: "k", ADMIN_TOKEN: "test-token", GOOGLE_CLIENT_ID: "test-client.apps.googleusercontent.com", MIN_ASKERS: "3", DB, AI: { run: async (m, i) => ({ data: i.text.map(fakeVec) }) } };
 const sse = (t) => t.match(/[\s\S]{1,200}/g).map((p) => `data: ${JSON.stringify({ choices: [{ delta: { content: p } }] })}\n\n`).join("") + "data: [DONE]\n\n";
 // fake Google: a test key pair; GET /__jwt?sub=1&email=a@b.c&name=Ada returns a token the gateway will accept
@@ -38,6 +38,17 @@ http.createServer(async (req, res) => {
   }
   if (u.pathname === "/__jwt") { res.end(await fakeJwt(u.searchParams)); return; }
   if (u.pathname === "/__run") { let p; await worker.scheduled({}, env, { waitUntil: (x) => (p = x) }); res.end(JSON.stringify(await p)); return; }
+  if (u.pathname === "/__certq") { // test hook: add n fresh questions to a section, or withdraw one
+    const { clearMemo } = await import("../worker/src/certq.js");
+    const wd = u.searchParams.get("withdraw");
+    if (wd) await DB.prepare("UPDATE cert_q SET status = 'withdrawn' WHERE id = ?").bind(wd).run();
+    const n = +(u.searchParams.get("n") || 0), ids = [];
+    for (let i = 0; i < n; i++) {
+      const id = "dbx-dea-n-test-" + Date.now() + "-" + i, d = { id, d: "ingest", q: `Which Auto Loader setting number ${i + 1} controls how new files are discovered in cloud storage?`, opts: ["cloudFiles.format", "cloudFiles.schemaLocation", "cloudFiles.useNotifications", "cloudFiles.maxFilesPerTrigger"], ans: [2], why: "Notifications mode lets Auto Loader learn about new files from cloud events instead of listing the directory, which scales better for very large folders. The other settings control format, schema tracking and batch size." };
+      await DB.prepare("INSERT INTO cert_q (id, cert, dom, q, data, status, model, created) VALUES (?, 'dbx-dea', 'ingest', ?, ?, 'live', 'test', ?)").bind(id, d.q, JSON.stringify(d), Date.now()).run(); ids.push(id);
+    }
+    clearMemo(); res.end(JSON.stringify(ids)); return;
+  }
   if (u.pathname === "/config.js") { res.writeHead(200, { "content-type": "text/javascript" }); res.end(`window.DATAKUL_CONFIG={gatewayUrl:"http://localhost:${PORT}"};`); return; }
   const f = join(WEB, u.pathname === "/" ? "index.html" : u.pathname);
   if (!f.startsWith(WEB) || !existsSync(f) || statSync(f).isDirectory()) { res.writeHead(404); res.end(); return; }

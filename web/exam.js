@@ -14,6 +14,44 @@ const domOf = (c, id) => c.domains.find((d) => d.id === id);
 const shuffle = (a) => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 const READY_N = 8, READY_ACC = 75, WINDOW = 10;
 
+/* ---------- fresh questions: the gateway writes new ones every night; they are cached here so they work offline ---------- */
+const CQ_GW = ((window.DATAKUL_CONFIG && window.DATAKUL_CONFIG.gatewayUrl) || "").replace(/\/+$/, "");
+const cqStr = (v, n) => (typeof v === "string" && v.length <= n ? v : "");
+function certqAdd(c, list) {
+  let added = 0;
+  const have = new Set(c.questions.map((q) => q.id));
+  for (const x of Array.isArray(list) ? list : []) {
+    if (!x || typeof x.id !== "string" || !x.id.startsWith(c.id + "-n-") || have.has(x.id) || !domOf(c, x.d)) continue;
+    if (!cqStr(x.q, 700) || !cqStr(x.why, 1000) || !Array.isArray(x.opts) || x.opts.length < 3 || x.opts.length > 5 || x.opts.some((o) => !cqStr(o, 300))) continue;
+    if (!Array.isArray(x.ans) || !x.ans.length || x.ans.length > 3 || x.ans.some((a) => !Number.isInteger(a) || a < 0 || a >= x.opts.length)) continue;
+    c.questions.push({ id: x.id, d: x.d, q: x.q, opts: x.opts.slice(), ans: x.ans.slice(), why: x.why, ai: 1, nw: Number(x.n) || 0 });
+    have.add(x.id); added++;
+  }
+  return added;
+}
+(function () { // questions from the last visit are in the bank before anything is drawn
+  const saved = store.get("certq", {});
+  if (typeof CERTS !== "undefined") CERTS.forEach((c) => certqAdd(c, saved[c.id]));
+})();
+async function certqRefresh() {
+  if (!CQ_GW || CQ_GW.startsWith("preview:") || typeof CERTS === "undefined") return;
+  const saved = store.get("certq", {});
+  let added = 0;
+  for (const c of CERTS) {
+    try {
+      const r = await fetch(CQ_GW + "/api/certq?cert=" + encodeURIComponent(c.id), { cache: "no-cache" }); // always asks the gateway; an unchanged list comes back as a tiny 304
+      if (!r.ok) continue;
+      const j = await r.json();
+      if (!Array.isArray(j.questions)) continue;
+      saved[c.id] = j.questions; // a question the owner withdrew drops out of the cache here, and from the bank on the next visit
+      added += certqAdd(c, j.questions);
+    } catch (e) {}
+  }
+  store.set("certq", saved);
+  if (added && !sess && typeof renderCert === "function" && document.querySelector("#view-cert:not([hidden])")) renderCert();
+}
+window.certqRefresh = certqRefresh;
+
 /* ---------- readiness: the last 10 answers in each section ---------- */
 function readiness(c) {
   const byQ = new Map(c.questions.map((q) => [q.id, q.d]));
@@ -109,6 +147,7 @@ function renderCert() {
   if (sess && sess.done) { host.innerHTML = certResultHTML(); return; }
   host.innerHTML = certHomeHTML();
 }
+const bankNew = (c) => c.questions.filter((q) => q.nw && Date.now() - q.nw < 7 * 864e5).length;
 function certHomeHTML() {
   const c = certOf(), rd = readiness(c), ov = overall(rd), f = focusDomain(rd);
   const date = CS.date[c.id] || "", days = date ? Math.ceil((Date.parse(date + "T00:00:00") - Date.parse(today() + "T00:00:00")) / 864e5) : null;
@@ -121,6 +160,7 @@ function certHomeHTML() {
   return `<div class="certwrap">
     <div class="card certhead"><span class="eyebrow">Certifications · beta</span><h1>${esc(c.name)}</h1>
       <div class="cfacts"><span><b>${c.scored}</b> questions</span><span><b>${c.minutes}</b> minutes</span><span><b>${esc(c.fee)}</b></span><span>valid <b>${esc(c.valid)}</b></span></div>
+      <p class="muted cdisc">Practice bank: <b>${c.questions.length}</b> questions${bankNew(c) ? `, ${bankNew(c)} added in the last 7 days` : ""}. New ones arrive every day. Those marked "AI-written" are written by AI from the public exam guide and checked automatically, so treat the official guide as the final word.</p>
       <p class="muted cdisc">${esc(c.disclaimer)} Based on the <a href="${esc(c.guideUrl)}" target="_blank" rel="noopener">official exam guide</a> (${esc(c.guide)}); check it again two weeks before your exam.</p></div>
     <div class="card cplan"><div class="cplanrow"><label class="lab" for="cDate">Your exam date<input type="date" id="cDate" value="${esc(date)}" min="${today()}"></label>${date && days >= 0 ? `<div class="cdays"><b>${days}</b><span>day${days === 1 ? "" : "s"} left</span></div>` : ""}</div><p>${esc(plan)}</p>
       <div class="acts">${!started ? `<button class="btn" type="button" data-cstart="diag">Start the diagnostic (${c.domains.length * 2} questions)</button>` : f ? `<button class="btn" type="button" data-cstart="practice" data-cdom="${f.id}">Practise ${esc(f.name)}</button>` : ""}<button class="btn ${started ? "" : "quiet"}" type="button" data-cstart="mock">Take a mock exam (${Math.min(c.scored, c.questions.length)} questions, ${Math.round((c.minutes * Math.min(c.scored, c.questions.length)) / c.scored)} min)</button></div></div>
@@ -140,7 +180,7 @@ function certQuestionHTML() {
     return `<label class="copt${cls}"><input type="${multi ? "checkbox" : "radio"}" name="cq" value="${oi}" ${on ? "checked" : ""} ${checked ? "disabled" : ""}><span>${esc(q.opts[oi])}</span>${checked && right ? '<b class="cmark">✓</b>' : checked && on ? '<b class="cmark">✗</b>' : ""}</label>`;
   }).join("");
   const answered = sess.ids.filter((x) => (sess.picks[x] || []).length).length;
-  const fb = checked ? `<div class="cfb ${sameAns(pick, q.ans) ? "ok" : "no"}"><b>${sameAns(pick, q.ans) ? "Correct." : "Not quite."}</b><p>${esc(q.why)}</p></div>` : "";
+  const fb = checked ? `<div class="cfb ${sameAns(pick, q.ans) ? "ok" : "no"}"><b>${sameAns(pick, q.ans) ? "Correct." : "Not quite."}</b><p>${esc(q.why)}</p>${q.ai ? `<small class="muted">AI-written, checked automatically.</small>` : ""}</div>` : "";
   const nav = mock
     ? `<button class="btn quiet" type="button" data-cnav="-1" ${sess.k === 0 ? "disabled" : ""}>Back</button>${sess.k < sess.ids.length - 1 ? `<button class="btn" type="button" data-cnav="1">Next</button>` : ""}<button class="btn ${sess.k === sess.ids.length - 1 ? "" : "quiet"}" type="button" data-csubmit>Submit exam</button>`
     : checked ? `<button class="btn" type="button" data-cnext>${sess.k < sess.ids.length - 1 ? "Next question" : "See results"}</button>` : `<button class="btn" type="button" data-ccheck ${pick.length ? "" : "disabled"}>Check</button>`;
@@ -212,3 +252,4 @@ document.addEventListener("click", (e) => {
 });
 // Loaded after quests.js, which may already have opened this view from the address bar.
 if ($("#view-cert") && !$("#view-cert").hidden) renderCert();
+if (typeof certqRefresh === "function") certqRefresh();

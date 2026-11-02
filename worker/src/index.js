@@ -4,6 +4,7 @@
 // Layer 2 (the shared library that grows from learners' questions) lives in community.js.
 
 import { handleCommunity, runJob } from "./community.js";
+import { runCertJob } from "./certq.js";
 import { handleAccounts, userStats, pruneSessions } from "./accounts.js";
 import { logUsage, meteredStream, promptTokens, rateHeaders, usageStatus, setMeta, pruneUsage } from "./usage.js";
 
@@ -595,6 +596,12 @@ export default {
 
   // Nightly: group unanswered questions, draft cards for popular groups, delete old questions.
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(runJob(env, deps(env, ctx)).then((r) => { console.log("layer2 job", JSON.stringify(r)); return r; }));
+    const d = deps(env, ctx);
+    ctx.waitUntil((async () => {
+      let res;
+      try { res = await runJob(env, d); console.log("layer2 job", JSON.stringify(res)); } catch (e) { console.log("layer2 job failed", e.message); }
+      try { const r = await runCertJob(env, d); console.log("cert questions", JSON.stringify({ added: r.added, paused: r.paused })); } catch (e) { console.log("cert questions failed", e.message); }
+      return res;
+    })());
   },
 };
