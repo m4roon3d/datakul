@@ -71,8 +71,9 @@ a GitHub secret like the others so the deploy handles it.
 2. Open **APIs & Services → OAuth consent screen** (newer accounts call it **Google Auth platform**) and start setup.
    App name **Datakul**, your email as support and contact email, audience **External**.
 3. In **Branding** (or the same screen), set the app home page to your site address (for example `https://datakul.pages.dev`) and
-   the privacy policy link to the same address plus `/privacy.html`. If it asks for an authorised domain and refuses
-   `pages.dev`, leave that box empty: it is only needed for sensitive permissions, and Datakul only asks for name and email.
+   the privacy policy link to the same address plus `/privacy.html`. Under **Authorised domains** press **Add domain** and
+   enter your site's address without `https://`, for example `datakul.pages.dev` (not `pages.dev` alone). Google needs it there
+   before it lets you save. Add your own domain too if you set one up.
 4. Open **Clients → Create client**. Type **Web application**, name **Datakul web**.
    Under **Authorised JavaScript origins** add your site address, for example `https://datakul.pages.dev` (add your own
    domain too if you set one up). Leave redirect URIs empty. Create, then copy the **Client ID**. It ends in
