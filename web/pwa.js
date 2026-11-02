@@ -23,20 +23,20 @@
     if (VIEWS.includes(v)) { showView(v); window.scrollTo({ top: 0 }); }
   });
 
-  /* keyboard: 1 to 4 switch tabs, / jumps to search, ? shows the list. Never fires while typing or with a dialog open. */
+  /* keyboard: 1 to 5 switch tabs, / jumps to search, ? shows the list. Never fires while typing or with a dialog open. */
   const typing = (t) => t && (t.isContentEditable || /^(input|textarea|select)$/i.test(t.tagName));
   document.addEventListener("keydown", (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey || typing(e.target)) return;
     const sheet = document.getElementById("sheet");
     if (sheet && !sheet.hidden) return;
-    const tabs = { 1: "quests", 2: "tutor", 3: "practice", 4: "library" };
-    if (tabs[e.key]) { showView(tabs[e.key] === "practice" ? store.get("psub", "interview") : tabs[e.key]); window.scrollTo({ top: 0 }); return; }
+    const tabs = { 1: "quests", 2: "tutor", 3: "practice", 4: "library", 5: "cert" };
+    if (tabs[e.key]) { showView(tabs[e.key] === "practice" ? lastPractice() : tabs[e.key]); window.scrollTo({ top: 0 }); return; }
     if (e.key === "/") {
       const lib = document.getElementById("view-library");
       if (!lib || lib.hidden) showView("library");
       const s = document.getElementById("libSearch"); if (s) { e.preventDefault(); s.focus(); }
       return;
     }
-    if (e.key === "?") toast("<span><b>Keys:</b> 1 Quests · 2 Ask · 3 Practice · 4 Library · / Search</span>");
+    if (e.key === "?") toast("<span><b>Keys:</b> 1 Quests · 2 Ask · 3 Practice · 4 Library · 5 Certifications · / Search</span>");
   });
 })();

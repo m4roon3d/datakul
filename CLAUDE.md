@@ -6,7 +6,7 @@ short answers, no jargon).
 
 ## Layout
 
-- `web/`: the app, served as static files. Scripts load in this order: config.js, library.js, community.js, problems.js,
+- `web/`: the app, served as static files. Menu: top bar with a Practice drop-down on desktop, bottom bar with a raised Ask button on phones (`tests/nav.py`). Scripts load in this order: config.js, library.js, community.js, problems.js,
   diagrams.js, app.js, pyrunner.js, practice.js, quests.js, exam.js, pwa.js (install, offline, shortcuts). `sw.js` is the
   offline service worker (network first; bump `CACHE` if the saved-file strategy changes) and `manifest.webmanifest` the install details. `admin.html` is the community review page.
 - `web/library.js`: the concepts (`C`) and interview questions (`Q`), 225 and 420 as of 28 Oct 2026 and growing weekly.
@@ -14,7 +14,7 @@ short answers, no jargon).
   with `content/merge_batch.js` (which stamps new concepts with an `nw` date). The syllabus source is
   `content/syllabus.txt`; wave 2 is written in the order of `content/queue.txt`. The weekly update follows
   `docs/weekly-content.md`.
-- `web/certs.js` (generated) and `web/exam.js`: exam prep under Practice. Question banks are written in
+- `web/certs.js` (generated) and `web/exam.js`: exam prep, its own top-level section (Certifications). Question banks are written in
   `content/certs/*.py` (original questions only, from the public exam guide; never real exam content), checked and built
   with `node content/build_certs.mjs`. Readiness = last 10 answers per exam section, ready at 8+ answered and 75%+.
 - `worker/src/index.js`: AI gateway (providers, prompts, fallback). `worker/src/community.js`: layer 2 (collect unanswered
@@ -35,7 +35,7 @@ short answers, no jargon).
 
 - Tests: `node --no-warnings tests/gateway.mjs`, `node --no-warnings tests/layer2.mjs`,
   `node --no-warnings tests/status.mjs`, then `node tests/l2server.mjs 8788 &` and `python3 tests/l2ui.py`,
-  `tests/themes.py`, `tests/teach.py`, `tests/status_ui.py`, `tests/exam.py`, `tests/pwa.py`, `tests/account_ui.py`; also `node --no-warnings tests/accounts.mjs`.
+  `tests/themes.py`, `tests/teach.py`, `tests/status_ui.py`, `tests/exam.py`, `tests/pwa.py`, `tests/account_ui.py`, `tests/nav.py`; also `node --no-warnings tests/accounts.mjs`.
 - After changing the grader in `web/app.js`: `node tools/sync-grader.mjs`.
 - Every interview question needs a model answer `a` that earns all its key points (`tests/teach.py` checks it); add
   answers to existing questions with `node content/add_model_answers.mjs <answers.json>`.

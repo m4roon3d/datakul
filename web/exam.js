@@ -104,7 +104,7 @@ function finishMock(timeUp) {
 function renderCert() {
   const host = $("#certBoard");
   if (!host) return;
-  if (typeof CERTS === "undefined" || !CERTS.length) { host.innerHTML = `<p class="muted">No exam prep yet.</p>`; return; }
+  if (typeof CERTS === "undefined" || !CERTS.length) { host.innerHTML = `<p class="muted">No certifications yet.</p>`; return; }
   if (sess && !sess.done) { host.innerHTML = certQuestionHTML(); return; }
   if (sess && sess.done) { host.innerHTML = certResultHTML(); return; }
   host.innerHTML = certHomeHTML();
@@ -119,7 +119,7 @@ function certHomeHTML() {
     : ov.all ? `${days} day${days === 1 ? "" : "s"} to go and every section is ready. Keep sharp with a mock exam every few days.`
     : f ? `${days} day${days === 1 ? "" : "s"} to go. Today: 10 questions on ${f.name}${days > 0 ? `, then about ${Math.max(10, Math.ceil(((rd.length - ov.ready) * 10) / Math.max(1, days)))} a day` : ""}.` : "";
   return `<div class="certwrap">
-    <div class="card certhead"><span class="eyebrow">Exam prep · beta</span><h1>${esc(c.name)}</h1>
+    <div class="card certhead"><span class="eyebrow">Certifications · beta</span><h1>${esc(c.name)}</h1>
       <div class="cfacts"><span><b>${c.scored}</b> questions</span><span><b>${c.minutes}</b> minutes</span><span><b>${esc(c.fee)}</b></span><span>valid <b>${esc(c.valid)}</b></span></div>
       <p class="muted cdisc">${esc(c.disclaimer)} Based on the <a href="${esc(c.guideUrl)}" target="_blank" rel="noopener">official exam guide</a> (${esc(c.guide)}); check it again two weeks before your exam.</p></div>
     <div class="card cplan"><div class="cplanrow"><label class="lab" for="cDate">Your exam date<input type="date" id="cDate" value="${esc(date)}" min="${today()}"></label>${date && days >= 0 ? `<div class="cdays"><b>${days}</b><span>day${days === 1 ? "" : "s"} left</span></div>` : ""}</div><p>${esc(plan)}</p>
@@ -168,7 +168,7 @@ function certResultHTML() {
     <div class="cscore"><b>${pct}%</b><span>${sess.score} of ${n} right${mock ? ` · ${fmtTime(Math.round((Date.now() - sess.start) / 1000) > sess.secs ? sess.secs : Math.round((Date.now() - sess.start) / 1000))}` : ""}</span></div>
     ${mock ? `<p>${pct >= 80 ? "Strong result. If every section shows Ready, you're in good shape to book." : "Keep going: practise the sections below where you dropped marks, then try another mock."}</p>` : ""}
     <div class="crd">${per.map((x) => { const p = Math.round((100 * x.ok) / x.ids.length); return `<div class="crow"><div class="cname"><b>${esc(x.d.name)}</b><small>${x.ok} of ${x.ids.length} right</small></div><div class="cbar ${p >= READY_ACC ? "ready" : "building"}"><i style="width:${p}%"></i><em style="left:${READY_ACC}%"></em></div><span class="cst">${p}%</span><button class="ghostlink" type="button" data-cstart="practice" data-cdom="${x.d.id}">Practise</button></div>`; }).join("")}</div>
-    <div class="acts"><button class="btn" type="button" data-chome>Back to exam prep</button>${f ? `<button class="btn quiet" type="button" data-cstart="practice" data-cdom="${f.id}">Practise ${esc(f.name)}</button>` : ""}</div>
+    <div class="acts"><button class="btn" type="button" data-chome>Back to certifications</button>${f ? `<button class="btn quiet" type="button" data-cstart="practice" data-cdom="${f.id}">Practise ${esc(f.name)}</button>` : ""}</div>
   </div>
   <div class="card"><h3 style="margin-bottom:8px">Review your answers</h3><div class="crevs">${review}</div></div></div>`;
 }

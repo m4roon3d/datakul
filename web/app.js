@@ -678,13 +678,18 @@ $("#libSearch").addEventListener("input", (e) => { libQuery = e.target.value; re
 
 /* ---------- navigation ---------- */
 const VIEWS = ["quests", "tutor", "interview", "practice", "cert", "library"];
+const wideNav = () => window.matchMedia("(min-width:900px)").matches;
+function closePMenu() { const m = $("#pmenu"); if (m && !m.hidden) { m.hidden = true; $("#tab-practice").setAttribute("aria-expanded", "false"); } }
+function openPMenu() { const m = $("#pmenu"); m.hidden = false; $("#tab-practice").setAttribute("aria-expanded", "true"); m.querySelectorAll("[data-sub]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.sub === (store.get("psub", "interview"))))); }
+const lastPractice = () => (store.get("psub", "interview") === "practice" ? "practice" : "interview");
 function showView(v) {
   if (!VIEWS.includes(v)) v = "quests";
-  const tab = v === "interview" || v === "cert" ? "practice" : v;
-  document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.view === tab)));
+  const tab = v === "interview" ? "practice" : v;
+  document.querySelectorAll(".tabs .tab").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.view === tab)));
   VIEWS.forEach((n) => ($("#view-" + n).hidden = n !== v));
   document.querySelectorAll(".subnav button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.sub === v)));
-  if (v === "interview" || v === "practice" || v === "cert") store.set("psub", v);
+  if (v === "interview" || v === "practice") store.set("psub", v);
+  closePMenu();
   if (v === "cert" && typeof renderCert === "function") renderCert();
   if (v === "library") renderLib();
   if (v === "practice" && typeof renderPractice === "function") renderPractice();
@@ -692,8 +697,16 @@ function showView(v) {
   if (v === "quests" && typeof renderQuests === "function") renderQuests();
   try { if (location.hash.slice(1) !== v) history.replaceState(null, "", "#" + v); } catch (e) {}
 }
-document.querySelectorAll(".tabs button").forEach((b) => b.addEventListener("click", () => { showView(b.dataset.view === "practice" ? store.get("psub", "interview") : b.dataset.view); window.scrollTo({ top: 0 }); }));
-document.addEventListener("click", (e) => { const b = e.target.closest("[data-sub]"); if (b) { showView(b.dataset.sub); window.scrollTo({ top: 0 }); } });
+document.querySelectorAll(".tabs .tab").forEach((b) => b.addEventListener("click", () => {
+  if (b.id === "tab-practice" && wideNav()) { if ($("#pmenu").hidden) openPMenu(); else closePMenu(); return; }
+  showView(b.dataset.view === "practice" ? lastPractice() : b.dataset.view); window.scrollTo({ top: 0 });
+}));
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-sub]"); if (b) { showView(b.dataset.sub); window.scrollTo({ top: 0 }); return; }
+  if (!e.target.closest(".tabwrap")) closePMenu();
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#pmenu").hidden) { closePMenu(); $("#tab-practice").focus(); } });
+$("#navSearch").addEventListener("click", () => { showView("library"); window.scrollTo({ top: 0 }); $("#libSearch").focus(); });
 
 renderInterview();
 renderEngineLine();

@@ -74,36 +74,52 @@ p{margin:0}
 .eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
-/* shell: sidebar on desktop, bottom bar on phones */
-.shell{display:grid;grid-template-columns:var(--side) minmax(0,1fr);min-height:100vh}
-.side{position:sticky;top:env(safe-area-inset-top,0px);height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:6px;padding:22px 14px 18px max(14px,env(safe-area-inset-left,0px));background:var(--surface);border-right:1px solid var(--line)}
-.brand{display:flex;align-items:center;gap:10px;padding:0 8px 22px;text-decoration:none}
-.brand .mk{width:36px;height:36px;flex:none;transition:transform .25s}
-.brand:hover .mk{transform:rotate(-6deg)}
-.brand .wm{height:24px;width:auto}
-.tabs{display:flex;flex-direction:column;gap:4px}
-.tabs button{display:flex;align-items:center;gap:12px;border:0;background:none;padding:11px 12px;border-radius:14px;color:var(--muted);font-weight:700;font-size:15px;text-align:left;transition:background .15s,color .15s}
-.tabs button:hover{color:var(--ink);background:var(--surface-2)}
-.tabs button svg{width:20px;height:20px;flex:none}
-.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
-.sidefoot{margin-top:auto;display:flex;flex-direction:column;gap:10px}
+/* shell: top bar with the menu on desktop, bottom tab bar on phones */
+.shell{display:block;min-height:100vh}
 .main{min-width:0;display:flex;flex-direction:column}
-.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg)}
-.tb{display:flex;align-items:center;gap:10px;padding-block:14px 6px}
-.tb .tbrand{display:none;align-items:center;gap:9px}
-.tb .tbrand .mk{width:34px;height:34px;flex:none}
-.tb .tbrand .wm{height:21px;width:auto}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:7;background:var(--surface);border-bottom:1.5px solid var(--line)}
+.tb{display:flex;align-items:center;gap:10px;min-height:68px;max-width:1360px;margin:0 auto}
+.tb .tbrand{display:flex;align-items:center;gap:10px;text-decoration:none;flex:none}
+.tb .tbrand .mk{width:36px;height:36px;flex:none;transition:transform .25s}
+.tb .tbrand:hover .mk{transform:rotate(-6deg)}
+.tb .tbrand .wm{height:24px;width:auto}
 .tb .sp{flex:1}
+.tabs{display:flex;align-items:center;gap:4px;margin-left:12px}
+.tabwrap{position:relative;display:flex}
+.tabs .tab{display:flex;align-items:center;gap:7px;border:0;background:none;padding:10px 15px;border-radius:12px;color:var(--ink);font-weight:700;font-size:15.5px;text-align:left;transition:background .15s,color .15s;white-space:nowrap}
+.tabs .tab:hover{background:var(--surface-2)}
+.tabs .tab svg{width:20px;height:20px;flex:none}
+.tabs .tab .caret{width:14px;height:14px;margin-right:-2px;transition:transform .15s}
+.tabs .tab[aria-expanded="true"] .caret{transform:rotate(180deg)}
+.tabs .tab[aria-selected="true"]{background:var(--accent-soft);color:var(--accent)}
+@media (min-width:900px){.tabs .tab>svg:not(.caret){display:none}}
+.pmenu{position:absolute;left:0;top:calc(100% + 8px);width:300px;padding:8px;border-radius:18px;background:var(--surface);border:1.5px solid var(--line);box-shadow:var(--shadow-lift);z-index:9}
+.pmenu button{display:flex;gap:12px;align-items:center;width:100%;border:0;background:none;text-align:left;padding:11px 12px;border-radius:12px;color:var(--ink)}
+.pmenu button:hover,.pmenu button[aria-pressed="true"]{background:var(--accent-soft)}
+.pmenu svg{width:20px;height:20px;flex:none;color:var(--accent)}
+.pmenu b{display:block;font-size:15.5px}.pmenu small{display:block;color:var(--muted);font-size:13px;line-height:1.3}
+.navsearch{display:flex;align-items:center;gap:10px;height:42px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--muted);min-width:210px;font-size:14.5px}
+.navsearch:hover{border-color:var(--accent);color:var(--ink)}
+.navsearch svg{width:17px;height:17px;flex:none}.navsearch span{flex:1;text-align:left}
+.navsearch kbd{font:inherit;font-size:12.5px;border:1.5px solid var(--line);border-radius:6px;padding:0 7px;background:var(--surface)}
+@media (min-width:900px){.gutter{padding-left:32px;padding-right:32px}main.gutter{width:100%;max-width:1424px;margin-inline:auto}}
+@media (max-width:1199px){.navsearch{min-width:0;width:42px;flex:none;padding:0;justify-content:center}.navsearch span,.navsearch kbd{display:none}.tabs{margin-left:6px;gap:2px}.tabs .tab{padding:9px 10px;font-size:14.5px}.tb{gap:8px}.tb .chip .long{display:none}.tb .chip .short{display:inline}}
+@media (min-width:900px) and (max-width:1049px){.tb .tbrand .wm{display:none}}
 @media (max-width:899px){
-  :root{--tabh:calc(70px + env(safe-area-inset-bottom,0px))}
-  .shell{display:block}
+  :root{--tabh:calc(74px + env(safe-area-inset-bottom,0px))}
   body{padding-bottom:var(--tabh)}
-  .side{position:fixed;left:0;right:0;bottom:0;top:auto;height:auto;z-index:6;flex-direction:row;padding:7px max(10px,env(safe-area-inset-right,0px)) calc(7px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));border-right:0;border-top:1px solid var(--line);border-radius:22px 22px 0 0;box-shadow:0 -6px 20px rgb(16 32 43 / .06)}
-  .side .brand,.sidefoot{display:none}
-  .tabs{flex-direction:row;justify-content:space-around;width:100%}
-  .tabs button{flex-direction:column;gap:3px;font-size:11.5px;padding:6px 10px;min-width:70px;text-align:center}
-  .tabs button[aria-selected="true"]{background:var(--accent-soft);color:var(--accent)}
-  .tb .tbrand{display:flex}
+  .navsearch,.pmenu{display:none}
+  .tb{gap:8px;min-height:64px}
+  .tabs{position:fixed;left:0;right:0;bottom:0;margin:0;z-index:8;justify-content:space-around;gap:0;background:var(--surface);border-top:1.5px solid var(--line);border-radius:22px 22px 0 0;box-shadow:0 -6px 20px rgb(16 32 43 / .06);padding:7px max(8px,env(safe-area-inset-right,0px)) calc(7px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+  .tabs>.tab,.tabs>.tabwrap{flex:1 1 0;min-width:0;justify-content:center}
+  .tabs .tab{flex-direction:column;gap:3px;font-size:11.5px;padding:6px 4px;width:100%;text-align:center;justify-content:center;min-height:52px}
+  .tabs .tab .caret{display:none}
+  #tab-quests{order:1}.tabs>.tabwrap{order:2}#tab-tutor{order:3}#tab-library{order:4}#tab-cert{order:5}
+  #tab-tutor{overflow:visible}
+  #tab-tutor svg{width:28px;height:28px;padding:17px;box-sizing:content-box;border-radius:50%;background:var(--accent);color:var(--accent-ink);margin-top:-34px;box-shadow:0 4px 0 var(--accent-deep),0 0 0 5px var(--surface)}
+  #tab-tutor[aria-selected="true"],#tab-tutor:hover{background:none}
+  #tab-tutor[aria-selected="true"]{color:var(--accent)}
+  .tb .chip .long{display:none}.tb .chip .short{display:inline}
 }
 main{padding-block:12px 32px;flex:1}
 .view{display:flex;flex-direction:column;gap:22px}
@@ -112,7 +128,6 @@ main{padding-block:12px 32px;flex:1}
 .chip{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700;white-space:nowrap;border:0}
 .chip svg{width:11px;height:15px;flex:none}
 .chip .short{display:none}
-@media (max-width:899px){.tb .chip .long{display:none}.tb .chip .short{display:inline}.tb{gap:8px}}
 .chip.fire{background:var(--flame-soft);color:var(--flame-ink)}
 .chip.lvl{background:var(--night);color:var(--night-ink)}
 .chip.xp{background:var(--flame-soft);color:var(--flame-ink)}
@@ -145,7 +160,7 @@ a.lnk:hover{text-decoration:underline;text-underline-offset:3px}
 /* quests home */
 .qhome{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:30px;align-items:start}
 .qmain{display:flex;flex-direction:column;gap:24px;min-width:0}
-.qrail{display:flex;flex-direction:column;gap:18px;position:sticky;top:76px}
+.qrail{display:flex;flex-direction:column;gap:18px;position:sticky;top:92px}
 @media (max-width:1180px){.qhome{grid-template-columns:minmax(0,1fr)}.qrail{position:static}}
 .qmain-wrap{max-width:none}
 .hello{display:flex;flex-direction:column;gap:4px;padding-top:6px}
@@ -243,7 +258,6 @@ a.lnk:hover{text-decoration:underline;text-underline-offset:3px}
 .ch.cleared .cn{background:var(--good);color:var(--surface)}
 .ch:hover span{color:var(--accent)}
 .ch .cn svg{width:14px;height:14px}
-@media (min-width:900px){#lvlChip{display:none}}
 .pathsel{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13.5px;font-weight:700}
 .toast{position:fixed;left:50%;width:max-content;bottom:calc(var(--tabh) + 22px);transform:translateX(-50%);z-index:30;background:var(--night);color:var(--night-ink);border-radius:16px;padding:12px 18px;font-weight:700;box-shadow:var(--shadow-lift);display:flex;align-items:center;gap:10px;max-width:calc(100vw - 32px)}
 .toast .xp{color:#FFD79A}
@@ -692,21 +706,22 @@ textarea.editor:focus{border-color:var(--accent);outline:none}
 </head>
 <body>
 <div class="shell">
-<aside class="side" aria-label="Main">
-  <div class="brand" role="img" aria-label="Datakul"><svg class="mk" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="26" fill="#0B2A3A"/><circle cx="50" cy="50" r="31" fill="none" stroke="#5CC3E6" stroke-width="4.5"/><path d="M50 14V20M50 80V86M14 50H20M80 50H86" stroke="#5CC3E6" stroke-width="4.5" stroke-linecap="round"/><path d="M50 22L59 50H41Z" fill="#FF8A2A"/><path d="M50 78L59 50H41Z" fill="#FFFFFF"/><circle cx="50" cy="50" r="4.5" fill="#0B2A3A"/></svg><svg class="wm" viewBox="26 -720 3440 754" aria-hidden="true"><path fill="var(--ink)" d="M270 14Q211 14 159.5 -15.5Q108 -45 77.0 -102.0Q46 -159 46 -240V-256Q46 -337 77.0 -394.0Q108 -451 159.0 -480.5Q210 -510 270 -510Q338 -510 373.0 -487.5Q408 -465 424 -439H442V-700H568V0H444V-60H426Q409 -32 373.5 -9.0Q338 14 270 14ZM308 -96Q366 -96 405.0 -133.5Q444 -171 444 -243V-253Q444 -325 405.5 -362.5Q367 -400 308 -400Q250 -400 211.0 -362.5Q172 -325 172 -253V-243Q172 -171 211.0 -133.5Q250 -96 308 -96ZM832.0 14Q779.0 14 737.0 -4.5Q695.0 -23 670.5 -58.5Q646.0 -94 646.0 -145Q646.0 -222 700.0 -261.0Q754.0 -300 838.0 -300H974.0V-328Q974.0 -363 952.0 -385.5Q930.0 -408 882.0 -408Q835.0 -408 812.0 -386.5Q789.0 -365 782.0 -331L666.0 -370Q678.0 -408 704.5 -439.5Q731.0 -471 775.5 -490.5Q820.0 -510 884.0 -510Q982.0 -510 1039.0 -461.0Q1096.0 -412 1096.0 -319V-134Q1096.0 -104 1124.0 -104H1164.0V0H1080.0Q1043.0 0 1019.0 -18.0Q995.0 -36 995.0 -66V-67H976.0Q972.0 -55 958.0 -35.5Q944.0 -16 914.0 -1.0Q884.0 14 832.0 14ZM854.0 -88Q907.0 -88 940.5 -117.5Q974.0 -147 974.0 -196V-206H847.0Q812.0 -206 792.0 -191.0Q772.0 -176 772.0 -149Q772.0 -122 793.0 -105.0Q814.0 -88 854.0 -88ZM1416.0 0Q1367.0 0 1336.5 -30.5Q1306.0 -61 1306.0 -112V-392H1182.0V-496H1306.0V-650H1432.0V-496H1568.0V-392H1432.0V-134Q1432.0 -104 1460.0 -104H1556.0V0ZM1806.0 14Q1753.0 14 1711.0 -4.5Q1669.0 -23 1644.5 -58.5Q1620.0 -94 1620.0 -145Q1620.0 -222 1674.0 -261.0Q1728.0 -300 1812.0 -300H1948.0V-328Q1948.0 -363 1926.0 -385.5Q1904.0 -408 1856.0 -408Q1809.0 -408 1786.0 -386.5Q1763.0 -365 1756.0 -331L1640.0 -370Q1652.0 -408 1678.5 -439.5Q1705.0 -471 1749.5 -490.5Q1794.0 -510 1858.0 -510Q1956.0 -510 2013.0 -461.0Q2070.0 -412 2070.0 -319V-134Q2070.0 -104 2098.0 -104H2138.0V0H2054.0Q2017.0 0 1993.0 -18.0Q1969.0 -36 1969.0 -66V-67H1950.0Q1946.0 -55 1932.0 -35.5Q1918.0 -16 1888.0 -1.0Q1858.0 14 1806.0 14ZM1828.0 -88Q1881.0 -88 1914.5 -117.5Q1948.0 -147 1948.0 -196V-206H1821.0Q1786.0 -206 1766.0 -191.0Q1746.0 -176 1746.0 -149Q1746.0 -122 1767.0 -105.0Q1788.0 -88 1828.0 -88Z"/><path fill="var(--flame)" d="M2200.0 0V-700H2326.0V-313H2344.0L2508.0 -496H2672.0L2443.0 -256L2680.0 0H2518.0L2344.0 -197H2326.0V0ZM2923.0 8Q2865.0 8 2821.5 -18.5Q2778.0 -45 2754.0 -92.0Q2730.0 -139 2730.0 -200V-496H2856.0V-210Q2856.0 -154 2883.5 -126.0Q2911.0 -98 2962.0 -98Q3020.0 -98 3052.0 -136.5Q3084.0 -175 3084.0 -244V-496H3210.0V0H3086.0V-65H3068.0Q3056.0 -40 3023.0 -16.0Q2990.0 8 2923.0 8ZM3320.0 0V-700H3446.0V0Z"/></svg></div>
-  <nav class="tabs" role="tablist" aria-label="Sections">
-    <button role="tab" id="tab-quests" data-view="quests" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4h11l-2.5 3.5L16 11H5"/></svg>Quests</button>
-    <button role="tab" id="tab-tutor" data-view="tutor" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Ask</button>
-    <button role="tab" id="tab-practice" data-view="practice" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>Practice</button>
-    <button role="tab" id="tab-library" data-view="library" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M8 7h7"/></svg>Library</button>
-  </nav>
-  <div class="sidefoot" id="sideFoot"></div>
-</aside>
-
 <div class="main">
 <header class="topbar gutter"><div class="tb">
-  <span class="tbrand" role="img" aria-label="Datakul"><svg class="mk" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="26" fill="#0B2A3A"/><circle cx="50" cy="50" r="31" fill="none" stroke="#5CC3E6" stroke-width="4.5"/><path d="M50 14V20M50 80V86M14 50H20M80 50H86" stroke="#5CC3E6" stroke-width="4.5" stroke-linecap="round"/><path d="M50 22L59 50H41Z" fill="#FF8A2A"/><path d="M50 78L59 50H41Z" fill="#FFFFFF"/><circle cx="50" cy="50" r="4.5" fill="#0B2A3A"/></svg><svg class="wm" viewBox="26 -720 3440 754" aria-hidden="true"><path fill="var(--ink)" d="M270 14Q211 14 159.5 -15.5Q108 -45 77.0 -102.0Q46 -159 46 -240V-256Q46 -337 77.0 -394.0Q108 -451 159.0 -480.5Q210 -510 270 -510Q338 -510 373.0 -487.5Q408 -465 424 -439H442V-700H568V0H444V-60H426Q409 -32 373.5 -9.0Q338 14 270 14ZM308 -96Q366 -96 405.0 -133.5Q444 -171 444 -243V-253Q444 -325 405.5 -362.5Q367 -400 308 -400Q250 -400 211.0 -362.5Q172 -325 172 -253V-243Q172 -171 211.0 -133.5Q250 -96 308 -96ZM832.0 14Q779.0 14 737.0 -4.5Q695.0 -23 670.5 -58.5Q646.0 -94 646.0 -145Q646.0 -222 700.0 -261.0Q754.0 -300 838.0 -300H974.0V-328Q974.0 -363 952.0 -385.5Q930.0 -408 882.0 -408Q835.0 -408 812.0 -386.5Q789.0 -365 782.0 -331L666.0 -370Q678.0 -408 704.5 -439.5Q731.0 -471 775.5 -490.5Q820.0 -510 884.0 -510Q982.0 -510 1039.0 -461.0Q1096.0 -412 1096.0 -319V-134Q1096.0 -104 1124.0 -104H1164.0V0H1080.0Q1043.0 0 1019.0 -18.0Q995.0 -36 995.0 -66V-67H976.0Q972.0 -55 958.0 -35.5Q944.0 -16 914.0 -1.0Q884.0 14 832.0 14ZM854.0 -88Q907.0 -88 940.5 -117.5Q974.0 -147 974.0 -196V-206H847.0Q812.0 -206 792.0 -191.0Q772.0 -176 772.0 -149Q772.0 -122 793.0 -105.0Q814.0 -88 854.0 -88ZM1416.0 0Q1367.0 0 1336.5 -30.5Q1306.0 -61 1306.0 -112V-392H1182.0V-496H1306.0V-650H1432.0V-496H1568.0V-392H1432.0V-134Q1432.0 -104 1460.0 -104H1556.0V0ZM1806.0 14Q1753.0 14 1711.0 -4.5Q1669.0 -23 1644.5 -58.5Q1620.0 -94 1620.0 -145Q1620.0 -222 1674.0 -261.0Q1728.0 -300 1812.0 -300H1948.0V-328Q1948.0 -363 1926.0 -385.5Q1904.0 -408 1856.0 -408Q1809.0 -408 1786.0 -386.5Q1763.0 -365 1756.0 -331L1640.0 -370Q1652.0 -408 1678.5 -439.5Q1705.0 -471 1749.5 -490.5Q1794.0 -510 1858.0 -510Q1956.0 -510 2013.0 -461.0Q2070.0 -412 2070.0 -319V-134Q2070.0 -104 2098.0 -104H2138.0V0H2054.0Q2017.0 0 1993.0 -18.0Q1969.0 -36 1969.0 -66V-67H1950.0Q1946.0 -55 1932.0 -35.5Q1918.0 -16 1888.0 -1.0Q1858.0 14 1806.0 14ZM1828.0 -88Q1881.0 -88 1914.5 -117.5Q1948.0 -147 1948.0 -196V-206H1821.0Q1786.0 -206 1766.0 -191.0Q1746.0 -176 1746.0 -149Q1746.0 -122 1767.0 -105.0Q1788.0 -88 1828.0 -88Z"/><path fill="var(--flame)" d="M2200.0 0V-700H2326.0V-313H2344.0L2508.0 -496H2672.0L2443.0 -256L2680.0 0H2518.0L2344.0 -197H2326.0V0ZM2923.0 8Q2865.0 8 2821.5 -18.5Q2778.0 -45 2754.0 -92.0Q2730.0 -139 2730.0 -200V-496H2856.0V-210Q2856.0 -154 2883.5 -126.0Q2911.0 -98 2962.0 -98Q3020.0 -98 3052.0 -136.5Q3084.0 -175 3084.0 -244V-496H3210.0V0H3086.0V-65H3068.0Q3056.0 -40 3023.0 -16.0Q2990.0 8 2923.0 8ZM3320.0 0V-700H3446.0V0Z"/></svg></span>
+  <a class="tbrand" href="#quests" role="img" aria-label="Datakul"><svg class="mk" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="26" fill="#0B2A3A"/><circle cx="50" cy="50" r="31" fill="none" stroke="#5CC3E6" stroke-width="4.5"/><path d="M50 14V20M50 80V86M14 50H20M80 50H86" stroke="#5CC3E6" stroke-width="4.5" stroke-linecap="round"/><path d="M50 22L59 50H41Z" fill="#FF8A2A"/><path d="M50 78L59 50H41Z" fill="#FFFFFF"/><circle cx="50" cy="50" r="4.5" fill="#0B2A3A"/></svg><svg class="wm" viewBox="26 -720 3440 754" aria-hidden="true"><path fill="var(--ink)" d="M270 14Q211 14 159.5 -15.5Q108 -45 77.0 -102.0Q46 -159 46 -240V-256Q46 -337 77.0 -394.0Q108 -451 159.0 -480.5Q210 -510 270 -510Q338 -510 373.0 -487.5Q408 -465 424 -439H442V-700H568V0H444V-60H426Q409 -32 373.5 -9.0Q338 14 270 14ZM308 -96Q366 -96 405.0 -133.5Q444 -171 444 -243V-253Q444 -325 405.5 -362.5Q367 -400 308 -400Q250 -400 211.0 -362.5Q172 -325 172 -253V-243Q172 -171 211.0 -133.5Q250 -96 308 -96ZM832.0 14Q779.0 14 737.0 -4.5Q695.0 -23 670.5 -58.5Q646.0 -94 646.0 -145Q646.0 -222 700.0 -261.0Q754.0 -300 838.0 -300H974.0V-328Q974.0 -363 952.0 -385.5Q930.0 -408 882.0 -408Q835.0 -408 812.0 -386.5Q789.0 -365 782.0 -331L666.0 -370Q678.0 -408 704.5 -439.5Q731.0 -471 775.5 -490.5Q820.0 -510 884.0 -510Q982.0 -510 1039.0 -461.0Q1096.0 -412 1096.0 -319V-134Q1096.0 -104 1124.0 -104H1164.0V0H1080.0Q1043.0 0 1019.0 -18.0Q995.0 -36 995.0 -66V-67H976.0Q972.0 -55 958.0 -35.5Q944.0 -16 914.0 -1.0Q884.0 14 832.0 14ZM854.0 -88Q907.0 -88 940.5 -117.5Q974.0 -147 974.0 -196V-206H847.0Q812.0 -206 792.0 -191.0Q772.0 -176 772.0 -149Q772.0 -122 793.0 -105.0Q814.0 -88 854.0 -88ZM1416.0 0Q1367.0 0 1336.5 -30.5Q1306.0 -61 1306.0 -112V-392H1182.0V-496H1306.0V-650H1432.0V-496H1568.0V-392H1432.0V-134Q1432.0 -104 1460.0 -104H1556.0V0ZM1806.0 14Q1753.0 14 1711.0 -4.5Q1669.0 -23 1644.5 -58.5Q1620.0 -94 1620.0 -145Q1620.0 -222 1674.0 -261.0Q1728.0 -300 1812.0 -300H1948.0V-328Q1948.0 -363 1926.0 -385.5Q1904.0 -408 1856.0 -408Q1809.0 -408 1786.0 -386.5Q1763.0 -365 1756.0 -331L1640.0 -370Q1652.0 -408 1678.5 -439.5Q1705.0 -471 1749.5 -490.5Q1794.0 -510 1858.0 -510Q1956.0 -510 2013.0 -461.0Q2070.0 -412 2070.0 -319V-134Q2070.0 -104 2098.0 -104H2138.0V0H2054.0Q2017.0 0 1993.0 -18.0Q1969.0 -36 1969.0 -66V-67H1950.0Q1946.0 -55 1932.0 -35.5Q1918.0 -16 1888.0 -1.0Q1858.0 14 1806.0 14ZM1828.0 -88Q1881.0 -88 1914.5 -117.5Q1948.0 -147 1948.0 -196V-206H1821.0Q1786.0 -206 1766.0 -191.0Q1746.0 -176 1746.0 -149Q1746.0 -122 1767.0 -105.0Q1788.0 -88 1828.0 -88Z"/><path fill="var(--flame)" d="M2200.0 0V-700H2326.0V-313H2344.0L2508.0 -496H2672.0L2443.0 -256L2680.0 0H2518.0L2344.0 -197H2326.0V0ZM2923.0 8Q2865.0 8 2821.5 -18.5Q2778.0 -45 2754.0 -92.0Q2730.0 -139 2730.0 -200V-496H2856.0V-210Q2856.0 -154 2883.5 -126.0Q2911.0 -98 2962.0 -98Q3020.0 -98 3052.0 -136.5Q3084.0 -175 3084.0 -244V-496H3210.0V0H3086.0V-65H3068.0Q3056.0 -40 3023.0 -16.0Q2990.0 8 2923.0 8ZM3320.0 0V-700H3446.0V0Z"/></svg></a>
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" id="tab-quests" data-view="quests" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4h11l-2.5 3.5L16 11H5"/></svg>Quests</button>
+    <button class="tab" role="tab" id="tab-tutor" data-view="tutor" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Ask</button>
+    <div class="tabwrap"><button class="tab" role="tab" id="tab-practice" data-view="practice" aria-selected="false" aria-haspopup="menu" aria-expanded="false" aria-controls="pmenu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>Practice<svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="pmenu" id="pmenu" role="menu" aria-label="Practice" hidden>
+        <button type="button" role="menuitem" data-sub="interview"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></span><span><b>Interview questions</b><small>Each with a model answer</small></span></button>
+        <button type="button" role="menuitem" data-sub="practice"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg></span><span><b>Coding</b><small>SQL and Python, run in the browser</small></span></button>
+      </div></div>
+    <button class="tab" role="tab" id="tab-library" data-view="library" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M8 7h7"/></svg>Library</button>
+    <button class="tab" role="tab" id="tab-cert" data-view="cert" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg>Certifications</button>
+  </nav>
   <span class="sp"></span>
+  <button class="navsearch" id="navSearch" type="button" aria-label="Search topics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Search topics</span><kbd>/</kbd></button>
   <span id="streakChip"></span>
   <span id="lvlChip"></span>
   <button class="iconbtn" id="gear" type="button" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
@@ -744,7 +759,7 @@ textarea.editor:focus{border-color:var(--accent);outline:none}
 </section>
 
 <section class="view" id="view-interview" hidden>
-  <div class="subnav" role="group" aria-label="Practice type"><button type="button" data-sub="interview" aria-pressed="true" id="sub-interview">Interview questions</button><button type="button" data-sub="practice" aria-pressed="false" id="sub-code">Coding</button><button type="button" data-sub="cert" aria-pressed="false">Exam prep</button></div>
+  <div class="subnav" role="group" aria-label="Practice type"><button type="button" data-sub="interview" aria-pressed="true" id="sub-interview">Interview questions</button><button type="button" data-sub="practice" aria-pressed="false" id="sub-code">Coding</button></div>
   <div id="mockArea"></div>
   <div class="target">
     <span class="eyebrow">Preparing for</span>
@@ -770,12 +785,11 @@ textarea.editor:focus{border-color:var(--accent);outline:none}
 </section>
 
 <section class="view" id="view-cert" hidden>
-  <div class="subnav" role="group" aria-label="Practice type"><button type="button" data-sub="interview" aria-pressed="false">Interview questions</button><button type="button" data-sub="practice" aria-pressed="false">Coding</button><button type="button" data-sub="cert" aria-pressed="true">Exam prep</button></div>
   <div id="certBoard"></div>
 </section>
 
 <section class="view" id="view-practice" hidden>
-  <div class="subnav" role="group" aria-label="Practice type"><button type="button" data-sub="interview" aria-pressed="false">Interview questions</button><button type="button" data-sub="practice" aria-pressed="true">Coding</button><button type="button" data-sub="cert" aria-pressed="false">Exam prep</button></div>
+  <div class="subnav" role="group" aria-label="Practice type"><button type="button" data-sub="interview" aria-pressed="false">Interview questions</button><button type="button" data-sub="practice" aria-pressed="true">Coding</button></div>
   <div id="pracBoard" class="view"></div>
 </section>
 
