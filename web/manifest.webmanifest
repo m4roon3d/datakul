@@ -1,0 +1,23 @@
+{
+  "name": "Datakul",
+  "short_name": "Datakul",
+  "description": "Quest-based learning for data engineering, analysis, science and architecture careers.",
+  "id": "/",
+  "start_url": "/?source=app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#071C27",
+  "theme_color": "#0B2A3A",
+  "categories": ["education", "productivity"],
+  "icons": [
+    { "src": "icons/datakul-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/datakul-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/datakul-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Ask the tutor", "url": "/#tutor", "icons": [{ "src": "icons/datakul-icon-192.png", "sizes": "192x192" }] },
+    { "name": "Interview practice", "url": "/#interview", "icons": [{ "src": "icons/datakul-icon-192.png", "sizes": "192x192" }] },
+    { "name": "Exam prep", "url": "/#cert", "icons": [{ "src": "icons/datakul-icon-192.png", "sizes": "192x192" }] }
+  ]
+}
