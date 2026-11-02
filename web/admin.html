@@ -377,6 +377,7 @@ async function loadStatus() {
       <div class="stat"><b>${fmt(t.fallbacks)}</b><span>answered by a backup provider</span></div>
       <div class="stat"><b>${fmt(t.tokens)}</b><span>tokens in + out</span></div>
     </div>
+    ${s.users ? `<div class="st-sum" aria-label="Learner accounts"><div class="stat"><b>${s.users.enabled ? fmt(s.users.total) : "Off"}</b><span>${s.users.enabled ? "signed-up learners" : "sign-in is off (add GOOGLE_CLIENT_ID)"}</span></div>${s.users.enabled && !s.users.error ? `<div class="stat"><b>${fmt(s.users.active7)}</b><span>active in 7 days</span></div><div class="stat"><b>${fmt(s.users.joined7)}</b><span>joined in 7 days</span></div>` : ""}</div>${s.users.error ? `<p class="msg">${esc(s.users.error)}</p>` : ""}` : ""}
     <div class="st-sec"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2>Models</h2><span class="sp"></span><button class="btn quiet" type="button" id="checkAll">Check all now</button></div>
       <div class="st-wrap"><table class="st-table"><thead><tr><th>Model</th><th>Health</th><th>Requests today</th><th>Tokens today</th><th>Speed</th><th>Last answer</th><th></th></tr></thead><tbody>
       ${s.models.map((m, k) => `<tr>
