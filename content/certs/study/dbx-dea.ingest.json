@@ -1,0 +1,305 @@
+{
+ "cert": "dbx-dea",
+ "dom": "ingest",
+ "intro": "This section is 21% of the exam. It asks you to load data into Unity Catalog tables with the right Databricks tool, and to know what happens when files repeat, schemas drift, or the source is a database or an API. Work the solved problems with the answer hidden, then practise.",
+ "expects": [
+  "Describe batch, streaming and incremental ingestion, and load a local file.",
+  "Load new files incrementally into a Unity Catalog table with COPY INTO.",
+  "Run Auto Loader as a scheduled batch job, with schema enforcement and schema evolution.",
+  "Set up Lakeflow Connect to ingest from enterprise sources.",
+  "Pull from a database (JDBC or ODBC) or a REST API in a notebook that Lakeflow Jobs runs.",
+  "Choose between Auto Loader, Lakeflow Connect, partner connectors and other methods from volume, frequency, data type and governance.",
+  "Load JSON and other semi-structured data into Unity Catalog Delta tables."
+ ],
+ "ideas": [
+  {
+   "t": "Three layers, start at the top",
+   "b": "Databricks' own advice is to start with the most managed option that supports your source and move down only when it cannot do the job. Top: Lakeflow Connect managed connectors. Middle: Lakeflow pipelines (declarative). Bottom: Structured Streaming with Spark APIs, the most control and the most code."
+  },
+  {
+   "t": "Incremental means remembering",
+   "b": "To load only what is new, a tool must remember what it already loaded. Auto Loader remembers in its checkpoint, so a new or deleted checkpoint makes it forget and reload. COPY INTO keeps track of the files it loaded into the table. Managed database connectors read the source's change log."
+  },
+  {
+   "t": "Files: Auto Loader or COPY INTO",
+   "b": "The docs' rule of thumb: COPY INTO suits files in the thousands over time; Auto Loader suits millions or more, discovers files with fewer operations, and handles schema change better. COPY INTO is easier when you need to reload a subset of files. For SQL users loading from cloud storage, the docs now recommend CREATE STREAMING TABLE."
+  },
+  {
+   "t": "Three ways Auto Loader finds new files",
+   "b": "File events (preferred): Auto Loader reads a cache of storage events and does not list the folder each time; needs a Unity Catalog external location with file events turned on, and cloudFiles.useManagedFileEvents set to true. Classic file notification: its own queue per stream, a bit lower latency. Directory listing: simplest, fine for small folders and one-off backfills, the highest listing cost at scale."
+  },
+  {
+   "t": "Run style: availableNow",
+   "b": "trigger(availableNow=True) processes whatever is available, then stops, so you pay for compute only while it runs. Schedule it with a Lakeflow Job or start it with a file arrival trigger. Use a continuous trigger only when you need low latency; it costs more. Trigger.Once is deprecated, and serverless compute supports only availableNow."
+  },
+  {
+   "t": "Databases and APIs",
+   "b": "Managed database connectors (MySQL, PostgreSQL, SQL Server, Oracle) capture changes with CDC: a connection, an always-on ingestion gateway, a staging volume and an ingestion pipeline that fills streaming tables. With no connector, write a notebook that uses JDBC or a REST client, and run it as a Lakeflow Jobs task. If you do not need to copy the data at all, Lakehouse Federation queries it in place."
+  },
+  {
+   "t": "Semi-structured data",
+   "b": "A VARIANT column (JSON needs Databricks Runtime 15.3 or above) keeps a whole record flexible when its shape changes. Keep stable, frequently filtered fields as typed columns, because VARIANT cannot be a partition or clustering key. Images and PDFs load as binaryFile."
+  }
+ ],
+ "tables": [
+  {
+   "title": "Which tool? (our summary of the docs' guidance)",
+   "head": [
+    "Situation",
+    "Use",
+    "Why"
+   ],
+   "rows": [
+    [
+     "Millions of files in a folder or volume, growing fast",
+     "Auto Loader, with file events",
+     "Scales, cheap discovery, strong schema evolution"
+    ],
+    [
+     "Thousands of files, SQL-only team, scheduled",
+     "CREATE STREAMING TABLE (or COPY INTO)",
+     "Simple and incremental; the docs prefer streaming tables for SQL users"
+    ],
+    [
+     "Reload a few corrected files",
+     "COPY INTO with FILES and force",
+     "Idempotent by default; force switches that off"
+    ],
+    [
+     "One small file from a laptop, one time",
+     "File upload (Add data)",
+     "Up to 10 files, under 2 GB, no archives; not for repeat loads"
+    ],
+    [
+     "Salesforce, Workday and similar apps",
+     "Lakeflow Connect SaaS connector",
+     "Managed authentication, incremental reads, schema changes"
+    ],
+    [
+     "MySQL, PostgreSQL, SQL Server or Oracle with changes",
+     "Lakeflow Connect database connector (CDC)",
+     "Reads change logs; no custom code"
+    ],
+    [
+     "A database with no connector",
+     "JDBC in a notebook run by a Lakeflow Job",
+     "Full control; you handle increments and retries"
+    ],
+    [
+     "A REST API",
+     "Notebook lands raw JSON in a volume; Auto Loader loads it",
+     "Keeps API quirks away from transformations"
+    ],
+    [
+     "Kafka, Kinesis, Pub/Sub",
+     "Structured Streaming or pipeline streaming source",
+     "These are streaming sources, not file sources"
+    ]
+   ]
+  },
+  {
+   "title": "Auto Loader schema evolution modes (cloudFiles.schemaEvolutionMode)",
+   "head": [
+    "Mode",
+    "New column arrives",
+    "Notes"
+   ],
+   "rows": [
+    [
+     "addNewColumns",
+     "Stream stops once, saves the column, uses it after restart",
+     "Default when you give no schema"
+    ],
+    [
+     "addNewColumnsWithTypeWidening",
+     "Same, and widens types such as int to long",
+     "Public Preview on Runtime 16.4 and above"
+    ],
+    [
+     "rescue",
+     "Schema never changes, stream never stops; new data goes to _rescued_data",
+     "Safest for never losing data"
+    ],
+    [
+     "failOnNewColumns",
+     "Stream fails and stays down until you update the schema or remove the file",
+     "A strict contract"
+    ],
+    [
+     "none",
+     "New columns are ignored; the stream keeps running",
+     "Default when you give a schema; data is rescued only if rescuedDataColumn is set"
+    ]
+   ]
+  }
+ ],
+ "problems": [
+  {
+   "t": "Pick the tool for five sources",
+   "q": "A team must load: (a) about 3 million JSON files a day into cloud storage; (b) 3,000 CSV files a week into a volume, from a team that only writes SQL; (c) Salesforce accounts; (d) a SQL Server table that changes all day; (e) a partner's REST API with no Databricks connector. Choose a tool for each.",
+   "steps": [
+    "Start at the top layer: is there a managed connector for the source? (c) and (d) are both managed-connector sources.",
+    "(a) is a file source at very high volume. Auto Loader, preferably with file events, so it does not list a huge folder on every run.",
+    "(b) is a file source at modest volume and the team writes SQL. CREATE STREAMING TABLE over the volume is the docs' recommendation; COPY INTO also works at thousands of files.",
+    "(d) changes all day, so use the database connector (CDC): it reads the change log, so updates arrive without a custom pull.",
+    "(e) has no connector, so you build it: a notebook calls the API and writes raw JSON to a volume, and Auto Loader loads those files."
+   ],
+   "answer": "(a) Auto Loader with file events. (b) A streaming table, or COPY INTO. (c) Salesforce connector. (d) Database connector with CDC. (e) Notebook to a volume, then Auto Loader, run by a Lakeflow Job."
+  },
+  {
+   "t": "COPY INTO runs twice, and a file was corrected",
+   "q": "COPY INTO loaded 500 files yesterday. Today 20 new files arrived, and one of yesterday's files was corrected in place. What loads, and how do you reload the corrected file?",
+   "steps": [
+    "COPY INTO is idempotent: it skips files it has already loaded, even if the file was modified afterwards. So today only the 20 new files load, and the corrected file is skipped.",
+    "To reload on purpose, set the force copy option to true. That switches idempotency off for every file the command matches, so name the file with FILES (or narrow with PATTERN). Without that, all 520 files load again and create duplicates.",
+    "Force adds new rows; it does not remove the rows the old copy of that file produced. Delete those first, or load into a staging table and MERGE."
+   ],
+   "answer": "Only the 20 new files load. To reload the corrected one, run COPY INTO with FILES set to that file and COPY_OPTIONS force = true, after removing its old rows.",
+   "code": "COPY INTO main.sales.orders_bronze\nFROM '/Volumes/main/sales/landing/orders/'\nFILEFORMAT = JSON\nFILES = ('orders_2026-11-01.json')\nCOPY_OPTIONS ('force' = 'true');"
+  },
+  {
+   "t": "Auto Loader as a scheduled batch job",
+   "q": "JSON files land in /Volumes/main/sales/landing/orders/. Load only new files into main.sales.orders_bronze every hour, with no always-on cluster.",
+   "steps": [
+    "Read with the cloudFiles source and set cloudFiles.format. Set cloudFiles.schemaLocation so Auto Loader can store the inferred schema.",
+    "Write with a checkpointLocation. The checkpoint is how Auto Loader remembers which files it has processed: one checkpoint per stream, kept outside the source folder.",
+    "Add trigger(availableNow=True) so the run processes everything that has arrived and then stops.",
+    "Run it as a Lakeflow Job on an hourly schedule, or with a file arrival trigger so compute starts only when files land.",
+    "If a backlog is large, cloudFiles.maxFilesPerTrigger or maxBytesPerTrigger caps each micro-batch so batches stay a steady size."
+   ],
+   "answer": "A cloudFiles readStream with schemaLocation, written with a checkpoint and trigger(availableNow=True), scheduled as a Lakeflow Job. In a Lakeflow pipeline the pipeline manages the schema and checkpoint locations for you.",
+   "code": "(spark.readStream\n  .format(\"cloudFiles\")\n  .option(\"cloudFiles.format\", \"json\")\n  .option(\"cloudFiles.schemaLocation\", \"/Volumes/main/sales/meta/orders_schema\")\n  .load(\"/Volumes/main/sales/landing/orders/\")\n .writeStream\n  .option(\"checkpointLocation\", \"/Volumes/main/sales/meta/orders_chk\")\n  .trigger(availableNow=True)\n  .toTable(\"main.sales.orders_bronze\"))"
+  },
+  {
+   "t": "A new column arrives",
+   "q": "The stream above runs with default settings and no schema supplied. Today's files contain a new field, coupon_code. What happens, and what do you do?",
+   "steps": [
+    "With no schema supplied, the default mode is addNewColumns. Auto Loader notices the unknown field, adds coupon_code to the schema stored at the schema location, and stops the stream with an unknown-field error.",
+    "Nothing is broken. On the next start the stream uses the new schema and the new column is populated from then on; older rows hold NULL.",
+    "So run schema-evolving streams under a Lakeflow Job with retries: the first failure fixes the schema and the retry succeeds.",
+    "If you never want it to stop, use rescue: the schema stays fixed and the new field lands in _rescued_data. If a new field should be an incident, use failOnNewColumns."
+   ],
+   "answer": "The stream stops once after saving the new column and works after a restart, which a job retry does for you. Use rescue to avoid stopping, or failOnNewColumns to demand attention."
+  },
+  {
+   "t": "Bad values and the rescued data column",
+   "q": "You tell Auto Loader that amount is a DOUBLE, but some records contain \"N/A\". Where does the bad value go, and how do you look at it?",
+   "steps": [
+    "A schema hint types the column. By default JSON columns are inferred as strings, so a mismatch only appears once you hint or provide a type.",
+    "Values that do not fit go to the rescued data column, _rescued_data, as a JSON blob that also holds the source file path. The stream does not fail on a type mismatch.",
+    "Broken JSON structure is a different problem: that is a corrupt record, and the docs advise capturing it with columnNameOfCorruptRecord rather than badRecordsPath.",
+    "Query the blob with the colon path syntax and filter on rows where it is not NULL, then fix the source or reprocess."
+   ],
+   "answer": "Into _rescued_data, as JSON with the original value and the file path. Query it with colon paths and WHERE _rescued_data IS NOT NULL.",
+   "code": "# Python: type amount, keep everything else as inferred\n.option(\"cloudFiles.schemaHints\", \"amount DOUBLE\")\n\n-- SQL: look at what did not fit\nSELECT order_id, _rescued_data:amount AS raw_amount\nFROM main.sales.orders_bronze\nWHERE _rescued_data IS NOT NULL;"
+  },
+  {
+   "t": "Reading a database with JDBC, then only the changes",
+   "q": "Copy an 80-million-row orders table from a relational database into Delta every night, in parallel. Then change it to load only new and changed rows.",
+   "steps": [
+    "A plain JDBC read uses one connection. For a parallel read set partitionColumn (a numeric, date or timestamp column), lowerBound, upperBound and numPartitions. The bounds only decide how the range is cut into numPartitions queries; they do not filter, so rows outside the range are still read.",
+    "Keep numPartitions modest: each partition is a connection to a production database.",
+    "Never put credentials in the URL. Use the Unity Catalog JDBC connection, or read them with dbutils.secrets.get.",
+    "For increments, remember a watermark: the highest updated_at you loaded last time. Read rows above it, then MERGE into the target on the key so a rerun does not duplicate rows.",
+    "A watermark pull cannot see deleted rows. That is a reason to prefer a managed CDC connector when the source is supported."
+   ],
+   "answer": "A JDBC read with partitionColumn, bounds and numPartitions, credentials from secrets or a UC connection, then a watermark filter and MERGE for the increment.",
+   "code": "df = (spark.read.format(\"jdbc\")\n  .option(\"url\", dbutils.secrets.get(\"ingest\", \"orders_url\"))\n  .option(\"dbtable\", \"public.orders\")\n  .option(\"user\", dbutils.secrets.get(\"ingest\", \"orders_user\"))\n  .option(\"password\", dbutils.secrets.get(\"ingest\", \"orders_pw\"))\n  .option(\"partitionColumn\", \"order_id\")\n  .option(\"lowerBound\", \"1\").option(\"upperBound\", \"80000000\")\n  .option(\"numPartitions\", \"8\")\n  .load())"
+  },
+  {
+   "t": "Landing a REST API",
+   "q": "A partner API returns 100 records a page with a next_page token and allows 60 calls a minute. Land it every day.",
+   "steps": [
+    "The docs' decoupled pattern: a notebook or script, run as a scheduled Lakeflow Jobs task, calls the API and writes each response unchanged as JSON to a volume. A pipeline or Auto Loader then loads those files.",
+    "Why split it: API quirks (paging, rate limits, retries) stay in one small task, and Auto Loader's file tracking stops files being processed twice.",
+    "Follow next_page until it is empty. On a 429 reply wait and retry; cap the retries so a bad day fails the task instead of looping.",
+    "Read the token with dbutils.secrets.get, never from the notebook text.",
+    "Name files by run date and page number. A rerun then overwrites the same files instead of adding duplicates."
+   ],
+   "answer": "Job task: page through the API with retries, write raw JSON to a dated volume folder; Auto Loader loads that folder into a bronze table.",
+   "code": "import json, time, requests\ntoken = dbutils.secrets.get(\"partner\", \"api_token\")\nrun_date = \"2026-11-02\"  # passed in by the job\nurl, params, page = \"https://api.example.com/v1/invoices\", {\"page_size\": 100}, 0\nwhile True:\n    r = requests.get(url, headers={\"Authorization\": f\"Bearer {token}\"}, params=params, timeout=30)\n    if r.status_code == 429:\n        time.sleep(int(r.headers.get(\"Retry-After\", 10))); continue  # add a retry cap\n    r.raise_for_status()\n    body = r.json()\n    dbutils.fs.put(f\"/Volumes/main/sales/landing/invoices/{run_date}/page-{page:05d}.json\", json.dumps(body), True)\n    if not body.get(\"next_page\"): break\n    params[\"page_token\"], page = body[\"next_page\"], page + 1"
+  },
+  {
+   "t": "A managed database connector: parts, compute and cost",
+   "q": "A SQL Server orders table changes all day. The business wants it in Unity Catalog within the hour without code to maintain. Which parts are created, where do they run, and what is the cost catch?",
+   "steps": [
+    "A Unity Catalog connection stores the database credentials.",
+    "The ingestion gateway runs continuously on classic compute. It extracts the first snapshot, then the change logs and metadata, before the source can truncate its logs.",
+    "A staging volume, created with the gateway, holds the extracted data until it is applied. Staging data is purged after 30 days.",
+    "The ingestion pipeline runs on serverless compute, on the schedule you choose, and applies staged changes to streaming tables.",
+    "Cost catch: the gateway is billed while it runs, even when the pipeline is idle. Also size its compute for the first snapshot, which can fail if undersized."
+   ],
+   "answer": "Connection, gateway (classic, always on), staging volume, ingestion pipeline (serverless) writing streaming tables. You pay for the gateway even when the pipeline is idle. Check the connector page for how deletes and history are handled."
+  },
+  {
+   "t": "Semi-structured JSON: VARIANT, struct or string?",
+   "q": "Clickstream JSON has stable event_id, ts and user_id fields and a properties object whose keys change every week. Load it into a Unity Catalog table.",
+   "steps": [
+    "Option 1: the whole record in one VARIANT column (Auto Loader singleVariantColumn). Most flexible, but there is no schema evolution and no rescued data column, and a record over 16 MB counts as corrupt.",
+    "Option 2: type the stable fields and keep only the changing part as VARIANT. Declare the VARIANT column in cloudFiles.schemaHints.",
+    "Why option 2: typed columns filter faster, and a VARIANT column cannot be a partition, clustering or Z-order key. The docs say pulling frequently queried fields out of VARIANT speeds queries and improves storage layout.",
+    "A raw string with from_json only makes sense when you must keep the exact text; it parses on every read.",
+    "Query inside VARIANT with the colon path and cast with ::."
+   ],
+   "answer": "Typed event_id, ts and user_id plus properties as VARIANT, set through schemaHints; read fields with properties:campaign::string.",
+   "code": ".option(\"cloudFiles.schemaHints\", \"event_id STRING, ts TIMESTAMP, user_id STRING, properties VARIANT\")\n\nSELECT event_id, properties:campaign::string AS campaign\nFROM main.web.events_bronze\nWHERE ts >= current_date() - 7;"
+  }
+ ],
+ "mistakes": [
+  "Sharing one checkpoint across two sources, or moving a stream to a new checkpoint and being surprised that every file loads again.",
+  "Deleting the schema location and expecting the old schema history to survive.",
+  "Treating COPY INTO and Auto Loader as interchangeable at any scale. Thousands of files: either. Millions: Auto Loader.",
+  "Running force on COPY INTO without FILES or PATTERN, which reloads everything and duplicates rows.",
+  "Putting credentials in a JDBC URL, or in notebook text instead of secrets.",
+  "Applying a cloud lifecycle policy to a checkpoint folder. Deleting checkpoint files corrupts the stream.",
+  "Ingesting everything as VARIANT and then querying it as if it were typed columns."
+ ],
+ "links": [
+  {
+   "u": "https://docs.databricks.com/aws/en/ingestion/",
+   "t": "Choose a standard connector",
+   "why": "The docs' own layers: managed, pipelines, Structured Streaming. Read the table of sources."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/",
+   "t": "Ingest data from cloud object storage",
+   "why": "Where the docs compare Auto Loader and COPY INTO by scale."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/schema",
+   "t": "Auto Loader schema inference and evolution",
+   "why": "The five evolution modes, the rescued data column and schema hints."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/file-events-explained",
+   "t": "Auto Loader with file events",
+   "why": "How file events replace listing, and when a full listing still happens."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/sql/language-manual/delta-copy-into",
+   "t": "COPY INTO reference",
+   "why": "Exact options: FILES, PATTERN, force, mergeSchema."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/cdc-overview",
+   "t": "Managed database connectors",
+   "why": "The gateway, staging volume and ingestion pipeline, and what each costs."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/connect/jdbc-connection",
+   "t": "JDBC connection",
+   "why": "Unity Catalog JDBC connections and pushdown. Read the part on credentials."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/ldp/api-ingestion",
+   "t": "Ingest data from an API in pipelines",
+   "why": "The three patterns, including the decoupled one used above."
+  },
+  {
+   "u": "https://docs.databricks.com/aws/en/ingestion/variant",
+   "t": "Ingest data as VARIANT",
+   "why": "Runtime requirements, limits and the Auto Loader option."
+  }
+ ],
+ "checked": "Checked against the exam guide of 6 August 2026 and the Databricks docs (AWS) on 2 November 2026. Where a detail was not confirmed on a docs page, check it in a free Databricks workspace."
+}

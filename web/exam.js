@@ -7,7 +7,7 @@
 const CS = Object.assign({ date: {}, att: [], mocks: [] }, store.get("cert", {}));
 const csSave = () => { CS.att = CS.att.slice(-3000); CS.mocks = CS.mocks.slice(-30); store.set("cert", CS); };
 let certId = (typeof CERTS !== "undefined" && CERTS[0] && CERTS[0].id) || null;
-let sess = null, timerT = null;
+let sess = null, timerT = null, cStudy = null; // cStudy: id of the section whose study chapter is open
 const certOf = () => CERTS.find((c) => c.id === certId);
 const qById = (c, id) => c.questions.find((q) => q.id === id);
 const domOf = (c, id) => c.domains.find((d) => d.id === id);
@@ -96,7 +96,7 @@ function pickMock(c) {
 
 /* ---------- sessions ---------- */
 function startSession(mode, dom) {
-  const c = certOf();
+  const c = certOf(); cStudy = null;
   const ids = mode === "mock" ? pickMock(c) : mode === "diag" ? pickDiag(c) : pickPractice(c, dom, 10);
   sess = { mode, dom, ids, k: 0, picks: {}, checked: {}, order: Object.fromEntries(ids.map((id) => [id, shuffle(qById(c, id).opts.map((_, i) => i))])), start: Date.now() };
   if (mode === "mock") { sess.secs = Math.round((c.minutes * 60 * ids.length) / c.scored); startTimer(); }
@@ -143,6 +143,7 @@ function renderCert() {
   const host = $("#certBoard");
   if (!host) return;
   if (typeof CERTS === "undefined" || !CERTS.length) { host.innerHTML = `<p class="muted">No certifications yet.</p>`; return; }
+  if (cStudy && !sess) { const d = domOf(certOf(), cStudy); if (d && d.study) { host.innerHTML = certStudyHTML(certOf(), d); return; } cStudy = null; }
   if (sess && !sess.done) { host.innerHTML = certQuestionHTML(); return; }
   if (sess && sess.done) { host.innerHTML = certResultHTML(); return; }
   host.innerHTML = certHomeHTML();
@@ -166,8 +167,27 @@ function certHomeHTML() {
       <div class="acts">${!started ? `<button class="btn" type="button" data-cstart="diag">Start the diagnostic (${c.domains.length * 2} questions)</button>` : f ? `<button class="btn" type="button" data-cstart="practice" data-cdom="${f.id}">Practise ${esc(f.name)}</button>` : ""}<button class="btn ${started ? "" : "quiet"}" type="button" data-cstart="mock">Take a mock exam (${Math.min(c.scored, c.questions.length)} questions, ${Math.round((c.minutes * Math.min(c.scored, c.questions.length)) / c.scored)} min)</button></div></div>
     <div class="card"><div class="sech" style="margin:0"><h3>Readiness by exam section</h3><span class="muted">${ov.all ? "Ready to book" : `${ov.ready} of ${rd.length} ready`}</span></div>
       <p class="muted" style="font-size:13.5px">A section is ready when you've answered at least ${READY_N} of its questions recently and got ${READY_ACC}% or more of your last ${WINDOW} right. Book the exam when every section is ready.</p>
-      <div class="crd">${rd.map((r) => `<div class="crow"><div class="cname"><b>${esc(r.name)}</b><small>${r.w}% of the exam · ${r.n ? `${r.acc}% of your last ${r.n}` : "not started"}</small></div><div class="cbar ${r.status}" role="img" aria-label="${r.n ? r.acc + "% correct" : "not started"}"><i style="width:${r.n ? r.acc : 0}%"></i><em style="left:${READY_ACC}%"></em></div><span class="cst ${r.status}">${{ new: "Not started", building: "Building", ready: "Ready" }[r.status]}</span><button class="ghostlink" type="button" data-cstart="practice" data-cdom="${r.id}">Practise</button></div>`).join("")}</div></div>
+      <div class="crd">${rd.map((r) => `<div class="crow"><div class="cname"><b>${esc(r.name)}</b><small>${r.w}% of the exam · ${r.n ? `${r.acc}% of your last ${r.n}` : "not started"}</small></div><div class="cbar ${r.status}" role="img" aria-label="${r.n ? r.acc + "% correct" : "not started"}"><i style="width:${r.n ? r.acc : 0}%"></i><em style="left:${READY_ACC}%"></em></div><span class="cst ${r.status}">${{ new: "Not started", building: "Building", ready: "Ready" }[r.status]}</span><span class="cbtns">${r.study ? `<button class="ghostlink" type="button" data-cstudy="${r.id}">Study</button>` : ""}<button class="ghostlink" type="button" data-cstart="practice" data-cdom="${r.id}">Practise</button></span></div>`).join("")}</div></div>
     ${mocks.length ? `<div class="card"><div class="sech" style="margin:0"><h3>Your mock exams</h3><span class="muted">aim for 80% or more</span></div><ul class="cmocks">${mocks.map((m) => `<li><b>${m.pct}%</b><span>${m.ok} of ${m.n} right · ${fmtTime(m.secs)} · ${new Date(m.t).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span></li>`).join("")}</ul><p class="muted" style="font-size:12.5px">Databricks doesn't publish a pass mark. 80% in mocks is Datakul's suggested safety margin, not an official figure.</p></div>` : ""}
+  </div>`;
+}
+/* ---------- study chapters: Schaum-style notes per exam section (content/certs/study/*.json) ---------- */
+const cLink = (l) => `<a href="${esc(l.u)}" target="_blank" rel="noopener">${esc(l.t)}</a>`;
+const cMore = (q) => (q.more ? `<p class="cmore">Read more: ${cLink(q.more)} <span class="muted">(Databricks docs)</span></p>` : "");
+function certStudyHTML(c, d) {
+  const s = d.study, mine = c.questions.filter((q) => q.d === d.id).length;
+  const tbl = (t) => `<div class="stbl"><h4>${esc(t.title)}</h4><div class="swrap"><table><thead><tr>${t.head.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${t.rows.map((r) => `<tr>${r.map((x) => `<td>${esc(x)}</td>`).join("")}</tr>`).join("")}</tbody></table></div></div>`;
+  return `<div class="certwrap study">
+    <div class="card"><div class="cqtop"><span class="eyebrow">Study · ${esc(c.short)} · ${d.w}% of the exam</span><button class="ghostlink" type="button" data-cstudyx>Back</button></div>
+      <h1>${esc(d.name)}</h1><p>${esc(s.intro)}</p>
+      <div class="acts"><button class="btn" type="button" data-cstart="practice" data-cdom="${d.id}">Practise this section (${mine} questions)</button></div></div>
+    <div class="card"><h3>What the exam expects</h3><ul class="sul">${s.expects.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>
+    <div class="card"><h3>Key ideas</h3>${s.ideas.map((i) => `<div class="sidea"><b>${esc(i.t)}</b><p>${esc(i.b)}</p></div>`).join("")}${(s.tables || []).map(tbl).join("")}</div>
+    <div class="card"><h3>Solved problems</h3><p class="muted" style="font-size:13.5px">Try each one first, then open the working.</p>
+      ${s.problems.map((p, i) => `<details class="sprob"><summary><span class="snum">${i + 1}</span><span><b>${esc(p.t)}</b><em>${esc(p.q)}</em></span>${CHEV}</summary><div class="db"><ol>${p.steps.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>${p.code ? `<pre class="ccode"><code>${esc(p.code)}</code></pre>` : ""}<p class="sans"><b>Answer.</b> ${esc(p.answer)}</p></div></details>`).join("")}</div>
+    <div class="card"><h3>Mistakes to avoid</h3><ul class="sul">${s.mistakes.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>
+    <div class="card"><h3>Read more in the Databricks docs</h3><ul class="slinks">${s.links.map((l) => `<li>${cLink(l)}<span class="muted">${esc(l.why)}</span></li>`).join("")}</ul><p class="muted" style="font-size:12.5px">${esc(s.checked)} ${esc(c.disclaimer)}</p>
+      <div class="acts"><button class="btn" type="button" data-cstart="practice" data-cdom="${d.id}">Practise this section</button><button class="btn quiet" type="button" data-cstudyx>Back to certifications</button></div></div>
   </div>`;
 }
 function certQuestionHTML() {
@@ -180,7 +200,7 @@ function certQuestionHTML() {
     return `<label class="copt${cls}"><input type="${multi ? "checkbox" : "radio"}" name="cq" value="${oi}" ${on ? "checked" : ""} ${checked ? "disabled" : ""}><span>${esc(q.opts[oi])}</span>${checked && right ? '<b class="cmark">✓</b>' : checked && on ? '<b class="cmark">✗</b>' : ""}</label>`;
   }).join("");
   const answered = sess.ids.filter((x) => (sess.picks[x] || []).length).length;
-  const fb = checked ? `<div class="cfb ${sameAns(pick, q.ans) ? "ok" : "no"}"><b>${sameAns(pick, q.ans) ? "Correct." : "Not quite."}</b><p>${esc(q.why)}</p>${q.ai ? `<small class="muted">AI-written, checked automatically.</small>` : ""}</div>` : "";
+  const fb = checked ? `<div class="cfb ${sameAns(pick, q.ans) ? "ok" : "no"}"><b>${sameAns(pick, q.ans) ? "Correct." : "Not quite."}</b><p>${esc(q.why)}</p>${q.ai ? `<small class="muted">AI-written, checked automatically.</small>` : ""}${sameAns(pick, q.ans) ? "" : cMore(q)}</div>` : "";
   const nav = mock
     ? `<button class="btn quiet" type="button" data-cnav="-1" ${sess.k === 0 ? "disabled" : ""}>Back</button>${sess.k < sess.ids.length - 1 ? `<button class="btn" type="button" data-cnav="1">Next</button>` : ""}<button class="btn ${sess.k === sess.ids.length - 1 ? "" : "quiet"}" type="button" data-csubmit>Submit exam</button>`
     : checked ? `<button class="btn" type="button" data-cnext>${sess.k < sess.ids.length - 1 ? "Next question" : "See results"}</button>` : `<button class="btn" type="button" data-ccheck ${pick.length ? "" : "disabled"}>Check</button>`;
@@ -201,7 +221,7 @@ function certResultHTML() {
   const rd = readiness(c), f = focusDomain(rd);
   const review = sess.ids.map((id, i) => {
     const q = qById(c, id), pick = sess.picks[id] || [], ok = sameAns(pick, q.ans);
-    return `<details class="crev ${ok ? "ok" : "no"}"><summary><b class="cmark">${ok ? "✓" : "✗"}</b><span>${i + 1}. ${esc(q.q)}</span>${CHEV}</summary><div class="db">${q.code ? `<pre class="ccode"><code>${esc(q.code)}</code></pre>` : ""}<ul class="crevopts">${q.opts.map((o, oi) => `<li class="${q.ans.includes(oi) ? "right" : pick.includes(oi) ? "wrong" : ""}">${q.ans.includes(oi) ? "✓ " : pick.includes(oi) ? "✗ " : ""}${esc(o)}</li>`).join("")}</ul><p>${esc(q.why)}</p><small class="muted">${esc(domOf(c, q.d).name)}</small></div></details>`;
+    return `<details class="crev ${ok ? "ok" : "no"}"><summary><b class="cmark">${ok ? "✓" : "✗"}</b><span>${i + 1}. ${esc(q.q)}</span>${CHEV}</summary><div class="db">${q.code ? `<pre class="ccode"><code>${esc(q.code)}</code></pre>` : ""}<ul class="crevopts">${q.opts.map((o, oi) => `<li class="${q.ans.includes(oi) ? "right" : pick.includes(oi) ? "wrong" : ""}">${q.ans.includes(oi) ? "✓ " : pick.includes(oi) ? "✗ " : ""}${esc(o)}</li>`).join("")}</ul><p>${esc(q.why)}</p>${ok ? "" : cMore(q)}<small class="muted">${esc(domOf(c, q.d).name)}</small></div></details>`;
   }).join("");
   return `<div class="certwrap"><div class="card cres">
     <span class="eyebrow">${mock ? "Mock exam result" : sess.mode === "diag" ? "Diagnostic result" : "Practice result"}${sess.timeUp ? " · time ran out" : ""}</span>
@@ -225,9 +245,11 @@ document.addEventListener("change", (e) => {
   }
 });
 document.addEventListener("click", (e) => {
-  const t = e.target.closest("[data-cstart],[data-ccheck],[data-cnext],[data-cnav],[data-cgo],[data-csubmit],[data-cquit],[data-chome]");
+  const t = e.target.closest("[data-cstudy],[data-cstudyx],[data-cstart],[data-ccheck],[data-cnext],[data-cnav],[data-cgo],[data-csubmit],[data-cquit],[data-chome]");
   if (!t || !t.closest("#certBoard")) return;
   const c = certOf();
+  if (t.dataset.cstudy) { cStudy = t.dataset.cstudy; renderCert(); window.scrollTo({ top: 0 }); return; }
+  if (t.hasAttribute("data-cstudyx")) { cStudy = null; renderCert(); window.scrollTo({ top: 0 }); return; }
   if (t.dataset.cstart) { startSession(t.dataset.cstart, t.dataset.cdom); return; }
   if (t.hasAttribute("data-ccheck")) {
     const id = sess.ids[sess.k], q = qById(c, id);

@@ -199,7 +199,11 @@
    "ans": [
     1
    ],
-   "why": "Directory listing works well for modest folders but has to list storage to find new files. File notification mode subscribes to cloud storage events, so it scales to huge numbers of files without repeated listing."
+   "why": "Directory listing works well for modest folders but has to list storage to find new files. File notification mode (and the newer file events, which the docs prefer) reads storage events, so it scales to huge numbers of files without repeated listing.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/file-events-explained",
+    "t": "Auto Loader with file events"
+   }
   },
   {
    "id": "dbx-016",
@@ -229,11 +233,15 @@
    "ans": [
     0
    ],
-   "why": "When no connector exists, a notebook using a REST or JDBC client can fetch data and write it to a Delta table, orchestrated by Lakeflow Jobs for scheduling and retries. Auto Loader and COPY INTO read files from storage, not APIs."
+   "why": "When no connector exists, a notebook using a REST or JDBC client can fetch data and write it to a Delta table, orchestrated by Lakeflow Jobs for scheduling and retries. Auto Loader and COPY INTO read files from storage, not APIs. The docs also describe a decoupled pattern: the notebook writes raw JSON to a volume and Auto Loader loads it.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/ldp/api-ingestion",
+    "t": "Ingest data from an API in pipelines"
+   }
   },
   {
    "id": "dbx-018",
-   "d": "ingest",
+   "d": "transform",
    "q": "A JSON column holds an array of line items per order. You need one row per line item in a silver table. Which function do you use?",
    "opts": [
     "explode",
@@ -262,6 +270,102 @@
     1
    ],
    "why": "Volumes are Unity Catalog objects for files, governed with the same permissions as tables, and both COPY INTO and Auto Loader can read from volume paths such as /Volumes/catalog/schema/volume/. Spark reads volume files like any other path."
+  },
+  {
+   "id": "dbx-117",
+   "d": "ingest",
+   "q": "COPY INTO loaded a folder yesterday. Today one of yesterday's files was corrected in place and 20 new files arrived. Without any options, what does COPY INTO load?",
+   "opts": [
+    "Only the 20 new files; the corrected file is skipped because it was already loaded",
+    "All files in the folder again",
+    "The 20 new files and the corrected file",
+    "Nothing, because the folder has already been loaded"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "COPY INTO is idempotent: it skips files it has already loaded, even when the file was changed afterwards. To reload on purpose, set the force copy option and name the files with FILES or PATTERN, otherwise every matching file is loaded again.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/sql/language-manual/delta-copy-into",
+    "t": "COPY INTO reference"
+   }
+  },
+  {
+   "id": "dbx-118",
+   "d": "ingest",
+   "q": "An Auto Loader stream has no schema supplied and the default schema evolution mode. Today's files contain a new field. What happens?",
+   "opts": [
+    "The stream stops once, saves the new column to the schema location, and uses it after a restart",
+    "The new field is silently ignored forever",
+    "All existing rows are rewritten with the new column immediately",
+    "The stream keeps running and the field is dropped"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "The default with no schema is addNewColumns: the stream fails with an unknown-field error after updating the stored schema, and the restart picks the new column up. Run it under a job with retries. Use rescue to never stop, or failOnNewColumns to demand attention.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/schema",
+    "t": "Auto Loader schema inference and evolution"
+   }
+  },
+  {
+   "id": "dbx-119",
+   "d": "ingest",
+   "q": "Auto Loader is given amount as a DOUBLE, but a record contains the text \"N/A\". Where does the value go?",
+   "opts": [
+    "Into the _rescued_data column, with the source file path",
+    "The stream fails and nothing more loads",
+    "It is turned into 0.0",
+    "It is written to a hidden error table you must create"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "Values that do not match the schema are kept in the rescued data column as JSON with the file path, so nothing is lost and the stream keeps running. Query it with a colon path where _rescued_data IS NOT NULL.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/schema",
+    "t": "Auto Loader schema inference and evolution"
+   }
+  },
+  {
+   "id": "dbx-120",
+   "d": "ingest",
+   "q": "Which statements about Lakeflow Connect managed database connectors are true? (Choose two.)",
+   "opts": [
+    "The ingestion gateway runs continuously on classic compute and is billed while it runs",
+    "The ingestion pipeline can run on a schedule on serverless compute",
+    "Both the gateway and the pipeline must run on a single-user all-purpose cluster",
+    "They read the source tables by running a full copy on every update"
+   ],
+   "ans": [
+    0,
+    1
+   ],
+   "why": "A managed database connector has a gateway that stays on to capture changes and a pipeline that applies them on a schedule, so the gateway is the cost to watch. It reads change logs rather than copying whole tables each time.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/cdc-overview",
+    "t": "Managed database connectors"
+   }
+  },
+  {
+   "id": "dbx-121",
+   "d": "ingest",
+   "q": "Clickstream JSON has stable event_id and ts fields and a properties object whose keys change weekly. How should it be loaded for fast filtering on event_id and ts?",
+   "opts": [
+    "Type event_id and ts as columns and keep properties as a VARIANT column",
+    "Store the whole record as one VARIANT column and partition by a field inside it",
+    "Store everything as one string and parse it on every query",
+    "Drop properties, since it changes"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "Typed columns filter faster, and VARIANT cannot be used as a partition or clustering key. Keeping only the changing part as VARIANT stays flexible. Declare it through cloudFiles.schemaHints.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/ingestion/variant",
+    "t": "Ingest data as VARIANT"
+   }
   },
   {
    "id": "dbx-030",
