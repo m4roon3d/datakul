@@ -9,6 +9,31 @@ const store = {
   set(k, v) { try { localStorage.setItem("dp_" + k, JSON.stringify(v)); } catch (e) {} },
 };
 const act = (o) => `data-act='${esc(JSON.stringify(o))}'`;
+
+/* ---------- motion: compass loader, card-to-lesson morph, haptics (all off when the device asks for reduced motion) ---------- */
+const calm = () => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } };
+function compassLoader(label, id) {
+  return `<span class="cloader" role="status"${id ? ` id="${id}"` : ""}><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="36" fill="none" stroke="var(--accent)" stroke-width="8"/><path d="M50 4v10M50 86v10M4 50h10M86 50h10" stroke="var(--accent)" stroke-width="8" stroke-linecap="round"/><g class="cneedle"><path d="M50 18L61 50H39Z" fill="var(--flame)"/><path d="M50 82L61 50H39Z" fill="var(--muted)"/></g><circle cx="50" cy="50" r="5.5" fill="var(--surface)"/></svg><span class="cl-t">${esc(label)}</span></span>`;
+}
+function buzz(pattern) { try { if (!calm() && navigator.vibrate) navigator.vibrate(pattern); } catch (e) {} }
+// A tapped card grows into the lesson it opens (View Transitions API). Browsers without it, or reduced motion, just switch.
+function morph(from, run) {
+  if (!document.startViewTransition || calm()) return run();
+  const card = from && (from.closest(".card, .pn, .sq, .citem") || from);
+  const before = thread.querySelectorAll(".ans").length;
+  if (card) card.style.viewTransitionName = "dk-lesson";
+  document.documentElement.classList.add("vt");
+  let vt;
+  try {
+    vt = document.startViewTransition(() => {
+      if (card) card.style.viewTransitionName = "";
+      run();
+      const all = thread.querySelectorAll(".ans"), t = all[all.length - 1];
+      if (card && t && all.length > before && !t.closest("[hidden]")) t.style.viewTransitionName = "dk-lesson";
+    });
+  } catch (e) { document.documentElement.classList.remove("vt"); if (card) card.style.viewTransitionName = ""; return run(); }
+  vt.finished.finally(() => { document.documentElement.classList.remove("vt"); thread.querySelectorAll(".ans").forEach((a) => (a.style.viewTransitionName = "")); });
+}
 const CHEV = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>`;
 const ARR = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
 const GW = ((window.DATAKUL_CONFIG && window.DATAKUL_CONFIG.gatewayUrl) || "").replace(/\/+$/, "");
@@ -282,7 +307,7 @@ function addMsg(who, html, cls) {
   d.className = "msg " + who + (cls ? " " + cls : "");
   d.innerHTML = html;
   thread.appendChild(d);
-  if (who === "bot") requestAnimationFrame(() => { const prev = d.previousElementSibling; (prev || d).scrollIntoView({ behavior: "smooth", block: "start" }); });
+  if (who === "bot") { const go = () => { const prev = d.previousElementSibling; (prev || d).scrollIntoView({ behavior: document.documentElement.classList.contains("vt") ? "instant" : "smooth", block: "start" }); }; if (document.documentElement.classList.contains("vt")) go(); else requestAnimationFrame(go); }
   return d;
 }
 let scSeq = 0;
@@ -328,7 +353,7 @@ async function aiResolve(text) {
   if (hits.length < 2) (await semanticSearch(text)).filter((x) => x.s >= 0.62 && !hits.includes(x.c)).slice(0, 2 - hits.length).forEach((x) => hits.push(x.c));
   let ctx = hits.slice();
   if (!ctx.length && lastConcept) ctx = [lastConcept];
-  const el = addMsg("bot", `<article class="ans"><div class="src">${ctx.length ? `Grounded in ${ctx.map((c) => `<span class="srcchip">${esc(c.title)}</span>`).join("")}` : `<span>No library match, so the answer will be flagged</span>`}</div><div class="md cursor"><p class="muted">Thinking…</p></div><div class="foot2"></div></article>`);
+  const el = addMsg("bot", `<article class="ans"><div class="src">${ctx.length ? `Grounded in ${ctx.map((c) => `<span class="srcchip">${esc(c.title)}</span>`).join("")}` : `<span>No library match, so the answer will be flagged</span>`}</div><div class="md cursor">${compassLoader("Thinking…")}</div><div class="foot2"></div></article>`);
   const body = el.querySelector(".md"), foot = el.querySelector(".foot2");
   const payload = {
     mode: "tutor", provider: engine.provider, model: engine.model, level: level || "work", detail,
@@ -388,7 +413,12 @@ function onAct(o) {
   else if (o.a === "problem" && typeof openProblem === "function") openProblem(o.id);
   else if (typeof questAct === "function") questAct(o);
 }
-document.addEventListener("click", (e) => { const b = e.target.closest("[data-act]"); if (b) onAct(JSON.parse(b.dataset.act)); });
+const MORPHS = ["concept", "qgo", "qstep"];
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const o = JSON.parse(b.dataset.act);
+  if (MORPHS.includes(o.a)) morph(b, () => onAct(o)); else onAct(o);
+});
 $("#askForm").addEventListener("submit", (e) => { e.preventDefault(); const v = $("#askInput").value.trim(); if (!v || busy) return; $("#askInput").value = ""; showView("tutor"); ask(v); });
 $("#lvl").addEventListener("change", (e) => { level = e.target.value; store.set("level", level); });
 $("#len").addEventListener("change", (e) => setDetail(e.target.value));
@@ -509,7 +539,7 @@ async function teachAI(i, ask, host) {
   const h = (teachHist[i] = teachHist[i] || []);
   const box = document.createElement("div");
   box.className = "aifb";
-  box.innerHTML = `<span class="eyebrow">AI tutor</span><div class="md cursor"><p class="muted">Thinking…</p></div><p class="muted foot3" style="font-size:12.5px"></p>`;
+  box.innerHTML = `<span class="eyebrow">AI tutor</span><div class="md cursor">${compassLoader("Thinking…")}</div><p class="muted foot3" style="font-size:12.5px"></p>`;
   host.appendChild(box);
   const body = box.querySelector(".md");
   try {
@@ -557,7 +587,7 @@ document.addEventListener("submit", (e) => {
 async function aiFeedback(i, answerText, hostEl, btn) {
   const q = Q[i];
   btn.disabled = true;
-  hostEl.innerHTML = `<div class="aifb"><span class="eyebrow">AI interviewer</span><div class="md cursor"><p class="muted">Reading your answer…</p></div><p class="muted foot3" style="font-size:12.5px"></p></div>`;
+  hostEl.innerHTML = `<div class="aifb"><span class="eyebrow">AI interviewer</span><div class="md cursor">${compassLoader("Reading your answer…")}</div><p class="muted foot3" style="font-size:12.5px"></p></div>`;
   const body = hostEl.querySelector(".md");
   try {
     const out = await streamChat({ mode: "feedback", detail, provider: engine.provider, model: engine.model, role: RN[F.role.value], levelLabel: LVN[F.level.value], question: q.q, points: q.p.map((p) => p.t), answer: answerText }, (t) => { body.innerHTML = md(t); });
@@ -724,7 +754,7 @@ document.addEventListener("click", async (e) => {
   }
   if (ans.split(/\s+/).filter(Boolean).length < 3) { host.innerHTML = `<p class="muted">Write your answer first, even a rough one.</p>`; return; }
   b.disabled = true;
-  host.innerHTML = `<div class="aifb"><span class="eyebrow">Tutor</span><div class="md cursor"><p class="muted">Reading your answer…</p></div><p class="muted foot3" style="font-size:12.5px"></p></div>`;
+  host.innerHTML = `<div class="aifb"><span class="eyebrow">Tutor</span><div class="md cursor">${compassLoader("Reading your answer…")}</div><p class="muted foot3" style="font-size:12.5px"></p></div>`;
   const body = host.querySelector(".md");
   try {
     const out = await streamChat({ mode: "selfcheck", detail, provider: engine.provider, model: engine.model, level: level || "work",
