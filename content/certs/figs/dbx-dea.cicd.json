@@ -1,0 +1,154 @@
+{
+ "map": {
+  "k": "cols",
+  "n": [
+   [
+    "Git folders",
+    "code in Git"
+   ],
+   [
+    "Bundles",
+    "the project as code"
+   ],
+   [
+    "Targets",
+    "dev, test, prod"
+   ],
+   [
+    "CLI",
+    "validate, deploy, run"
+   ]
+  ]
+ },
+ "ideas": {
+  "Git folders: Git inside the workspace": {
+   "k": "flow",
+   "n": [
+    [
+     "Branch"
+    ],
+    [
+     "Commit & Push",
+     "message required"
+    ],
+    [
+     "Pull request",
+     "in your Git provider",
+     "hi"
+    ],
+    [
+     "Pull",
+     "back in the workspace",
+     "end"
+    ]
+   ]
+  },
+  "A bundle is the project as code": {
+   "k": "tree",
+   "n": [
+    [
+     0,
+     "Bundle root"
+    ],
+    [
+     1,
+     "databricks.yml",
+     "bundle name and targets",
+     "hi"
+    ],
+    [
+     1,
+     "Resource files",
+     "jobs, pipelines, dashboards"
+    ],
+    [
+     1,
+     "Source files",
+     "notebooks, Python, SQL"
+    ]
+   ],
+   "cap": "Deployed as one unit: prod runs what was reviewed."
+  },
+  "Targets are environments": {
+   "k": "vs",
+   "a": [
+    "mode: development",
+    "[dev your_name] prefix",
+    "Schedules and triggers paused",
+    "Each developer's own copy"
+   ],
+   "b": [
+    "mode: production",
+    "run_as and permissions checked",
+    "No cluster overrides",
+    "Can require a Git branch"
+   ]
+  },
+  "Variables and overrides": {
+   "k": "layers",
+   "n": [
+    [
+     "--var or BUNDLE_VAR_",
+     "wins"
+    ],
+    [
+     "Target value",
+     "per environment"
+    ],
+    [
+     "Default",
+     "in databricks.yml"
+    ]
+   ],
+   "cap": "Top wins."
+  },
+  "The CLI lifecycle": {
+   "k": "flow",
+   "n": [
+    [
+     "init"
+    ],
+    [
+     "validate"
+    ],
+    [
+     "plan"
+    ],
+    [
+     "deploy",
+     "",
+     "hi"
+    ],
+    [
+     "run",
+     "",
+     "end"
+    ]
+   ],
+   "cap": "summary lists what is deployed; destroy removes it. Every command takes -t."
+  },
+  "CI/CD flow": {
+   "k": "flow",
+   "n": [
+    [
+     "Dev",
+     "own dev target"
+    ],
+    [
+     "Pull request",
+     "tests + bundle validate",
+     "hi"
+    ],
+    [
+     "Merge to main",
+     "CI runs deploy -t prod"
+    ],
+    [
+     "Prod",
+     "runs as a service principal",
+     "end"
+    ]
+   ]
+  }
+ }
+}

@@ -1,0 +1,217 @@
+{
+ "map": {
+  "k": "flow",
+  "n": [
+   [
+    "Trigger",
+    "time or data"
+   ],
+   [
+    "Task graph",
+    "Depends on"
+   ],
+   [
+    "Control flow",
+    "Run if, If/else, For each",
+    "hi"
+   ],
+   [
+    "Recover",
+    "retries, repair",
+    "end"
+   ]
+  ]
+ },
+ "ideas": {
+  "A job is a graph of tasks": {
+   "k": "dag",
+   "n": [
+    [
+     [
+      "Ingest",
+      "notebook"
+     ]
+    ],
+    [
+     [
+      "Clean",
+      "pipeline"
+     ],
+     [
+      "Validate",
+      "notebook"
+     ]
+    ],
+    [
+     [
+      "Refresh",
+      "dashboard",
+      "end"
+     ]
+    ]
+   ],
+   "cap": "Example. Clean and Validate run in parallel; Refresh waits for both."
+  },
+  "Pick the task type for the step": {
+   "k": "cols",
+   "n": [
+    [
+     "Notebook",
+     "runs a notebook"
+    ],
+    [
+     "SQL",
+     "query, .sql file or alert"
+    ],
+    [
+     "Dashboard",
+     "refresh, email a snapshot"
+    ],
+    [
+     "Pipeline",
+     "one update"
+    ],
+    [
+     "Run Job",
+     "starts another job"
+    ]
+   ]
+  },
+  "Run if: when a task starts": {
+   "k": "table",
+   "cap": "Example: a task after Load A and Load B",
+   "cols": [
+    "Load A",
+    "Load B",
+    "All succeeded",
+    "All done",
+    "At least one failed"
+   ],
+   "rows": [
+    [
+     "✓",
+     "✓",
+     "runs",
+     "runs",
+     "Excluded"
+    ],
+    [
+     "✓",
+     "✗",
+     "Upstream failed",
+     "runs",
+     "runs"
+    ]
+   ],
+   "hi": [
+    1
+   ]
+  },
+  "Retries, timeouts and repairs": {
+   "k": "line",
+   "n": [
+    [
+     "Try 1",
+     "fails: network error"
+    ],
+    [
+     "Wait",
+     "retry interval"
+    ],
+    [
+     "Try 2",
+     "timeout applies again",
+     "hi"
+    ],
+    [
+     "Repair",
+     "reruns failed + downstream",
+     "end"
+    ]
+   ],
+   "cap": "Retries are off by default (max_retries 0)."
+  },
+  "Passing values between tasks": {
+   "k": "flow",
+   "n": [
+    [
+     "validate",
+     "taskValues.set('bad_rows', 12)",
+     "hi"
+    ],
+    [
+     "report",
+     "{{tasks.validate.values.bad_rows}}",
+     "end"
+    ]
+   ],
+   "cap": "JSON-serialisable, at most 48 KiB."
+  },
+  "If/else and For each": {
+   "k": "table",
+   "cap": "If/else comparisons",
+   "cols": [
+    "condition",
+    "compares as",
+    "result"
+   ],
+   "rows": [
+    [
+     "12.0 == 12",
+     "text",
+     "false"
+    ],
+    [
+     "12.0 >= 12",
+     "numbers",
+     "true"
+    ]
+   ],
+   "hi": [
+    0
+   ]
+  },
+  "Triggers: time or data": {
+   "k": "cols",
+   "n": [
+    [
+     "Schedule",
+     "fixed times"
+    ],
+    [
+     "File arrival",
+     "checks about once a minute",
+     "volume or external location"
+    ],
+    [
+     "Table update",
+     "up to 25 UC tables"
+    ],
+    [
+     "Continuous",
+     "one run, always on"
+    ]
+   ]
+  },
+  "Concurrency and queueing": {
+   "k": "line",
+   "n": [
+    [
+     "09:00",
+     "run 1 starts"
+    ],
+    [
+     "09:10",
+     "run 2 arrives: queued",
+     "hi"
+    ],
+    [
+     "09:30",
+     "run 1 ends, run 2 starts",
+     "end"
+    ]
+   ],
+   "cap": "Example with max_concurrent_runs = 1. Queued runs wait up to 48 hours instead of being skipped."
+  }
+ }
+}

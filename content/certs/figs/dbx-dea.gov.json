@@ -1,0 +1,212 @@
+{
+ "map": {
+  "k": "flow",
+  "n": [
+   [
+    "Where it lives",
+    "catalog.schema.table"
+   ],
+   [
+    "Who owns the files",
+    "managed or external"
+   ],
+   [
+    "Who can do what",
+    "grants flow down",
+    "hi"
+   ],
+   [
+    "What each person sees",
+    "filters, masks, ABAC",
+    "end"
+   ]
+  ]
+ },
+ "ideas": {
+  "Three levels, one name": {
+   "k": "tree",
+   "n": [
+    [
+     0,
+     "Metastore"
+    ],
+    [
+     1,
+     "Catalog",
+     "e.g. sales"
+    ],
+    [
+     2,
+     "Schema",
+     "e.g. silver"
+    ],
+    [
+     3,
+     "Table, view, volume, function",
+     "e.g. sales.silver.orders",
+     "end"
+    ]
+   ]
+  },
+  "Managed or external: who owns the files": {
+   "k": "vs",
+   "a": [
+    "Managed",
+    "Unity Catalog manages the files",
+    "Predictive optimization",
+    "DROP deletes files after 7 days"
+   ],
+   "b": [
+    "External",
+    "Points at an external location",
+    "Other systems read the files",
+    "DROP removes only the definition"
+   ]
+  },
+  "Converting external to managed": {
+   "k": "line",
+   "n": [
+    [
+     "Start",
+     "SET MANAGED copies data + log",
+     "hi"
+    ],
+    [
+     "End of copy",
+     "a minute or two of blocked writes"
+    ],
+    [
+     "Up to 14 days",
+     "UNSET MANAGED rolls back"
+    ],
+    [
+     "After 14 days",
+     "old files no longer kept",
+     "end"
+    ]
+   ]
+  },
+  "Privileges flow down": {
+   "k": "tree",
+   "n": [
+    [
+     0,
+     "Catalog",
+     "USE CATALOG"
+    ],
+    [
+     1,
+     "Schema",
+     "USE SCHEMA"
+    ],
+    [
+     2,
+     "Table",
+     "SELECT",
+     "end"
+    ]
+   ],
+   "cap": "All three to read one table. A grant on a parent covers its children, future ones included."
+  },
+  "Who can grant": {
+   "k": "hub",
+   "c": [
+    "GRANT and REVOKE",
+    "on an object"
+   ],
+   "n": [
+    "Its owner",
+    "Catalog or schema owner",
+    "Metastore admin",
+    "Anyone with MANAGE"
+   ]
+  },
+  "There is no DENY statement": {
+   "k": "table",
+   "cap": "Example: Asha is in the analysts group",
+   "cols": [
+    "grant",
+    "after REVOKE from Asha"
+   ],
+   "rows": [
+    [
+     "SELECT to Asha",
+     "removed"
+    ],
+    [
+     "SELECT to analysts",
+     "still applies: Asha can read"
+    ]
+   ],
+   "hi": [
+    1
+   ]
+  },
+  "Row filters and column masks": {
+   "k": "tables",
+   "tables": [
+    {
+     "cap": "Stored",
+     "cols": [
+      "name",
+      "region",
+      "ssn"
+     ],
+     "rows": [
+      [
+       "Asha",
+       "IN",
+       "123-45-6789"
+      ],
+      [
+       "Ben",
+       "US",
+       "987-65-4321"
+      ]
+     ]
+    },
+    {
+     "cap": "What one user sees",
+     "cols": [
+      "name",
+      "region",
+      "ssn"
+     ],
+     "rows": [
+      [
+       "Asha",
+       "IN",
+       "***-**-6789"
+      ]
+     ],
+     "hi": [
+      0
+     ]
+    }
+   ],
+   "cap": "Example: a row filter keeps region IN; a column mask hides most of ssn."
+  },
+  "ABAC: one policy, many tables": {
+   "k": "flow",
+   "n": [
+    [
+     "Governed tag",
+     "pii = ssn"
+    ],
+    [
+     "Tag columns"
+    ],
+    [
+     "Policy",
+     "on a catalog or schema",
+     "hi"
+    ],
+    [
+     "Every tagged table",
+     "new ones too",
+     "end"
+    ]
+   ]
+  }
+ }
+}

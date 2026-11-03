@@ -9,6 +9,8 @@
      bars   n: [[label, value 0-100, mark?]]   horizontal bars
      line   n: [[time, label, mark?]]          a timeline
      grid2  r: [rowLabel, rowLabel], c: [colLabel, colLabel], v: [[a, b], [c, d]], hi: [[r, c]]
+     tree   n: [[depth 0-3, label, sub?, mark?]]  an indented hierarchy (catalog > schema > table)
+     dag    n: [[[label, sub?, mark?], …], …]     stages left to right; boxes in one stage run side by side
    cap: an optional one-line caption under the diagram. */
 const DIAGRAMS = {
   /* ---------- data engineering ---------- */
@@ -105,7 +107,7 @@ const DIAGRAMS = {
 };
 
 function drawDiagram(id) {
-  const d = DIAGRAMS[id];
+  const d = typeof id === "object" && id ? id : DIAGRAMS[id];
   if (!d) return "";
   const e = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
   const chev = `<i class="dg-ch" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></i>`;
@@ -117,10 +119,12 @@ function drawDiagram(id) {
   else if (d.k === "vs") h = `<div class="dg-vs">${[d.a, d.b].map(([t, ...ls], i) => `<div class="dg-col${i ? " end" : ""}"><b>${e(t)}</b>${ls.map((l) => `<span>${e(l)}</span>`).join("")}</div>`).join(`<i class="dg-or">vs</i>`)}</div>`;
   else if (d.k === "layers") h = `<div class="dg-layers">${d.n.map(([t, s], i) => `<div class="dg-layer" style="--i:${i}"><b>${e(t)}</b>${s ? `<span>${e(s)}</span>` : ""}</div>`).join("")}</div>`;
   else if (d.k === "hub") h = `<div class="dg-hub"><div class="dg-box end dg-center"><b>${e(d.c[0])}</b>${d.c[1] ? `<span>${e(d.c[1])}</span>` : ""}</div><div class="dg-spokes">${d.n.map((t) => `<div class="dg-box"><b>${e(t)}</b></div>`).join("")}</div></div>`;
-  else if (d.k === "table") h = tbl(d);
+  else if (d.k === "table") h = tbl({ ...d, cap: "" });
   else if (d.k === "tables") h = `<div class="dg-two">${d.tables.map(tbl).join("")}</div>`;
   else if (d.k === "bars") { const mx = Math.max(...d.n.map((x) => x[1])); h = `<div class="dg-bars">${d.n.map(([t, v, m]) => `<div class="dg-bar${m ? " " + m : ""}"><span>${e(t)}</span><i><b style="width:${Math.max(2, (100 * v) / mx)}%"></b></i><em>${e(v)}</em></div>`).join("")}</div>`; }
   else if (d.k === "line") h = `<div class="dg-line">${d.n.map(([t, l, m]) => `<div class="dg-tick${m ? " " + m : ""}"><i></i><b>${e(t)}</b><span>${e(l)}</span></div>`).join("")}</div>`;
   else if (d.k === "grid2") h = `<table class="dg-g2"><thead><tr><th></th>${d.c.map((c) => `<th>${e(c)}</th>`).join("")}</tr></thead><tbody>${d.v.map((row, r) => `<tr><th>${e(d.r[r])}</th>${row.map((v, c) => `<td class="${(d.hi || []).some(([a, b]) => a === r && b === c) ? "hi" : ""}">${e(v)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  else if (d.k === "tree") h = `<div class="dg-tree">${d.n.map(([lv, t, s, m]) => `<div class="dg-node${m ? " " + m : ""}" style="--lv:${lv}"><b>${e(t)}</b>${s ? `<span>${e(s)}</span>` : ""}</div>`).join("")}</div>`;
+  else if (d.k === "dag") h = `<div class="dg-dag">${d.n.map((st) => `<div class="dg-stage">${st.map(box).join("")}</div>`).join(chev)}</div>`;
   return `<figure class="dg" aria-label="Diagram">${h}${d.cap ? `<figcaption>${e(d.cap)}</figcaption>` : ""}</figure>`;
 }

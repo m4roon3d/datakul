@@ -1,0 +1,176 @@
+{
+ "map": {
+  "k": "cols",
+  "n": [
+   [
+    "Files",
+    "Auto Loader",
+    "COPY INTO"
+   ],
+   [
+    "Databases",
+    "Lakeflow Connect (CDC)",
+    "JDBC notebook in a job"
+   ],
+   [
+    "APIs",
+    "REST notebook in a job"
+   ],
+   [
+    "Leave it in place",
+    "Lakehouse Federation"
+   ]
+  ],
+  "cap": "Where the data comes from decides the tool."
+ },
+ "ideas": {
+  "Three layers, start at the top": {
+   "k": "layers",
+   "n": [
+    [
+     "Lakeflow Connect",
+     "managed connectors · start here"
+    ],
+    [
+     "Lakeflow pipelines",
+     "declarative"
+    ],
+    [
+     "Structured Streaming",
+     "Spark APIs · most control, most code"
+    ]
+   ],
+   "cap": "Move down a layer only when the one above cannot do the job."
+  },
+  "Incremental means remembering": {
+   "k": "cols",
+   "n": [
+    [
+     "Auto Loader",
+     "remembers in its checkpoint",
+     "new checkpoint = reload"
+    ],
+    [
+     "COPY INTO",
+     "tracks files already loaded into the table"
+    ],
+    [
+     "DB connectors",
+     "read the source's change log"
+    ]
+   ]
+  },
+  "Files: Auto Loader or COPY INTO": {
+   "k": "vs",
+   "a": [
+    "COPY INTO",
+    "Thousands of files",
+    "Easy to reload a subset"
+   ],
+   "b": [
+    "Auto Loader",
+    "Millions of files or more",
+    "Fewer discovery operations",
+    "Better with schema change"
+   ],
+   "cap": "SQL users loading from cloud storage: CREATE STREAMING TABLE."
+  },
+  "Three ways Auto Loader finds new files": {
+   "k": "cols",
+   "n": [
+    [
+     "File events",
+     "preferred",
+     "reads a cache of storage events",
+     "needs a UC external location"
+    ],
+    [
+     "File notification",
+     "own queue per stream",
+     "a bit lower latency"
+    ],
+    [
+     "Directory listing",
+     "simplest",
+     "small folders, backfills",
+     "highest cost at scale"
+    ]
+   ]
+  },
+  "Run style: availableNow": {
+   "k": "flow",
+   "n": [
+    [
+     "Start",
+     "job schedule or file arrival"
+    ],
+    [
+     "Process",
+     "everything available",
+     "hi"
+    ],
+    [
+     "Stop",
+     "compute stops, billing stops",
+     "end"
+    ]
+   ],
+   "cap": "Serverless supports only availableNow. Trigger.Once is deprecated."
+  },
+  "Databases and APIs": {
+   "k": "flow",
+   "n": [
+    [
+     "Connection"
+    ],
+    [
+     "Ingestion gateway",
+     "always on"
+    ],
+    [
+     "Staging volume"
+    ],
+    [
+     "Ingestion pipeline",
+     "",
+     "hi"
+    ],
+    [
+     "Streaming tables",
+     "",
+     "end"
+    ]
+   ],
+   "cap": "A managed database connector (CDC), step by step."
+  },
+  "Semi-structured data": {
+   "k": "table",
+   "cap": "Example: one events table",
+   "cols": [
+    "column",
+    "type",
+    "why"
+   ],
+   "rows": [
+    [
+     "event_id",
+     "STRING",
+     "filtered often"
+    ],
+    [
+     "event_date",
+     "DATE",
+     "can be a clustering key"
+    ],
+    [
+     "payload",
+     "VARIANT",
+     "shape keeps changing"
+    ]
+   ],
+   "hi": [
+    2
+   ]
+  }
+ }
+}
