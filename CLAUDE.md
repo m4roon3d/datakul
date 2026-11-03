@@ -43,7 +43,7 @@ short answers, no jargon).
 
 - Tests: `node --no-warnings tests/gateway.mjs`, `node --no-warnings tests/layer2.mjs`,
   `node --no-warnings tests/status.mjs`, then `node tests/l2server.mjs 8788 &` and `python3 tests/l2ui.py`,
-  `tests/themes.py`, `tests/teach.py`, `tests/status_ui.py`, `tests/exam.py`, `tests/pwa.py`, `tests/account_ui.py`, `tests/nav.py`; also `node --no-warnings tests/accounts.mjs` and `tests/certq.mjs`.
+  `tests/themes.py`, `tests/teach.py`, `tests/status_ui.py`, `tests/exam.py`, `tests/pwa.py`, `tests/account_ui.py`, `tests/nav.py`, `tests/motion.py`; also `node --no-warnings tests/accounts.mjs` and `tests/certq.mjs`.
 - After changing the grader in `web/app.js`: `node tools/sync-grader.mjs`.
 - Every interview question needs a model answer `a` that earns all its key points (`tests/teach.py` checks it); add
   answers to existing questions with `node content/add_model_answers.mjs <answers.json>`.
@@ -60,6 +60,7 @@ short answers, no jargon).
   out. Anything new that sends learner data off the device needs the privacy notice updated first.
 - Colours come from the theme tokens in `web/index.html` (light, dark, black). Never hard-code a colour in a component;
   check new UI in all three themes and at phone width (the phone header must fit logo, chips and settings).
+- Motion: helpers live at the top of `web/app.js` (`compassLoader` for every wait, `morph` for card-to-lesson, `buzz` for Android haptics). Keep animations short (under about a second) and keep everything off under `prefers-reduced-motion` (`tests/motion.py`).
 - Concept cards stay short: a takeaway, a diagram where it helps, an example; detail behind disclosures.
 
 ## Working agreement

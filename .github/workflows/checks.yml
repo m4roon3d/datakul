@@ -94,6 +94,7 @@ jobs:
         run: |
           set -o pipefail
           python3 tests/nav.py 2>&1 | tee "$RUNNER_TEMP/nv.txt" || { grep -E "^FAIL|Error" "$RUNNER_TEMP/nv.txt" | head -10 | while read -r l; do echo "::error title=Menu test::$l"; done; exit 1; }
+          python3 tests/motion.py 2>&1 | tee "$RUNNER_TEMP/mo.txt" || { grep -E "^FAIL|Error" "$RUNNER_TEMP/mo.txt" | head -10 | while read -r l; do echo "::error title=Motion test::$l"; done; exit 1; }
       - name: Accounts UI test
         run: |
           set -o pipefail
