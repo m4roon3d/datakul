@@ -242,7 +242,7 @@ tools/sync-grader.mjs copies the grader from app.js into the gateway
 
 ## Brand
 
-The logo is the **compass**: a saffron north needle in a sky-blue ring on a deep navy tile, for "find your path". The wordmark is "datakul" in Space Grotesk Bold, "data" in navy and "kul" in saffron, outlined so it looks the same everywhere.
+The logo is **Data climb**: three rising saffron bars with a sky-blue flag on the tallest, on a deep navy tile, for "Climb your data career". The wordmark is "datakul" in Space Grotesk Bold, "data" in navy and "kul" in saffron, outlined so it looks the same everywhere.
 
 All brand files are built by `python3 tools/make_brand.py` from one definition (the font is in `brand/fonts/`, OFL licence):
 

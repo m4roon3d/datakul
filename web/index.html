@@ -12,9 +12,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Datakul">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="description" content="Datakul: quest-based learning for data engineering, analysis, science and architecture careers, with an AI tutor and interview practice.">
-<title>Datakul</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='64' height='64' role='img' aria-label='Datakul'%3E%3Ctitle%3EDatakul%3C/title%3E%3Crect width='100' height='100' rx='26' fill='%230B2A3A'/%3E%3Ccircle cx='50' cy='50' r='31' fill='none' stroke='%235CC3E6' stroke-width='4.5'/%3E%3Cpath d='M50 14V20M50 80V86M14 50H20M80 50H86' stroke='%235CC3E6' stroke-width='4.5' stroke-linecap='round'/%3E%3Cpath d='M50 22L59 50H41Z' fill='%23FF8A2A'/%3E%3Cpath d='M50 78L59 50H41Z' fill='%23FFFFFF'/%3E%3Ccircle cx='50' cy='50' r='4.5' fill='%230B2A3A'/%3E%3C/svg%3E">
+<meta name="description" content="Datakul: climb your data career, one quest at a time. Quest-based learning for data engineering, analysis, science and architecture careers, with an AI tutor and interview practice.">
+<title>Datakul · Climb your data career</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='64' height='64' role='img' aria-label='Datakul'%3E%3Ctitle%3EDatakul%3C/title%3E%3Crect width='100' height='100' rx='26' fill='%230B2A3A'/%3E%3Crect x='18' y='62' width='16' height='22' rx='3' fill='%23B85A14'/%3E%3Crect x='40' y='48' width='16' height='36' rx='3' fill='%23F7861F'/%3E%3Crect x='62' y='34' width='16' height='50' rx='3' fill='%23FFB65C'/%3E%3Cpath d='M70 34V12' stroke='%23FFFFFF' stroke-width='6' stroke-linecap='round'/%3E%3Cpath d='M70 10.5H89.5L84 17.5L89.5 24.5H70Z' fill='%235CC3E6' stroke='%235CC3E6' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,6 +26,7 @@
   --bg:#F2F6F8; --surface:#FFFFFF; --surface-2:#E8F0F4; --ink:#0B2A3A; --muted:#4F6676; --line:#D8E3EA; --dot:#CFDCE4;
   --accent:#0B6F94; --accent-soft:#E0F1F8; --accent-ink:#FFFFFF; --accent-deep:#0B2A3A;
   --flame:#F7861F; --flame-soft:#FFF0DD; --flame-ink:#9A4A00; --flame-line:#F7C995;
+  --climb-1:#B85A14; --climb-2:#F7861F; --climb-3:#FFB65C; --sky:#5CC3E6;
   --de:#B4581A; --da:#1C6DB0; --ds:#A23A7A; --ar:#2D7A4C; --good:#2D7A4C; --good-soft:#E3F2E8; --warn:#A66400; --warn-soft:#FBF0DC;
   --lock:#8597A3; --night:#0B2A3A; --night-ink:#FFFFFF; --night-muted:#A9C3D0; --night-line:#1E4356;
   --shadow:0 1px 2px rgb(11 42 58 / .06),0 8px 24px rgb(11 42 58 / .07);
@@ -40,6 +41,7 @@
   --bg:#071C27; --surface:#0C2836; --surface-2:#123345; --ink:#E4F0F5; --muted:#8FAFBF; --line:#1D4357; --dot:#123345;
   --accent:#5CC3E6; --accent-soft:#103A4D; --accent-ink:#04131A; --accent-deep:#2E9CC4;
   --flame:#FF9A45; --flame-soft:#2B2116; --flame-ink:#FFC27A; --flame-line:#5A3E1E;
+  --climb-1:#D9772E; --climb-2:#FF9A45; --climb-3:#FFC27A; --sky:#5CC3E6;
   --de:#F0A266; --da:#7DB7EC; --ds:#E68CC0; --ar:#7FCB9A; --good:#7FCB9A; --good-soft:#163024; --warn:#E8B45A; --warn-soft:#33270F;
   --lock:#5D7A8A; --night:#133B4F; --night-ink:#FFFFFF; --night-muted:#A9C3D0; --night-line:#24506A;
   --shadow:0 1px 2px rgb(0 0 0 / .35),0 8px 24px rgb(0 0 0 / .25);
@@ -48,6 +50,7 @@
   --bg:#071C27; --surface:#0C2836; --surface-2:#123345; --ink:#E4F0F5; --muted:#8FAFBF; --line:#1D4357; --dot:#123345;
   --accent:#5CC3E6; --accent-soft:#103A4D; --accent-ink:#04131A; --accent-deep:#2E9CC4;
   --flame:#FF9A45; --flame-soft:#2B2116; --flame-ink:#FFC27A; --flame-line:#5A3E1E;
+  --climb-1:#D9772E; --climb-2:#FF9A45; --climb-3:#FFC27A; --sky:#5CC3E6;
   --de:#F0A266; --da:#7DB7EC; --ds:#E68CC0; --ar:#7FCB9A; --good:#7FCB9A; --good-soft:#163024; --warn:#E8B45A; --warn-soft:#33270F;
   --lock:#5D7A8A; --night:#133B4F; --night-ink:#FFFFFF; --night-muted:#A9C3D0; --night-line:#24506A;
   --shadow:0 1px 2px rgb(0 0 0 / .35),0 8px 24px rgb(0 0 0 / .25);
@@ -56,6 +59,7 @@
   --bg:#000000; --surface:#0B0F12; --surface-2:#141B20; --ink:#E8EEF1; --muted:#8C9BA5; --line:#1F2930; --dot:#141B20;
   --accent:#5CC3E6; --accent-soft:#0E2A36; --accent-ink:#00131A; --accent-deep:#2E9CC4;
   --flame:#FF9A45; --flame-soft:#22190F; --flame-ink:#FFC27A; --flame-line:#4A3319;
+  --climb-1:#D9772E; --climb-2:#FF9A45; --climb-3:#FFC27A; --sky:#5CC3E6;
   --de:#F0A266; --da:#7DB7EC; --ds:#E68CC0; --ar:#7FCB9A; --good:#7FCB9A; --good-soft:#0F2318; --warn:#E8B45A; --warn-soft:#2A1F0B;
   --lock:#4F5E68; --night:#10181D; --night-ink:#FFFFFF; --night-muted:#9AAAB4; --night-line:#222E36;
   --shadow:0 0 0 1px rgb(255 255 255 / .04); --shadow-lift:0 0 0 1px rgb(255 255 255 / .07); color-scheme:dark}
@@ -261,29 +265,41 @@ a.lnk:hover{text-decoration:underline;text-underline-offset:3px}
 .pathsel{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13.5px;font-weight:700}
 .toast{position:fixed;left:50%;width:max-content;bottom:calc(var(--tabh) + 22px);transform:translateX(-50%);z-index:30;background:var(--night);color:var(--night-ink);border-radius:16px;padding:12px 18px;font-weight:700;box-shadow:var(--shadow-lift);display:flex;align-items:center;gap:10px;max-width:calc(100vw - 32px)}
 .toast .xp{color:#FFD79A}
-.toast .tick{width:30px;height:30px;flex:none}
-.toast .tick circle{fill:none;stroke:var(--flame);stroke-width:4}
-.toast .tick path{fill:none;stroke:var(--night-ink);stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round}
+.toast .fdrop{width:32px;height:32px;flex:none}
+.toast .lvup{width:40px;height:30px;flex:none}
 .toast .celt{display:flex;flex-direction:column;gap:7px;min-width:0}
 .toast .celrow{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .toast .celbar{height:6px;border-radius:999px;background:var(--night-line);overflow:hidden}
 .toast .celbar i{display:block;height:100%;width:var(--to);border-radius:999px;background:var(--flame)}
 .toast .xpfly{position:absolute;right:16px;top:-6px;font-family:var(--f-display);font-weight:800;font-size:20px;color:var(--flame);opacity:0;pointer-events:none}
 @media (prefers-reduced-motion:no-preference){
-.toast .tick circle{stroke-dasharray:107;animation:tkc .4s ease-out both}
-.toast .tick path{stroke-dasharray:26;animation:tkp .28s .32s ease-out both}
-.toast .celbar i{animation:celb .7s .35s cubic-bezier(.3,1.3,.5,1) both}
-.toast .xpfly{animation:xpf 1.1s .45s ease-out both}
-@keyframes tkc{from{stroke-dashoffset:107}to{stroke-dashoffset:0}}
-@keyframes tkp{from{stroke-dashoffset:26}to{stroke-dashoffset:0}}
+.toast .fdrop .fd{animation:fdrop .5s .1s cubic-bezier(.3,1.5,.5,1) both}
+.toast .lvup .b4{transform-box:fill-box;transform-origin:50% 100%;animation:b4grow .6s .15s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes fdrop{from{transform:translateY(-20px);opacity:0}to{transform:none;opacity:1}}
+@keyframes b4grow{from{transform:scaleY(0)}to{transform:none}}
 @keyframes celb{from{width:var(--from)}to{width:var(--to)}}
 @keyframes xpf{0%{opacity:0;transform:translateY(8px)}25%{opacity:1}100%{opacity:0;transform:translateY(-36px)}}
 }
-/* Compass loader: the needle searches for north wherever the app is waiting. */
+/* Climb loader: the three bars of the logo bounce in turn wherever the app is waiting. */
 .cloader{display:inline-flex;align-items:center;gap:10px;color:var(--muted);font-size:14.5px;font-weight:600}
-.cloader svg{width:26px;height:26px;flex:none}
+.cloader svg{width:28px;height:22px;flex:none}
 .md.cursor:has(> .cloader)::after{display:none}
-@media (prefers-reduced-motion:no-preference){.cneedle{transform-origin:50px 50px;animation:cwob 1.4s ease-in-out infinite}@keyframes cwob{0%,100%{transform:rotate(-28deg)}50%{transform:rotate(24deg)}}}
+@media (prefers-reduced-motion:no-preference){.cloader .lb{transform-box:fill-box;transform-origin:50% 100%;animation:lbounce 1.05s ease-in-out infinite}.cloader .lb2{animation-delay:.15s}.cloader .lb3{animation-delay:.3s}@keyframes lbounce{0%,100%{transform:none}40%{transform:scaleY(.45)}}}
+/* Splash on the first open of a session: the bars rise, the flag runs up the pole and waves, the wordmark slides in. */
+#splash{position:fixed;inset:0;z-index:100;background:var(--bg);display:grid;place-items:center;pointer-events:none;animation:spout .3s 1.15s ease-in forwards}
+#splash[hidden]{display:none}
+#splash .sp-in{display:flex;align-items:center;gap:16px}
+#splash .sp-mk{width:84px;height:84px;flex:none}
+#splash .sp-wm{height:44px;width:auto;animation:spwm .35s .55s ease-out both}
+#splash .kb{transform-box:fill-box;transform-origin:50% 100%;animation:krise .38s cubic-bezier(.3,1.4,.5,1) both}
+#splash .kb2{animation-delay:.1s}#splash .kb3{animation-delay:.2s}
+#splash .kpole{stroke-dasharray:24;animation:kpole .25s .42s ease-out both}
+#splash .kflag{transform-box:fill-box;transform-origin:0 50%;animation:kflag .55s .6s ease-out both}
+@keyframes krise{from{transform:scaleY(0)}to{transform:none}}
+@keyframes kpole{from{stroke-dashoffset:24}to{stroke-dashoffset:0}}
+@keyframes kflag{0%{transform:translateY(16px) scaleX(0)}45%{transform:none}70%{transform:scaleX(.8)}100%{transform:none}}
+@keyframes spwm{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+@keyframes spout{to{opacity:0;visibility:hidden}}
 /* Card to lesson: the tapped card grows into the lesson (View Transitions API). */
 ::view-transition-old(root),::view-transition-new(root){animation-duration:.2s}
 ::view-transition-group(dk-lesson){animation-duration:.38s;animation-timing-function:cubic-bezier(.2,.8,.2,1);overflow:clip;border-radius:var(--r-card)}
@@ -783,10 +799,12 @@ textarea.editor:focus{border-color:var(--accent);outline:none}
 
 </head>
 <body>
+<div id="splash" hidden aria-hidden="true"><div class="sp-in"><svg class="sp-mk" viewBox="0 0 100 100"><rect width="100" height="100" rx="26" fill="#0B2A3A"/><rect class="kb" x="18" y="62" width="16" height="22" rx="3" fill="#B85A14"/><rect class="kb kb2" x="40" y="48" width="16" height="36" rx="3" fill="#F7861F"/><rect class="kb kb3" x="62" y="34" width="16" height="50" rx="3" fill="#FFB65C"/><path class="kpole" d="M70 34V12" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/><path class="kflag" d="M70 12.5H87L82.5 18L87 23.5H70Z" fill="#5CC3E6" stroke="#5CC3E6" stroke-width="1.5" stroke-linejoin="round"/></svg><svg class="sp-wm" viewBox="26 -720 3440 754" aria-hidden="true"><path fill="var(--ink)" d="M270 14Q211 14 159.5 -15.5Q108 -45 77.0 -102.0Q46 -159 46 -240V-256Q46 -337 77.0 -394.0Q108 -451 159.0 -480.5Q210 -510 270 -510Q338 -510 373.0 -487.5Q408 -465 424 -439H442V-700H568V0H444V-60H426Q409 -32 373.5 -9.0Q338 14 270 14ZM308 -96Q366 -96 405.0 -133.5Q444 -171 444 -243V-253Q444 -325 405.5 -362.5Q367 -400 308 -400Q250 -400 211.0 -362.5Q172 -325 172 -253V-243Q172 -171 211.0 -133.5Q250 -96 308 -96ZM832.0 14Q779.0 14 737.0 -4.5Q695.0 -23 670.5 -58.5Q646.0 -94 646.0 -145Q646.0 -222 700.0 -261.0Q754.0 -300 838.0 -300H974.0V-328Q974.0 -363 952.0 -385.5Q930.0 -408 882.0 -408Q835.0 -408 812.0 -386.5Q789.0 -365 782.0 -331L666.0 -370Q678.0 -408 704.5 -439.5Q731.0 -471 775.5 -490.5Q820.0 -510 884.0 -510Q982.0 -510 1039.0 -461.0Q1096.0 -412 1096.0 -319V-134Q1096.0 -104 1124.0 -104H1164.0V0H1080.0Q1043.0 0 1019.0 -18.0Q995.0 -36 995.0 -66V-67H976.0Q972.0 -55 958.0 -35.5Q944.0 -16 914.0 -1.0Q884.0 14 832.0 14ZM854.0 -88Q907.0 -88 940.5 -117.5Q974.0 -147 974.0 -196V-206H847.0Q812.0 -206 792.0 -191.0Q772.0 -176 772.0 -149Q772.0 -122 793.0 -105.0Q814.0 -88 854.0 -88ZM1416.0 0Q1367.0 0 1336.5 -30.5Q1306.0 -61 1306.0 -112V-392H1182.0V-496H1306.0V-650H1432.0V-496H1568.0V-392H1432.0V-134Q1432.0 -104 1460.0 -104H1556.0V0ZM1806.0 14Q1753.0 14 1711.0 -4.5Q1669.0 -23 1644.5 -58.5Q1620.0 -94 1620.0 -145Q1620.0 -222 1674.0 -261.0Q1728.0 -300 1812.0 -300H1948.0V-328Q1948.0 -363 1926.0 -385.5Q1904.0 -408 1856.0 -408Q1809.0 -408 1786.0 -386.5Q1763.0 -365 1756.0 -331L1640.0 -370Q1652.0 -408 1678.5 -439.5Q1705.0 -471 1749.5 -490.5Q1794.0 -510 1858.0 -510Q1956.0 -510 2013.0 -461.0Q2070.0 -412 2070.0 -319V-134Q2070.0 -104 2098.0 -104H2138.0V0H2054.0Q2017.0 0 1993.0 -18.0Q1969.0 -36 1969.0 -66V-67H1950.0Q1946.0 -55 1932.0 -35.5Q1918.0 -16 1888.0 -1.0Q1858.0 14 1806.0 14ZM1828.0 -88Q1881.0 -88 1914.5 -117.5Q1948.0 -147 1948.0 -196V-206H1821.0Q1786.0 -206 1766.0 -191.0Q1746.0 -176 1746.0 -149Q1746.0 -122 1767.0 -105.0Q1788.0 -88 1828.0 -88Z"/><path fill="var(--flame)" d="M2200.0 0V-700H2326.0V-313H2344.0L2508.0 -496H2672.0L2443.0 -256L2680.0 0H2518.0L2344.0 -197H2326.0V0ZM2923.0 8Q2865.0 8 2821.5 -18.5Q2778.0 -45 2754.0 -92.0Q2730.0 -139 2730.0 -200V-496H2856.0V-210Q2856.0 -154 2883.5 -126.0Q2911.0 -98 2962.0 -98Q3020.0 -98 3052.0 -136.5Q3084.0 -175 3084.0 -244V-496H3210.0V0H3086.0V-65H3068.0Q3056.0 -40 3023.0 -16.0Q2990.0 8 2923.0 8ZM3320.0 0V-700H3446.0V0Z"/></svg></div></div>
+<script>(function(){try{var s=document.getElementById("splash");if(sessionStorage.getItem("dk_splash")||matchMedia("(prefers-reduced-motion: reduce)").matches||(navigator.webdriver&&!/[?&]splash\b/.test(location.search)))return;sessionStorage.setItem("dk_splash","1");s.hidden=false;setTimeout(function(){s.remove()},1500)}catch(e){}})();</script>
 <div class="shell">
 <div class="main">
 <header class="topbar gutter"><div class="tb">
-  <a class="tbrand" href="#quests" role="img" aria-label="Datakul"><svg class="mk" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="26" fill="#0B2A3A"/><circle cx="50" cy="50" r="31" fill="none" stroke="#5CC3E6" stroke-width="4.5"/><path d="M50 14V20M50 80V86M14 50H20M80 50H86" stroke="#5CC3E6" stroke-width="4.5" stroke-linecap="round"/><path d="M50 22L59 50H41Z" fill="#FF8A2A"/><path d="M50 78L59 50H41Z" fill="#FFFFFF"/><circle cx="50" cy="50" r="4.5" fill="#0B2A3A"/></svg><svg class="wm" viewBox="26 -720 3440 754" aria-hidden="true"><path fill="var(--ink)" d="M270 14Q211 14 159.5 -15.5Q108 -45 77.0 -102.0Q46 -159 46 -240V-256Q46 -337 77.0 -394.0Q108 -451 159.0 -480.5Q210 -510 270 -510Q338 -510 373.0 -487.5Q408 -465 424 -439H442V-700H568V0H444V-60H426Q409 -32 373.5 -9.0Q338 14 270 14ZM308 -96Q366 -96 405.0 -133.5Q444 -171 444 -243V-253Q444 -325 405.5 -362.5Q367 -400 308 -400Q250 -400 211.0 -362.5Q172 -325 172 -253V-243Q172 -171 211.0 -133.5Q250 -96 308 -96ZM832.0 14Q779.0 14 737.0 -4.5Q695.0 -23 670.5 -58.5Q646.0 -94 646.0 -145Q646.0 -222 700.0 -261.0Q754.0 -300 838.0 -300H974.0V-328Q974.0 -363 952.0 -385.5Q930.0 -408 882.0 -408Q835.0 -408 812.0 -386.5Q789.0 -365 782.0 -331L666.0 -370Q678.0 -408 704.5 -439.5Q731.0 -471 775.5 -490.5Q820.0 -510 884.0 -510Q982.0 -510 1039.0 -461.0Q1096.0 -412 1096.0 -319V-134Q1096.0 -104 1124.0 -104H1164.0V0H1080.0Q1043.0 0 1019.0 -18.0Q995.0 -36 995.0 -66V-67H976.0Q972.0 -55 958.0 -35.5Q944.0 -16 914.0 -1.0Q884.0 14 832.0 14ZM854.0 -88Q907.0 -88 940.5 -117.5Q974.0 -147 974.0 -196V-206H847.0Q812.0 -206 792.0 -191.0Q772.0 -176 772.0 -149Q772.0 -122 793.0 -105.0Q814.0 -88 854.0 -88ZM1416.0 0Q1367.0 0 1336.5 -30.5Q1306.0 -61 1306.0 -112V-392H1182.0V-496H1306.0V-650H1432.0V-496H1568.0V-392H1432.0V-134Q1432.0 -104 1460.0 -104H1556.0V0ZM1806.0 14Q1753.0 14 1711.0 -4.5Q1669.0 -23 1644.5 -58.5Q1620.0 -94 1620.0 -145Q1620.0 -222 1674.0 -261.0Q1728.0 -300 1812.0 -300H1948.0V-328Q1948.0 -363 1926.0 -385.5Q1904.0 -408 1856.0 -408Q1809.0 -408 1786.0 -386.5Q1763.0 -365 1756.0 -331L1640.0 -370Q1652.0 -408 1678.5 -439.5Q1705.0 -471 1749.5 -490.5Q1794.0 -510 1858.0 -510Q1956.0 -510 2013.0 -461.0Q2070.0 -412 2070.0 -319V-134Q2070.0 -104 2098.0 -104H2138.0V0H2054.0Q2017.0 0 1993.0 -18.0Q1969.0 -36 1969.0 -66V-67H1950.0Q1946.0 -55 1932.0 -35.5Q1918.0 -16 1888.0 -1.0Q1858.0 14 1806.0 14ZM1828.0 -88Q1881.0 -88 1914.5 -117.5Q1948.0 -147 1948.0 -196V-206H1821.0Q1786.0 -206 1766.0 -191.0Q1746.0 -176 1746.0 -149Q1746.0 -122 1767.0 -105.0Q1788.0 -88 1828.0 -88Z"/><path fill="var(--flame)" d="M2200.0 0V-700H2326.0V-313H2344.0L2508.0 -496H2672.0L2443.0 -256L2680.0 0H2518.0L2344.0 -197H2326.0V0ZM2923.0 8Q2865.0 8 2821.5 -18.5Q2778.0 -45 2754.0 -92.0Q2730.0 -139 2730.0 -200V-496H2856.0V-210Q2856.0 -154 2883.5 -126.0Q2911.0 -98 2962.0 -98Q3020.0 -98 3052.0 -136.5Q3084.0 -175 3084.0 -244V-496H3210.0V0H3086.0V-65H3068.0Q3056.0 -40 3023.0 -16.0Q2990.0 8 2923.0 8ZM3320.0 0V-700H3446.0V0Z"/></svg></a>
+  <a class="tbrand" href="#quests" role="img" aria-label="Datakul"><svg class="mk" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="26" fill="#0B2A3A"/><rect x="18" y="62" width="16" height="22" rx="3" fill="#B85A14"/><rect x="40" y="48" width="16" height="36" rx="3" fill="#F7861F"/><rect x="62" y="34" width="16" height="50" rx="3" fill="#FFB65C"/><path d="M70 34V12" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/><path d="M70 10.5H89.5L84 17.5L89.5 24.5H70Z" fill="#5CC3E6" stroke="#5CC3E6" stroke-width="1.5" stroke-linejoin="round"/></svg><svg class="wm" viewBox="26 -720 3440 754" aria-hidden="true"><path fill="var(--ink)" d="M270 14Q211 14 159.5 -15.5Q108 -45 77.0 -102.0Q46 -159 46 -240V-256Q46 -337 77.0 -394.0Q108 -451 159.0 -480.5Q210 -510 270 -510Q338 -510 373.0 -487.5Q408 -465 424 -439H442V-700H568V0H444V-60H426Q409 -32 373.5 -9.0Q338 14 270 14ZM308 -96Q366 -96 405.0 -133.5Q444 -171 444 -243V-253Q444 -325 405.5 -362.5Q367 -400 308 -400Q250 -400 211.0 -362.5Q172 -325 172 -253V-243Q172 -171 211.0 -133.5Q250 -96 308 -96ZM832.0 14Q779.0 14 737.0 -4.5Q695.0 -23 670.5 -58.5Q646.0 -94 646.0 -145Q646.0 -222 700.0 -261.0Q754.0 -300 838.0 -300H974.0V-328Q974.0 -363 952.0 -385.5Q930.0 -408 882.0 -408Q835.0 -408 812.0 -386.5Q789.0 -365 782.0 -331L666.0 -370Q678.0 -408 704.5 -439.5Q731.0 -471 775.5 -490.5Q820.0 -510 884.0 -510Q982.0 -510 1039.0 -461.0Q1096.0 -412 1096.0 -319V-134Q1096.0 -104 1124.0 -104H1164.0V0H1080.0Q1043.0 0 1019.0 -18.0Q995.0 -36 995.0 -66V-67H976.0Q972.0 -55 958.0 -35.5Q944.0 -16 914.0 -1.0Q884.0 14 832.0 14ZM854.0 -88Q907.0 -88 940.5 -117.5Q974.0 -147 974.0 -196V-206H847.0Q812.0 -206 792.0 -191.0Q772.0 -176 772.0 -149Q772.0 -122 793.0 -105.0Q814.0 -88 854.0 -88ZM1416.0 0Q1367.0 0 1336.5 -30.5Q1306.0 -61 1306.0 -112V-392H1182.0V-496H1306.0V-650H1432.0V-496H1568.0V-392H1432.0V-134Q1432.0 -104 1460.0 -104H1556.0V0ZM1806.0 14Q1753.0 14 1711.0 -4.5Q1669.0 -23 1644.5 -58.5Q1620.0 -94 1620.0 -145Q1620.0 -222 1674.0 -261.0Q1728.0 -300 1812.0 -300H1948.0V-328Q1948.0 -363 1926.0 -385.5Q1904.0 -408 1856.0 -408Q1809.0 -408 1786.0 -386.5Q1763.0 -365 1756.0 -331L1640.0 -370Q1652.0 -408 1678.5 -439.5Q1705.0 -471 1749.5 -490.5Q1794.0 -510 1858.0 -510Q1956.0 -510 2013.0 -461.0Q2070.0 -412 2070.0 -319V-134Q2070.0 -104 2098.0 -104H2138.0V0H2054.0Q2017.0 0 1993.0 -18.0Q1969.0 -36 1969.0 -66V-67H1950.0Q1946.0 -55 1932.0 -35.5Q1918.0 -16 1888.0 -1.0Q1858.0 14 1806.0 14ZM1828.0 -88Q1881.0 -88 1914.5 -117.5Q1948.0 -147 1948.0 -196V-206H1821.0Q1786.0 -206 1766.0 -191.0Q1746.0 -176 1746.0 -149Q1746.0 -122 1767.0 -105.0Q1788.0 -88 1828.0 -88Z"/><path fill="var(--flame)" d="M2200.0 0V-700H2326.0V-313H2344.0L2508.0 -496H2672.0L2443.0 -256L2680.0 0H2518.0L2344.0 -197H2326.0V0ZM2923.0 8Q2865.0 8 2821.5 -18.5Q2778.0 -45 2754.0 -92.0Q2730.0 -139 2730.0 -200V-496H2856.0V-210Q2856.0 -154 2883.5 -126.0Q2911.0 -98 2962.0 -98Q3020.0 -98 3052.0 -136.5Q3084.0 -175 3084.0 -244V-496H3210.0V0H3086.0V-65H3068.0Q3056.0 -40 3023.0 -16.0Q2990.0 8 2923.0 8ZM3320.0 0V-700H3446.0V0Z"/></svg></a>
   <nav class="tabs" role="tablist" aria-label="Sections">
     <button class="tab" role="tab" id="tab-quests" data-view="quests" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4h11l-2.5 3.5L16 11H5"/></svg>Quests</button>
     <button class="tab" role="tab" id="tab-tutor" data-view="tutor" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Ask</button>

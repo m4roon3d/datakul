@@ -1,7 +1,7 @@
 {
   "name": "Datakul",
   "short_name": "Datakul",
-  "description": "Quest-based learning for data engineering, analysis, science and architecture careers.",
+  "description": "Climb your data career, one quest at a time. Quest-based learning for data engineering, analysis, science and architecture careers.",
   "id": "/",
   "start_url": "/?source=app",
   "scope": "/",

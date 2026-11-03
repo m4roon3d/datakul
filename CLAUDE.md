@@ -48,7 +48,7 @@ short answers, no jargon).
 - Every interview question needs a model answer `a` that earns all its key points (`tests/teach.py` checks it); add
   answers to existing questions with `node content/add_model_answers.mjs <answers.json>`.
 - All app scripts share one global scope: `node tools/check_globals.mjs` fails if a top-level name is declared twice.
-- Brand files: `python3 tools/make_brand.py` (compass mark + Space Grotesk wordmark → `brand/`). Theme test: `python3 tests/themes.py`.
+- Brand files: `python3 tools/make_brand.py` (K mark + Space Grotesk wordmark → `brand/`, `web/icons/`, Android icons, inline mark and favicon). Theme test: `python3 tests/themes.py`.
 
 ## Rules
 
@@ -60,7 +60,8 @@ short answers, no jargon).
   out. Anything new that sends learner data off the device needs the privacy notice updated first.
 - Colours come from the theme tokens in `web/index.html` (light, dark, black). Never hard-code a colour in a component;
   check new UI in all three themes and at phone width (the phone header must fit logo, chips and settings).
-- Motion: helpers live at the top of `web/app.js` (`compassLoader` for every wait, `morph` for card-to-lesson, `buzz` for Android haptics). Keep animations short (under about a second) and keep everything off under `prefers-reduced-motion` (`tests/motion.py`).
+- Brand: logo K "Data climb" (three rising saffron bars, sky-blue flag, navy tile), tagline "Climb your data career". `python3 tools/make_brand.py` rebuilds every logo file, the web icons, the Android launcher icons, and the mark and favicon inside `web/index.html` and `web/admin.html`. The bar colours are theme tokens `--climb-1..3` (with `--sky` for the flag).
+- Motion: helpers live at the top of `web/app.js` (`climbLoader` for every wait, `morph` for card-to-lesson, `buzz` for Android haptics); the splash is inline at the top of `<body>` in `web/index.html` (first open of a session only, never blocks taps). Keep animations short (under about a second; the splash about 1.5 s) and keep everything off under `prefers-reduced-motion` (`tests/motion.py`).
 - Concept cards stay short: a takeaway, a diagram where it helps, an example; detail behind disclosures.
 
 ## Working agreement
