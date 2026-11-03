@@ -75,16 +75,18 @@ function touchStreak() {
   QS.streak.last = t;
 }
 const lvlPct = (xp) => { const L = levelOf(xp), a = lvlStart(L); return Math.round((100 * (xp - a)) / (lvlStart(L + 1) - a)); };
-const TICK = `<svg class="tick" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17"/><path d="M12 20.5l5.5 5.5L28.5 14.5"/></svg>`;
+// Quest cleared: the flag drops onto the step you finished. Level up: a fourth, taller bar grows in.
+const FLAGDROP = `<svg class="fdrop" viewBox="0 0 40 40" aria-hidden="true"><rect x="8" y="27" width="24" height="9" rx="3" fill="var(--climb-2)"/><g class="fd"><path d="M20 27V7" stroke="var(--night-ink)" stroke-width="2.6" stroke-linecap="round"/><path d="M20 7.5H31L28 11L31 14.5H20Z" fill="var(--sky)"/></g></svg>`;
+const LVLUP = `<svg class="lvup" viewBox="0 0 48 36" aria-hidden="true"><rect x="2" y="24" width="8" height="10" rx="2" fill="var(--climb-1)"/><rect x="13" y="18" width="8" height="16" rx="2" fill="var(--climb-2)"/><rect x="24" y="12" width="8" height="22" rx="2" fill="var(--climb-3)"/><rect class="b4" x="35" y="4" width="8" height="30" rx="2" fill="var(--night-ink)"/></svg>`;
 function award(n, why, quiet) {
   const before = levelOf(QS.xp), from = lvlPct(QS.xp);
   QS.xp += n; touchStreak();
   const after = levelOf(QS.xp);
-  if (after > before) { buzz([20, 60, 30]); toast(`<span>Level up! You're Level ${after} · ${titleOf(after)}</span>`); }
+  if (after > before) { buzz([20, 60, 30]); toast(`${LVLUP}<span>Level up! You're Level ${after} · ${titleOf(after)}</span>`); }
   else if (!quiet) {
-    // Quest step cleared: the tick draws, +XP floats up and the level bar fills from where it was.
+    // Quest step cleared: the flag drops, +XP floats up and the level bar fills from where it was.
     buzz(20);
-    toast(`${TICK}<span class="celt"><span class="celrow"><span class="xp">+${n} XP</span><span>${esc(why)}</span></span><span class="celbar" aria-hidden="true"><i style="--from:${from}%;--to:${lvlPct(QS.xp)}%"></i></span></span><span class="xpfly" aria-hidden="true">+${n}</span>`);
+    toast(`${FLAGDROP}<span class="celt"><span class="celrow"><span class="xp">+${n} XP</span><span>${esc(why)}</span></span><span class="celbar" aria-hidden="true"><i style="--from:${from}%;--to:${lvlPct(QS.xp)}%"></i></span></span><span class="xpfly" aria-hidden="true">+${n}</span>`);
   }
 }
 

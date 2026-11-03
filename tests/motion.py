@@ -1,4 +1,4 @@
-# Browser test for the motion pack: quest-cleared celebration, compass loader, card-to-lesson morph, haptics,
+# Browser test for the motion pack: splash, quest-cleared flag drop, level-up bar, climb loader, card-to-lesson morph, haptics,
 # and that all of it switches off under reduced motion. Needs tests/l2server.mjs running (same as l2ui.py).
 import os
 from playwright.sync_api import sync_playwright
@@ -28,19 +28,27 @@ with sync_playwright() as p:
         # 1. Quest step cleared
         pg.evaluate("award(15, 'Learned: Slowly changing dimensions')"); pg.wait_for_timeout(1300)
         t = pg.locator("#toast")
-        ok(t.is_visible() and t.locator(".tick").count() == 1 and t.locator(".xpfly").inner_text() == "+15", f"{theme}: toast shows tick and floating +15")
+        ok(t.is_visible() and t.locator(".fdrop .fd").count() == 1 and t.locator(".xpfly").inner_text() == "+15", f"{theme}: toast drops the flag and floats +15")
+        ok(pg.evaluate("getComputedStyle(document.querySelector('#toast .fd')).animationName") == "fdrop", f"{theme}: flag drop animates")
         to = pg.evaluate("getComputedStyle(document.querySelector('#toast .celbar i')).getPropertyValue('--to').trim()")
         ok(to.endswith("%"), f"{theme}: level bar fills to {to}")
         ok(pg.evaluate("window.__buzz.length") == 1, f"{theme}: one short buzz on Android")
         pg.screenshot(path=f"{OUT}/motion_toast_{theme}.png")
 
         # 2. Compass loader
-        pg.evaluate("document.querySelector('#view-quests').insertAdjacentHTML('afterbegin', '<div id=\"lt\" class=\"md cursor\">' + compassLoader('Thinking…') + '</div>')")
-        ok(pg.evaluate("getComputedStyle(document.querySelector('#lt .cneedle')).animationName") == "cwob", f"{theme}: compass needle wobbles")
+        pg.evaluate("document.querySelector('#view-quests').insertAdjacentHTML('afterbegin', '<div id=\"lt\" class=\"md cursor\">' + climbLoader('Thinking…') + '</div>')")
+        ok(pg.evaluate("[...document.querySelectorAll('#lt .lb')].map(e => getComputedStyle(e).animationName).join()") == "lbounce,lbounce,lbounce", f"{theme}: loader bars bounce")
         ok(pg.evaluate("getComputedStyle(document.querySelector('#lt'), '::after').display") == "none", f"{theme}: streaming cursor hidden while the loader shows")
         pg.evaluate("window.scrollTo(0,0)"); pg.wait_for_timeout(100)
         pg.locator("#lt").screenshot(path=f"{OUT}/motion_loader_{theme}.png")
         pg.evaluate("document.querySelector('#lt').remove()")
+
+        # Level up: a fourth bar grows in
+        pg.wait_for_timeout(2900)
+        pg.evaluate("award(5000, 'big jump')"); pg.wait_for_timeout(900)
+        ok(pg.locator("#toast .lvup .b4").count() == 1 and "Level up" in pg.locator("#toast").inner_text(), f"{theme}: level up shows the growing fourth bar")
+        ok(pg.evaluate("window.__buzz.length") == 2, f"{theme}: level up buzzes too")
+        pg.screenshot(path=f"{OUT}/motion_levelup_{theme}.png")
 
         # 3. Card to lesson morph
         go = pg.locator("#view-quests [data-act*='qgo']").first
@@ -59,10 +67,23 @@ with sync_playwright() as p:
     pg.goto(B + "/#quests"); pg.wait_for_timeout(700)
     pg.evaluate("award(15, 'Learned: x')")
     ok(pg.evaluate("window.__buzz.length") == 0, "reduced motion: no buzz")
-    pg.evaluate("document.body.insertAdjacentHTML('beforeend', compassLoader('Thinking…'))")
-    ok(pg.evaluate("getComputedStyle(document.querySelector('.cneedle')).animationName") == "none", "reduced motion: needle still")
+    pg.evaluate("document.body.insertAdjacentHTML('beforeend', climbLoader('Thinking…'))")
+    ok(pg.evaluate("getComputedStyle(document.querySelector('.cloader .lb')).animationName") == "none", "reduced motion: loader bars still")
+    pg.goto(B + "/?splash#quests"); pg.wait_for_timeout(100)
+    ok(pg.locator("#splash").count() == 0 or not pg.is_visible("#splash"), "reduced motion: no splash")
     pg.locator("#view-quests [data-act*='qgo']").first.click(); pg.wait_for_timeout(400)
     ok(pg.evaluate("window.__vt") == 0 and pg.is_visible("#view-tutor .ans"), "reduced motion: lesson opens without a transition")
+    c.close()
+
+    # Splash: shown on the first open of a session only, never blocks taps, then removes itself.
+    c = b.new_context(viewport={"width": 390, "height": 844}); pg = c.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
+    pg.goto(B + "/?splash#quests"); pg.wait_for_timeout(450)
+    ok(pg.is_visible("#splash") and pg.evaluate("getComputedStyle(document.querySelector('#splash')).pointerEvents") == "none", "splash shows on first open and lets taps through")
+    pg.screenshot(path=f"{OUT}/motion_splash.png")
+    pg.wait_for_timeout(1300)
+    ok(pg.locator("#splash").count() == 0, "splash removes itself after about 1.5 s")
+    pg.goto(B + "/?splash#quests"); pg.wait_for_timeout(200)
+    ok(pg.locator("#splash").count() == 0 or not pg.is_visible("#splash"), "splash is not shown again in the same session")
     c.close()
 
     # Library card on desktop morphs too.
