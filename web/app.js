@@ -129,12 +129,30 @@ async function drawMermaid(root) {
   if (!els.length) return;
   try {
     const m = await loadMermaid();
-    m.initialize({ startOnLoad: false, securityLevel: "strict", theme: isDark() ? "dark" : "neutral", fontFamily: "Atkinson Hyperlegible, sans-serif" });
+    m.initialize({ startOnLoad: false, securityLevel: "strict", suppressErrorRendering: true, theme: isDark() ? "dark" : "neutral", fontFamily: "Atkinson Hyperlegible, sans-serif" });
     for (const el of els) {
       const src = el.dataset.src; el.removeAttribute("data-src");
-      try { const { svg } = await m.render("mmd" + (++mmdSeq), src); el.innerHTML = svg; } catch (e) { /* keep the code block */ }
+      // AI diagrams often break on labels like A[RANK()]; try as written, then with quoted labels, else keep the code block.
+      const good = await firstValid(m, [src, fixMermaid(src)]);
+      if (!good) { el.classList.add("mmd-bad"); continue; }
+      const id = "mmd" + (++mmdSeq);
+      try { const { svg } = await m.render(id, good); el.innerHTML = svg; } catch (e) { /* keep the code block */ }
+      finally { document.querySelectorAll(`body > #d${id}, body > #${id}`).forEach((n) => n.remove()); }
     }
   } catch (e) { /* offline: the code block stays */ }
+}
+
+/* Quote node and edge labels that hold characters Mermaid treats as syntax. */
+function fixMermaid(src) {
+  const q = (t) => '"' + t.trim().replace(/^"|"$/g, "").replace(/"/g, "'") + '"';
+  return src
+    .replace(/(\b[\w-]+)\s*\[(?!["\/\\(\[])([^\]\n]*)\]/g, (m, id, t) => /[()<>{}|;:#&]/.test(t) ? `${id}[${q(t)}]` : m)
+    .replace(/(\b[\w-]+)\s*\{(?!["{])([^}\n]*)\}/g, (m, id, t) => /[()<>\[\]|;:#&]/.test(t) ? `${id}{${q(t)}}` : m)
+    .replace(/\|([^|"\n]+)\|/g, (m, t) => /[()<>{}\[\];:#&]/.test(t) ? `|${q(t)}|` : m);
+}
+async function firstValid(m, cands) {
+  for (const c of [...new Set(cands)]) { try { if (await m.parse(c, { suppressErrors: true })) return c; } catch (e) { /* next */ } }
+  return null;
 }
 
 /* Optional semantic search: concept vectors in emb.js (built by tools/embed-concepts.mjs) plus the gateway's /api/embed. */

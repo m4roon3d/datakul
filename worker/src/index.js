@@ -146,7 +146,7 @@ function tutorPrompt(body) {
     "  1. Start with a one-sentence takeaway in bold.",
     "  2. Then at most 3 short bullets or a short numbered list of steps.",
     "  3. Add one tiny concrete example (2–4 lines of SQL or Python, or a few sample rows in a code block) only when it really helps.",
-    "- When a pipeline, flow, architecture or sequence is clearer as a picture, include exactly ONE small Mermaid diagram in a ```mermaid code block: `flowchart LR`, at most 7 nodes, labels of 1–3 words, no styling or classes. Otherwise draw nothing.",
+    "- When a pipeline, flow, architecture or sequence is clearer as a picture, include exactly ONE small Mermaid diagram in a ```mermaid code block: `flowchart LR`, at most 7 nodes, labels of 1–3 words in double quotes (A[\"Raw data\"] --> B[\"Clean\"]), no parentheses outside quotes, no styling or classes. Otherwise draw nothing.",
     "- For a study plan, give one line per week or step.",
     "- For a quick factual follow-up, answer in one or two sentences.",
     ]),
