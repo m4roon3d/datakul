@@ -176,16 +176,17 @@ const cLink = (l) => `<a href="${esc(l.u)}" target="_blank" rel="noopener">${esc
 const cMore = (q) => (q.more ? `<p class="cmore">Read more: ${cLink(q.more)} <span class="muted">(Databricks docs)</span></p>` : "");
 function certStudyHTML(c, d) {
   const s = d.study, mine = c.questions.filter((q) => q.d === d.id).length;
+  const fig = (g) => (g && typeof drawDiagram === "function" ? drawDiagram(g) : "");
   const tbl = (t) => `<div class="stbl"><h4>${esc(t.title)}</h4><div class="swrap"><table><thead><tr>${t.head.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${t.rows.map((r) => `<tr>${r.map((x) => `<td>${esc(x)}</td>`).join("")}</tr>`).join("")}</tbody></table></div></div>`;
   return `<div class="certwrap study">
     <div class="card"><div class="cqtop"><span class="eyebrow">Study · ${esc(c.short)} · ${d.w}% of the exam</span><button class="ghostlink" type="button" data-cstudyx>Back</button></div>
-      <h1>${esc(d.name)}</h1><p>${esc(s.intro)}</p>
+      <h1>${esc(d.name)}</h1><p>${esc(s.intro)}</p>${fig(s.map)}
       <div class="acts"><button class="btn" type="button" data-cstart="practice" data-cdom="${d.id}">Practise this section (${mine} questions)</button></div></div>
-    <div class="card"><h3>What the exam expects</h3><ul class="sul">${s.expects.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>
-    <div class="card"><h3>Key ideas</h3>${s.ideas.map((i) => `<div class="sidea"><b>${esc(i.t)}</b><p>${esc(i.b)}</p></div>`).join("")}${(s.tables || []).map(tbl).join("")}</div>
+    <div class="card"><h3>What the exam expects</h3><ol class="sexp">${s.expects.map((x) => `<li>${esc(x)}</li>`).join("")}</ol></div>
+    <div class="card"><h3>Key ideas</h3><div class="sideas">${s.ideas.map((i, n) => `<div class="sidea${i.fig ? " hasfig" : ""}"><b><span class="snum">${n + 1}</span>${esc(i.t)}</b>${fig(i.fig)}<p>${esc(i.b)}</p></div>`).join("")}</div>${(s.tables || []).map(tbl).join("")}</div>
     <div class="card"><h3>Solved problems</h3><p class="muted" style="font-size:13.5px">Try each one first, then open the working.</p>
       ${s.problems.map((p, i) => `<details class="sprob"><summary><span class="snum">${i + 1}</span><span><b>${esc(p.t)}</b><em>${esc(p.q)}</em></span>${CHEV}</summary><div class="db"><ol>${p.steps.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>${p.code ? `<pre class="ccode"><code>${esc(p.code)}</code></pre>` : ""}<p class="sans"><b>Answer.</b> ${esc(p.answer)}</p></div></details>`).join("")}</div>
-    <div class="card"><h3>Mistakes to avoid</h3><ul class="sul">${s.mistakes.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>
+    <div class="card"><h3>Mistakes to avoid</h3><ul class="sul smis">${s.mistakes.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>
     <div class="card"><h3>Read more in the Databricks docs</h3><ul class="slinks">${s.links.map((l) => `<li>${cLink(l)}<span class="muted">${esc(l.why)}</span></li>`).join("")}</ul><p class="muted" style="font-size:12.5px">${esc(s.checked)} ${esc(c.disclaimer)}</p>
       <div class="acts"><button class="btn" type="button" data-cstart="practice" data-cdom="${d.id}">Practise this section</button><button class="btn quiet" type="button" data-cstudyx>Back to certifications</button></div></div>
   </div>`;

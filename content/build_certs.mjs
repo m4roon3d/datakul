@@ -50,6 +50,18 @@ for (const f of readdirSync(dir).filter((x) => x.endsWith(".json")).sort()) {
       if (!p.t || !p.q || !p.answer || !(p.steps || []).length) w(`problem ${i + 1} needs t, q, steps and answer`);
     });
     (ch.links || []).forEach((l, i) => { if (!DOCS.test(l.u || "") || !l.t || !l.why) w(`link ${i + 1} must be a docs.databricks.com link with title and why`); });
+    // Figures: content/certs/figs/<cert>.<domain>.json (written by study_figs.py): a section map and one figure per idea title
+    let figs = null; try { figs = JSON.parse(readFileSync(join(dir, "figs", f2), "utf8")); } catch {}
+    if (figs) {
+      const KINDS = { flow: "n", cols: "n", vs: "a", layers: "n", hub: "n", table: "rows", tables: "tables", bars: "n", line: "n", grid2: "v", tree: "n", dag: "n" };
+      const okFig = (g, at) => { if (!g || !KINDS[g.k] || !g[KINDS[g.k]] || !g[KINDS[g.k]].length) w(`figure ${at} needs a known kind and its items`); };
+      if (figs.map) { okFig(figs.map, "map"); ch.map = figs.map; }
+      for (const [t, g] of Object.entries(figs.ideas || {})) {
+        const idea = (ch.ideas || []).find((i) => i.t === t);
+        if (!idea) { w(`figure for unknown idea "${t}"`); continue; }
+        okFig(g, `"${t}"`); idea.fig = g;
+      }
+    }
     if (/—/.test(JSON.stringify(ch))) w("contains an em dash");
     d.study = ch;
   }

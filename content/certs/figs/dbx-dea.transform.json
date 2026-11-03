@@ -1,0 +1,285 @@
+{
+ "map": {
+  "k": "flow",
+  "n": [
+   [
+    "Bronze",
+    "raw"
+   ],
+   [
+    "Clean",
+    "types, nulls"
+   ],
+   [
+    "Join",
+    "keys, row counts"
+   ],
+   [
+    "De-duplicate",
+    "latest wins",
+    "hi"
+   ],
+   [
+    "Gold",
+    "aggregates, views",
+    "end"
+   ]
+  ]
+ },
+ "ideas": {
+  "Bronze, silver, gold": {
+   "k": "cols",
+   "n": [
+    [
+     "Bronze",
+     "raw, as it arrived",
+     "lets you rebuild"
+    ],
+    [
+     "Silver",
+     "right types, nulls handled",
+     "no duplicates, joinable keys"
+    ],
+    [
+     "Gold",
+     "aggregates, business models",
+     "what BI tools read"
+    ]
+   ]
+  },
+  "Cleaning is mostly types and nulls": {
+   "k": "table",
+   "cap": "ANSI mode on (serverless)",
+   "cols": [
+    "value",
+    "cast AS INT",
+    "try_cast AS INT"
+   ],
+   "rows": [
+    [
+     "'42'",
+     "42",
+     "42"
+    ],
+    [
+     "'N/A'",
+     "error",
+     "NULL"
+    ]
+   ],
+   "hi": [
+    1
+   ]
+  },
+  "Joins: keys, row counts and shuffles": {
+   "k": "tables",
+   "tables": [
+    {
+     "cap": "orders: 3 rows",
+     "cols": [
+      "order_id",
+      "cust"
+     ],
+     "rows": [
+      [
+       "1",
+       "A"
+      ],
+      [
+       "2",
+       "B"
+      ],
+      [
+       "3",
+       "C"
+      ]
+     ]
+    },
+    {
+     "cap": "left join customers: 4 rows",
+     "cols": [
+      "order_id",
+      "cust",
+      "name"
+     ],
+     "rows": [
+      [
+       "1",
+       "A",
+       "Asha"
+      ],
+      [
+       "2",
+       "B",
+       "Bala"
+      ],
+      [
+       "2",
+       "B",
+       "Bala"
+      ],
+      [
+       "3",
+       "C",
+       "Chitra"
+      ]
+     ],
+     "hi": [
+      2
+     ]
+    }
+   ],
+   "cap": "Example. A jump in rows means the right side has a duplicate key."
+  },
+  "union matches by position": {
+   "k": "tables",
+   "tables": [
+    {
+     "cap": "union (by position)",
+     "cols": [
+      "id",
+      "city"
+     ],
+     "rows": [
+      [
+       "1",
+       "Pune"
+      ],
+      [
+       "Delhi",
+       "2"
+      ]
+     ],
+     "hi": [
+      1
+     ]
+    },
+    {
+     "cap": "unionByName",
+     "cols": [
+      "id",
+      "city"
+     ],
+     "rows": [
+      [
+       "1",
+       "Pune"
+      ],
+      [
+       "2",
+       "Delhi"
+      ]
+     ]
+    }
+   ],
+   "cap": "Example: the second DataFrame has its columns as (city, id)."
+  },
+  "Duplicates: say which row wins": {
+   "k": "table",
+   "cap": "row_number() over (partition by order_id order by updated_at desc)",
+   "cols": [
+    "order_id",
+    "updated_at",
+    "rn"
+   ],
+   "rows": [
+    [
+     "7",
+     "10:05",
+     "1  keep"
+    ],
+    [
+     "7",
+     "09:40",
+     "2"
+    ],
+    [
+     "7",
+     "08:15",
+     "3"
+    ]
+   ],
+   "hi": [
+    0
+   ]
+  },
+  "Spark settings: few, measured, and set in the right place": {
+   "k": "flow",
+   "n": [
+    [
+     "Change one setting"
+    ],
+    [
+     "Run"
+    ],
+    [
+     "Measure",
+     "Spark UI or query profile",
+     "hi"
+    ],
+    [
+     "Keep or undo",
+     "",
+     "end"
+    ]
+   ]
+  },
+  "Gold objects for BI": {
+   "k": "cols",
+   "n": [
+    [
+     "Table",
+     "stores data you write",
+     "INSERT, MERGE"
+    ],
+    [
+     "View",
+     "stores only the query",
+     "runs it on every read"
+    ],
+    [
+     "Materialized view",
+     "stores the result",
+     "refreshed, incrementally if it can"
+    ],
+    [
+     "Streaming table",
+     "each new row once",
+     "append-only data"
+    ]
+   ]
+  },
+  "Quality rules": {
+   "k": "dag",
+   "n": [
+    [
+     [
+      "Bronze"
+     ]
+    ],
+    [
+     [
+      "WHERE valid",
+      "",
+      "hi"
+     ],
+     [
+      "WHERE NOT valid"
+     ]
+    ],
+    [
+     [
+      "Silver",
+      "",
+      "end"
+     ],
+     [
+      "Quarantine",
+      "kept for inspection"
+     ]
+    ]
+   ],
+   "cap": "Splitting keeps bad rows. Pipeline expectations: warn, DROP ROW or FAIL UPDATE."
+  }
+ }
+}

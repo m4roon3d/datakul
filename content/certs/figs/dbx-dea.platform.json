@@ -1,0 +1,163 @@
+{
+ "map": {
+  "k": "cols",
+  "n": [
+   [
+    "Storage",
+    "Delta Lake",
+    "Parquet files + a log"
+   ],
+   [
+    "Governance",
+    "Unity Catalog",
+    "access, lineage, audit"
+   ],
+   [
+    "Compute",
+    "Serverless",
+    "Classic",
+    "SQL warehouses"
+   ]
+  ],
+  "cap": "Three parts to know. Every later section builds on them."
+ },
+ "ideas": {
+  "Two planes": {
+   "k": "layers",
+   "n": [
+    [
+     "Control plane",
+     "Databricks' side: web app, job scheduler, Unity Catalog"
+    ],
+    [
+     "Compute plane",
+     "serverless: Databricks' account · classic: your cloud account"
+    ],
+    [
+     "Cloud object storage",
+     "your tables and files stay here either way"
+    ]
+   ]
+  },
+  "Delta Lake: tables on files": {
+   "k": "flow",
+   "n": [
+    [
+     "Parquet files",
+     "the data"
+    ],
+    [
+     "_delta_log",
+     "one commit per change",
+     "hi"
+    ],
+    [
+     "Delta table",
+     "ACID, time travel, MERGE",
+     "end"
+    ]
+   ]
+  },
+  "Unity Catalog: one place for access and lineage": {
+   "k": "tree",
+   "n": [
+    [
+     0,
+     "Metastore",
+     "shared by attached workspaces"
+    ],
+    [
+     1,
+     "Catalog"
+    ],
+    [
+     2,
+     "Schema"
+    ],
+    [
+     3,
+     "Tables · views · volumes · functions · models",
+     "catalog.schema.object",
+     "end"
+    ]
+   ]
+  },
+  "Serverless first": {
+   "k": "vs",
+   "a": [
+    "Serverless gives you",
+    "Starts in seconds",
+    "Scales on its own",
+    "No idle machines to pay for"
+   ],
+   "b": [
+    "It does not support",
+    "R or RDD APIs",
+    "Executor memory settings",
+    "Most Spark settings"
+   ]
+  },
+  "Classic compute": {
+   "k": "vs",
+   "a": [
+    "Jobs compute",
+    "Made for one run, then shut down",
+    "Lower rate",
+    "Scheduled work"
+   ],
+   "b": [
+    "All-purpose compute",
+    "Shared, interactive",
+    "Costs while idle",
+    "Until auto termination"
+   ]
+  },
+  "SQL warehouses": {
+   "k": "bars",
+   "n": [
+    [
+     "Serverless",
+     6,
+     "end"
+    ],
+    [
+     "Pro",
+     240
+    ],
+    [
+     "Classic",
+     240
+    ]
+   ],
+   "cap": "Seconds to start, roughly: serverless 2 to 6, Pro and Classic about 4 minutes."
+  },
+  "How it is charged": {
+   "k": "grid2",
+   "r": [
+    "Serverless",
+    "Classic"
+   ],
+   "c": [
+    "DBUs",
+    "Cloud VM charge"
+   ],
+   "v": [
+    [
+     "Yes",
+     "No separate charge"
+    ],
+    [
+     "Yes",
+     "Yes"
+    ]
+   ],
+   "hi": [
+    [
+     1,
+     1
+    ]
+   ],
+   "cap": "Scheduled work: serverless or jobs compute, never all-purpose."
+  }
+ }
+}

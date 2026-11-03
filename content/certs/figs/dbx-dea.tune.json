@@ -1,0 +1,178 @@
+{
+ "map": {
+  "k": "cols",
+  "n": [
+   [
+    "Slow",
+    "skew, shuffle, spill"
+   ],
+   [
+    "Failing",
+    "statuses, first red task"
+   ],
+   [
+    "Won't start",
+    "event log codes"
+   ],
+   [
+    "Storage",
+    "clustering, predictive optimization"
+   ]
+  ]
+ },
+ "ideas": {
+  "Start from the job, then go down": {
+   "k": "flow",
+   "n": [
+    [
+     "Matrix view",
+     "runs over time"
+    ],
+    [
+     "Timeline",
+     "slowest task"
+    ],
+    [
+     "Spark UI or query profile",
+     "that task's stages",
+     "hi"
+    ],
+    [
+     "Fix one thing",
+     "",
+     "end"
+    ]
+   ]
+  },
+  "Read the statuses": {
+   "k": "dag",
+   "n": [
+    [
+     [
+      "Extract",
+      "Succeeded"
+     ]
+    ],
+    [
+     [
+      "Transform",
+      "Failed",
+      "hi"
+     ]
+    ],
+    [
+     [
+      "Load",
+      "Upstream failed"
+     ],
+     [
+      "Notify",
+      "Upstream failed"
+     ]
+    ]
+   ],
+   "cap": "Look for the first red task, not the last."
+  },
+  "Skew": {
+   "k": "bars",
+   "n": [
+    [
+     "Median",
+     22
+    ],
+    [
+     "75th percentile",
+     25
+    ],
+    [
+     "Max",
+     140,
+     "hi"
+    ]
+   ],
+   "cap": "Example task durations in seconds. Max far above the 75th percentile means skew."
+  },
+  "Shuffle and spill": {
+   "k": "flow",
+   "n": [
+    [
+     "Shuffle",
+     "rows move between executors"
+    ],
+    [
+     "Memory full",
+     "",
+     "hi"
+    ],
+    [
+     "Spill to disk",
+     "slow",
+     "hi"
+    ]
+   ],
+   "cap": "Fixes: shuffle partitions auto, read less, broadcast a small side, more memory."
+  },
+  "Liquid clustering": {
+   "k": "vs",
+   "a": [
+    "Partitioning, ZORDER",
+    "Replaced by liquid clustering",
+    "Cannot be combined with it"
+   ],
+   "b": [
+    "CLUSTER BY (up to 4 keys)",
+    "Change keys without rewriting old data",
+    "OPTIMIZE: incremental; FULL: all",
+    "AUTO: Databricks picks keys"
+   ]
+  },
+  "Predictive optimization": {
+   "k": "hub",
+   "c": [
+    "Predictive optimization",
+    "UC managed tables only"
+   ],
+   "n": [
+    "OPTIMIZE",
+    "VACUUM",
+    "ANALYZE"
+   ],
+   "cap": "Runs on serverless, billed to you. Does nothing for external tables."
+  },
+  "Compute that will not start": {
+   "k": "table",
+   "cap": "From the compute event log",
+   "cols": [
+    "cause",
+    "first fix"
+   ],
+   "rows": [
+    [
+     "Capacity or quota",
+     "another instance type or zone"
+    ],
+    [
+     "Network",
+     "firewall, DNS, routes"
+    ],
+    [
+     "INIT_SCRIPT_FAILURE",
+     "read the init script logs"
+    ]
+   ]
+  },
+  "Libraries and memory": {
+   "k": "vs",
+   "a": [
+    "Driver out of memory",
+    "collect() or toPandas()",
+    "on large data"
+   ],
+   "b": [
+    "Executor out of memory",
+    "Skew, too few partitions",
+    "Oversized broadcast, heavy UDF"
+   ]
+  }
+ }
+}
