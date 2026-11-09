@@ -131,6 +131,27 @@ q("dbx-121", "ingest", "Clickstream JSON has stable event_id and ts fields and a
   "Typed columns filter faster, and VARIANT cannot be used as a partition or clustering key. Keeping only the changing part as VARIANT stays flexible. Declare it through cloudFiles.schemaHints.",
   more={"u": "https://docs.databricks.com/aws/en/ingestion/variant", "t": "Ingest data as VARIANT"}),
 
+q("dbx-154", "ingest", "An Auto Loader stream infers its schema from JSON files. Which option tells it where to store the inferred schema and its changes over time?",
+  ["cloudFiles.schemaLocation", "cloudFiles.format", "mergeSchema", "checkpointLocation on the source DataFrame"], 0,
+  "Auto Loader keeps the inferred schema and every evolution of it under cloudFiles.schemaLocation, so restarts reuse the same schema. It is often set to the same path as the stream's checkpoint. cloudFiles.format only says which file format to read.",
+  more={"u": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/schema", "t": "Configure schema inference and evolution in Auto Loader"}),
+q("dbx-155", "ingest", "A COPY INTO load must reload every file in a folder, including files it has already loaded. What does this?",
+  ["COPY_OPTIONS ('force' = 'true')", "FORMAT_OPTIONS ('mergeSchema' = 'true')", "Running COPY INTO twice in a row", "Adding PATTERN = '*' to the command"], 0,
+  "COPY INTO skips files it has already loaded, which makes reruns safe. Setting the force copy option to true turns that off and loads all matching files again, so duplicates are possible. mergeSchema only lets new columns be added.",
+  more={"u": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/copy-into/", "t": "Get started using COPY INTO to load data"}),
+q("dbx-156", "ingest", "In Databricks SQL, which statement creates a table that picks up only new CSV files from a volume each time it refreshes?",
+  ["CREATE OR REFRESH STREAMING TABLE raw_orders AS SELECT * FROM STREAM read_files('/Volumes/main/raw/orders/', format => 'csv')", "CREATE TABLE raw_orders AS SELECT * FROM read_files('/Volumes/main/raw/orders/', format => 'csv')", "CREATE VIEW raw_orders AS SELECT * FROM csv.`/Volumes/main/raw/orders/`", "CREATE MATERIALIZED VIEW raw_orders AS SELECT * FROM STREAM read_files('/Volumes/main/raw/orders/')"], 0,
+  "read_files with the STREAM keyword inside a streaming table uses Auto Loader, so each refresh processes only files that arrived since the last one. A plain CREATE TABLE AS SELECT reads everything once and never updates.",
+  more={"u": "https://docs.databricks.com/aws/en/sql/language-manual/functions/read_files", "t": "read_files table-valued function"}),
+q("dbx-157", "ingest", "A source sends a change feed with customer_id, an operation column and a sequence number, sometimes out of order. In a pipeline, which statement applies it to a target as SCD type 2?",
+  ["AUTO CDC INTO target FROM stream(source) KEYS (customer_id) SEQUENCE BY seq_no STORED AS SCD TYPE 2", "MERGE INTO target USING source ON customer_id WHEN MATCHED THEN UPDATE SET *", "INSERT OVERWRITE target SELECT * FROM source ORDER BY seq_no", "COPY INTO target FROM source FILEFORMAT = DELTA"], 0,
+  "AUTO CDC needs KEYS to identify rows and SEQUENCE BY to order events, so late or out-of-order changes are applied correctly; STORED AS SCD TYPE 2 keeps history (the default is type 1). The target must be a streaming table declared first. A plain MERGE would not handle ordering for you.",
+  more={"u": "https://docs.databricks.com/aws/en/ldp/developer/ldp-sql-ref-apply-changes-into", "t": "AUTO CDC INTO (pipelines)"}),
+q("dbx-158", "ingest", "Which statements about reading files with read_files are true? (Choose two.)",
+  ["It can infer a schema across the files it finds and supports schema hints", "It can read from Unity Catalog volumes and external locations", "It only reads Delta tables", "It needs a running all-purpose cluster and cannot be used in Databricks SQL"], [0, 1],
+  "read_files reads formats such as JSON, CSV, XML, Parquet and Avro from cloud storage, volumes or external locations. It infers a unified schema, accepts hints and can rescue data that does not match. It works in Databricks SQL and Databricks Runtime 13.3 LTS and above.",
+  more={"u": "https://docs.databricks.com/aws/en/sql/language-manual/functions/read_files", "t": "read_files table-valued function"}),
+
 # ---------------- transform (22%) ----------------
 q("dbx-030", "transform", "In PySpark, df1.union(df2) is called on two DataFrames with the same columns in a different order. What happens?",
   ["Columns are matched by name automatically", "Columns are matched by position, so values can end up in the wrong columns; use unionByName instead", "Duplicates are removed like SQL UNION", "It always raises an error"], 1,
@@ -197,6 +218,19 @@ q("dbx-128", "transform", "A notebook on a running classic cluster runs spark.co
   "Session settings such as spark.sql.shuffle.partitions can change at run time, but executor and driver memory are set when the executors start, so they belong in the compute configuration. On serverless you cannot set them at all.",
   more={"u": "https://docs.databricks.com/aws/en/spark/conf", "t": "Set Spark configuration properties"}),
 
+q("dbx-159", "transform", "A full daily extract should make a Delta table match the source exactly, including removing rows that no longer exist in the source. Which MERGE clause removes them?",
+  ["WHEN NOT MATCHED BY SOURCE THEN DELETE", "WHEN NOT MATCHED THEN DELETE", "WHEN MATCHED THEN DELETE", "WHEN NOT MATCHED BY TARGET THEN DELETE"], 0,
+  "WHEN NOT MATCHED BY SOURCE acts on target rows that have no match in the source, so DELETE there removes rows that disappeared. WHEN NOT MATCHED (BY TARGET) handles new source rows and can only insert.",
+  more={"u": "https://docs.databricks.com/aws/en/sql/language-manual/delta-merge-into", "t": "MERGE INTO"}),
+q("dbx-160", "transform", "Each order has an items array of structs with a price field. Which expression keeps only items priced above 100 without exploding the array?",
+  ["filter(items, x -> x.price > 100)", "explode(items) WHERE price > 100", "array_contains(items, price > 100)", "transform(items, x -> x.price > 100)"], 0,
+  "filter is a higher-order function that returns the array elements for which the lambda is true. transform returns a new value for every element, so here it would give an array of booleans. explode would create one row per item instead of keeping one row per order.",
+  more={"u": "https://docs.databricks.com/aws/en/sql/language-manual/functions/filter", "t": "filter function"}),
+q("dbx-161", "transform", "A bad job overwrote main.sales.orders an hour ago. The previous good state is table version 41. Which statement puts the table back?",
+  ["RESTORE TABLE main.sales.orders TO VERSION AS OF 41", "VACUUM main.sales.orders RETAIN 1 HOURS", "SELECT * FROM main.sales.orders VERSION AS OF 41", "DESCRIBE HISTORY main.sales.orders"], 0,
+  "RESTORE writes a new commit that returns the table to an earlier version, as long as the old data files have not been removed by VACUUM. SELECT ... VERSION AS OF only reads the old version, and DESCRIBE HISTORY only helps you find the right version number.",
+  more={"u": "https://docs.databricks.com/aws/en/sql/language-manual/delta-restore", "t": "RESTORE"}),
+
 # ---------------- jobs (16%) ----------------
 q("dbx-050", "jobs", "In a Lakeflow Job, task C depends on tasks A and B. C should run as long as at least one of them succeeded. Which setting achieves this?",
   ["Set C's \"Run if dependencies\" to At least one succeeded", "Remove C's dependencies", "Add retries to A and B", "Schedule C one hour after A and B"], 0,
@@ -244,6 +278,23 @@ q("dbx-139", "jobs", "A task uses dbutils.jobs.taskValues.set to pass a list to 
   "Task values are set from Python notebooks, must be JSON-serialisable and no larger than 48 KiB, and are read in later tasks of the same run with a dynamic value reference such as {{tasks.get_list.values.items}}.",
   more={"u": "https://docs.databricks.com/aws/en/jobs/task-values", "t": "Use task values to pass information between tasks"}),
 
+q("dbx-162", "jobs", "A job parameter run_date should default to the date the run started, so backfills can override it. Which default value does this?",
+  ["{{job.start_time.iso_date}}", "{{run_date}}", "current_date()", "${job.start_date}"], 0,
+  "{{job.start_time.iso_date}} is a dynamic value reference that resolves to the run's start date in UTC. Tasks then read it as {{job.parameters.run_date}}, and a backfill can pass a different date.",
+  more={"u": "https://docs.databricks.com/aws/en/jobs/dynamic-value-references", "t": "Dynamic value references"}),
+q("dbx-163", "jobs", "Three teams each own a job. A fourth job must run the three jobs in order and stop if one fails. Which task type fits?",
+  ["A Run Job task for each of the three jobs, with dependencies between them", "A notebook task that copies the other jobs' code", "Three For each tasks", "A file arrival trigger on each job"], 0,
+  "A Run Job task triggers another job and waits for it, so a parent job can chain existing jobs with normal dependencies and failure handling. Each team keeps owning its own job.",
+  more={"u": "https://docs.databricks.com/aws/en/jobs/tasks/run-job", "t": "Run Job task for jobs"}),
+q("dbx-164", "jobs", "A job is scheduled every 15 minutes with maximum concurrent runs set to 1. One run takes 25 minutes. With queueing enabled, what happens to the next scheduled run?",
+  ["It waits in the queue and starts when the running run finishes", "It starts anyway, so two runs overlap", "It cancels the running run", "It fails immediately with an error"], 0,
+  "When the concurrency limit is reached, queueing holds new runs (for up to 48 hours) until a slot is free. Without queueing, Databricks skips the run. Runs only overlap if maximum concurrent runs is raised above 1.",
+  more={"u": "https://docs.databricks.com/aws/en/jobs/configure-job", "t": "Configure and edit Lakeflow Jobs"}),
+q("dbx-165", "jobs", "A nightly job normally takes 20 minutes. The team wants an alert if it runs longer than 45 minutes, without stopping it. What should they set?",
+  ["A duration warning threshold with a notification", "A timeout of 45 minutes", "Retries with a 45-minute interval", "Maximum concurrent runs of 45"], 0,
+  "A duration warning raises an event, which can notify the team, when a run goes past the expected time, and the run carries on. A timeout ends the run as Timed Out, which is not what the team asked for.",
+  more={"u": "https://docs.databricks.com/aws/en/jobs/configure-job", "t": "Configure and edit Lakeflow Jobs"}),
+
 # ---------------- cicd (10%) ----------------
 q("dbx-070", "cicd", "Where do you work on a feature branch of a repository inside the Databricks workspace?",
   ["A Git folder", "A volume", "The workspace's trash", "A SQL warehouse"], 0,
@@ -281,6 +332,15 @@ q("dbx-144", "cicd", "Production jobs deployed from CI must not run as the perso
   ["run_as with the service principal's application ID, and deploy from CI as that service principal", "mode: development", "default: true", "A personal access token of the team lead in databricks.yml"], 0,
   "run_as sets the identity jobs run as. Using a service principal for both the CI deploy and run_as keeps production independent of any person, and secrets stay in the CI system, never in the repository.",
   more={"u": "https://docs.databricks.com/aws/en/dev-tools/bundles/run-as", "t": "Specify a run identity for a bundle workflow"}),
+
+q("dbx-166", "cicd", "A developer wants to start a new bundle project with a standard folder layout and example job. Which command does this?",
+  ["databricks bundle init", "databricks bundle deploy", "databricks bundle validate", "databricks workspace import"], 0,
+  "bundle init creates a new project from a template, such as the default Python template, with a databricks.yml and example resources. validate checks configuration, and deploy sends it to a workspace.",
+  more={"u": "https://docs.databricks.com/aws/en/dev-tools/cli/bundle-commands", "t": "bundle command group"}),
+q("dbx-167", "cicd", "After deploying a bundle to the staging target, the CI pipeline must start the bundle's job with resource key nightly_etl and wait for it. Which command does this?",
+  ["databricks bundle run nightly_etl -t staging", "databricks jobs create nightly_etl", "databricks bundle deploy nightly_etl", "databricks bundle validate -t staging nightly_etl"], 0,
+  "bundle run starts a job or pipeline defined in the bundle, by its resource key, in the chosen target, and by default waits for it to finish, so CI can fail if the run fails.",
+  more={"u": "https://docs.databricks.com/aws/en/dev-tools/cli/bundle-commands", "t": "bundle command group"}),
 
 # ---------------- tune (10%) ----------------
 q("dbx-090", "tune", "In the Spark UI, one stage has 200 tasks: most finish in 10 seconds but three take 15 minutes. What is the most likely cause?",
@@ -320,6 +380,15 @@ q("dbx-149", "tune", "A job on classic compute fails before any task runs, and t
   "The termination code says a cluster-scoped init script failed. Its stderr log, delivered with cluster log delivery, shows the failing command. Spark settings and worker counts cannot help because Spark never started.",
   more={"u": "https://docs.databricks.com/gcp/en/compute/troubleshooting/cluster-error-codes", "t": "Classic compute termination error codes"}),
 
+q("dbx-168", "tune", "A SQL dashboard query on a SQL warehouse is slow. Where do you see which operator, such as a scan or a join, took the most time and how many rows it handled?",
+  ["The query profile in query history", "The cluster's driver logs", "DESCRIBE HISTORY on the table", "The job's run output"], 0,
+  "The query profile shows the query's operators as a graph with time spent, rows and bytes for each, so you can spot a large scan or an exploding join. DESCRIBE HISTORY shows table commits, not query performance.",
+  more={"u": "https://docs.databricks.com/aws/en/sql/user/queries/query-profile", "t": "Query profile"}),
+q("dbx-169", "tune", "A team turns on Photon for a job, but one step that applies a Python UDF row by row is no faster. Why?",
+  ["Photon speeds up SQL and DataFrame operations, but Python UDFs are not run by Photon", "Photon only works on SQL warehouses", "Photon must be enabled separately for each table", "Photon makes jobs slower when they use Delta"], 0,
+  "Photon is a native engine for SQL and DataFrame operations such as scans, joins and aggregations. Code it cannot run, such as a row-by-row Python UDF, runs outside it. Replacing the UDF with built-in functions usually helps more.",
+  more={"u": "https://docs.databricks.com/aws/en/compute/photon", "t": "What is Photon?"}),
+
 # ---------------- gov (15%) ----------------
 q("dbx-110", "gov", "A Unity Catalog managed table is dropped. What happens to its data files?",
   ["They are deleted, because Unity Catalog manages the table's storage", "They stay in place and must be deleted by hand", "They move to the user's home folder", "Nothing; managed tables cannot be dropped"], 0,
@@ -358,7 +427,23 @@ q("dbx-152", "gov", "Contractors must lose access to one table in a schema where
 q("dbx-153", "gov", "Who can grant SELECT on main.gold.sales to another group? (Choose two.)",
   ["The table's owner", "A user with MANAGE on the table or its schema", "Any user with SELECT on the table", "Any user with USE SCHEMA on main.gold"], [0, 1],
   "Owners of the object or its catalog or schema, metastore admins, and holders of MANAGE can grant privileges. Holding SELECT or USE SCHEMA only lets you use the object.",
-  more={"u": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts", "t": "Unity Catalog permissions model"}),
+  more={"u": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts", "t": "Unity Catalog permissions model"}),q("dbx-170", "gov", "An auditor asks who read a sensitive table last month. Where do you look first in Unity Catalog?",
+  ["The system.access.audit system table", "DESCRIBE HISTORY on the table", "The table's _delta_log folder", "The cluster's Spark UI"], 0,
+  "Audit logs, available as the system.access.audit system table, record user actions such as queries and permission changes across workspaces. DESCRIBE HISTORY records writes to a table, not who read it.",
+  more={"u": "https://docs.databricks.com/aws/en/admin/account-settings/audit-logs", "t": "Audit log reference"}),
+q("dbx-171", "gov", "Before changing a column in a silver table, an engineer wants to see which downstream tables and dashboards use it. What gives this without extra setup?",
+  ["Unity Catalog lineage, which is captured automatically down to column level", "A tag on the column", "The table's comment field", "Running SHOW GRANTS on the table"], 0,
+  "Unity Catalog captures lineage from queries run on Databricks, at table and column level, and shows upstream and downstream tables, notebooks, jobs and dashboards in Catalog Explorer.",
+  more={"u": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/data-lineage", "t": "Lineage in Unity Catalog"}),
+q("dbx-172", "gov", "A partner company that does not use Databricks needs read access to two of your tables, without copying files to them. What fits?",
+  ["OpenSharing (Delta Sharing) with Databricks-to-Open sharing to a recipient", "Granting the partner SELECT in your metastore", "Exporting the tables as CSV every night", "Giving the partner a personal access token for your workspace"], 0,
+  "OpenSharing, built on the open Delta Sharing protocol, shares live tables without copies. Databricks-to-Open sharing serves recipients on any platform, who connect with a bearer token or OIDC federation and tools such as Spark, pandas or Power BI. Databricks-to-Databricks sharing is for recipients with their own Unity Catalog workspace. Check the feature name in a workspace, as the docs now call it OpenSharing.",
+  more={"u": "https://docs.databricks.com/aws/en/opensharing/", "t": "What is OpenSharing?"}),
+q("dbx-173", "gov", "A view should show the salary column only to members of the hr group and NULL to everyone else. Which expression belongs in the view?",
+  ["CASE WHEN is_account_group_member('hr') THEN salary ELSE NULL END", "CASE WHEN current_user() = 'hr' THEN salary END", "salary WHERE group = 'hr'", "MASK(salary, 'hr')"], 0,
+  "is_account_group_member checks whether the person running the query is in an account-level group, which is what dynamic views use for column and row rules. current_user() returns a user name, not a group.",
+  more={"u": "https://docs.databricks.com/aws/en/views/dynamic", "t": "Create a dynamic view"}),
+
 ]
 
 out = pathlib.Path(__file__).with_suffix(".json")
