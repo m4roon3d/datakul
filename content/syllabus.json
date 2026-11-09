@@ -2836,7 +2836,7 @@
    "llm-evaluation"
   ],
   "pack": "genai",
-  "status": "new",
+  "status": "existing",
   "order": 221
  },
  {
@@ -2849,7 +2849,7 @@
    "prompting-data"
   ],
   "pack": "genai",
-  "status": "new",
+  "status": "existing",
   "order": 222
  },
  {
@@ -2862,7 +2862,7 @@
    "function-calling"
   ],
   "pack": "genai",
-  "status": "new",
+  "status": "existing",
   "order": 223
  },
  {
@@ -3225,7 +3225,7 @@
    "cloud-platforms"
   ],
   "pack": "cloud",
-  "status": "new",
+  "status": "existing",
   "order": 251
  },
  {
@@ -3238,7 +3238,7 @@
    "azure-data-services"
   ],
   "pack": "cloud",
-  "status": "new",
+  "status": "existing",
   "order": 252
  },
  {
@@ -3251,7 +3251,7 @@
    "kafka-basics"
   ],
   "pack": "cloud",
-  "status": "new",
+  "status": "existing",
   "order": 253
  },
  {
@@ -3626,7 +3626,7 @@
    "insurance-data"
   ],
   "pack": "industry",
-  "status": "new",
+  "status": "existing",
   "order": 282
  },
  {
@@ -3639,7 +3639,7 @@
    "apis-json"
   ],
   "pack": "industry",
-  "status": "new",
+  "status": "existing",
   "order": 283
  },
  {
@@ -3962,7 +3962,7 @@
    "stateful-streaming"
   ],
   "pack": "advanced",
-  "status": "new",
+  "status": "existing",
   "order": 308
  },
  {
@@ -3975,7 +3975,7 @@
    "delivery-semantics"
   ],
   "pack": "advanced",
-  "status": "new",
+  "status": "existing",
   "order": 309
  },
  {
