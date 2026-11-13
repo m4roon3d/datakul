@@ -75,6 +75,73 @@ with sync_playwright() as p:
     ok(pg.evaluate("window.__vt") == 0 and pg.is_visible("#view-tutor .ans"), "reduced motion: lesson opens without a transition")
     c.close()
 
+    # Streak flame, boss unlock and tab glide, in all three themes at phone width and on desktop.
+    for theme, vw in [("light", 390), ("dark", 390), ("black", 390), ("light", 1440)]:
+        c = b.new_context(viewport={"width": vw, "height": 900}); c.add_init_script(SPY + f"localStorage.setItem('dp_theme', JSON.stringify('{theme}'));")
+        pg = c.new_page(); pg.on("pageerror", lambda e: errs.append(str(e))); tag = f"{theme}@{vw}"
+        pg.goto(B + "/#quests"); pg.wait_for_timeout(700)
+
+        # Streak: flame flickers while alive; the count rolls when it grows.
+        pg.evaluate("QS.streak = { last: addDays(today(), -1), n: 3 }; refreshChrome(); touchStreak(); refreshChrome()")
+        chip = pg.locator("#streakChip .chip")
+        ok("live" in chip.get_attribute("class") and "grew" in chip.get_attribute("class"), f"{tag}: streak chip flickers and rolls when the streak grows")
+        ok(pg.locator("#streakChip .rl span").all_inner_texts() == ["3", "4"], f"{tag}: day count rolls from 3 to 4")
+        ok(pg.evaluate("getComputedStyle(document.querySelector('#streakChip svg')).animationName").startswith("flick"), f"{tag}: flame flickers")
+        pg.evaluate("refreshChrome()")
+        ok("grew" not in chip.get_attribute("class") and pg.locator("#streakChip .roll").count() == 0, f"{tag}: no roll on an ordinary refresh")
+
+        # Boss round unlocks: the lock rattles once, then it's a plain crown.
+        # Finish the chapter's quests from another screen (as a learner would, inside lessons), then come back.
+        pg.evaluate("""(() => { showView('library'); const ch = chapters(pathTrack())[0]; QS.sel = ch.mod;
+            ch.ids.forEach((id) => { markSeen(id); QS.ans[id] = 100; }); renderQuests(); })()""")
+        ok(pg.evaluate("store.get('bossseen', []).length") == 0, f"{tag}: unlock isn't used up while Quests is hidden")
+        pg.evaluate("showView('quests')")
+        pg.wait_for_timeout(250)
+        ok(pg.locator(".pn.boss.unlock .ul-lock .shk").count() == 1 and pg.locator(".pn.boss.unlock .ul-crown").count() == 1, f"{tag}: boss node shows the unlocking lock")
+        ok(pg.evaluate("getComputedStyle(document.querySelector('.pn.boss.unlock .ul-lock svg')).animationName") == "rattle", f"{tag}: lock rattles")
+        ok(pg.locator(".card.path.glow").count() == 1, f"{tag}: the path card glows")
+        pg.wait_for_timeout(1300)
+        ok("Boss round unlocked" in pg.locator("#toast").inner_text(), f"{tag}: toast says the boss round unlocked")
+        pg.screenshot(path=f"{OUT}/motion_boss_{theme}_{vw}.png")
+        pg.evaluate("renderQuests()")
+        ok(pg.locator(".pn.boss.unlock").count() == 0 and pg.locator(".pn.boss .dotn svg").count() == 1, f"{tag}: shown once, then a plain crown")
+
+        # Tab glide: one highlight slides to the selected tab.
+        def ind_ok(tab_id):
+            return pg.evaluate(f"""(() => {{ const n = document.querySelector('.tabs'), i = n.querySelector('.tabind'), t = document.getElementById('{tab_id}');
+                const a = n.getBoundingClientRect(), b = t.getBoundingClientRect(), r = i.getBoundingClientRect();
+                return Math.abs(r.left - b.left) < 2 && Math.abs(r.width - b.width) < 2 && getComputedStyle(i).opacity === '1'; }})()""")
+        pg.click("#tab-library"); pg.wait_for_timeout(450)
+        ok(ind_ok("tab-library"), f"{tag}: highlight slides to Library")
+        ok(pg.evaluate("getComputedStyle(document.getElementById('tab-library')).backgroundColor") in ("rgba(0, 0, 0, 0)", "transparent"), f"{tag}: only the sliding highlight is painted")
+        pg.click("#tab-cert"); pg.wait_for_timeout(450)
+        ok(ind_ok("tab-cert"), f"{tag}: highlight slides to Certifications")
+        pg.click("#tab-tutor"); pg.wait_for_timeout(450)
+        if vw < 900:
+            ok(pg.evaluate("getComputedStyle(document.querySelector('.tabind')).opacity") == "0", f"{tag}: highlight steps aside for the raised Ask button")
+        else:
+            ok(ind_ok("tab-tutor"), f"{tag}: highlight slides to Ask")
+        pg.click("#tab-quests"); pg.wait_for_timeout(450)
+        ok(ind_ok("tab-quests"), f"{tag}: highlight back on Quests")
+        pg.set_viewport_size({"width": 1440 if vw < 900 else 390, "height": 900}); pg.wait_for_timeout(300)
+        ok(ind_ok("tab-quests"), f"{tag}: highlight follows a resize")
+        ok(pg.evaluate("document.documentElement.scrollWidth") <= pg.evaluate("innerWidth"), f"{tag}: no sideways scroll")
+        pg.screenshot(path=f"{OUT}/motion_tabs_{theme}_{vw}.png")
+        c.close()
+
+    # Reduced motion: no flicker, roll, rattle or slide; everything still shows the right state.
+    c = b.new_context(viewport={"width": 390, "height": 844}, reduced_motion="reduce"); c.add_init_script(SPY)
+    pg = c.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
+    pg.goto(B + "/#quests"); pg.wait_for_timeout(600)
+    pg.evaluate("QS.streak = { last: addDays(today(), -1), n: 3 }; refreshChrome(); touchStreak(); refreshChrome()")
+    ok(pg.evaluate("getComputedStyle(document.querySelector('#streakChip svg')).animationName") == "none", "reduced motion: flame still")
+    ok(pg.evaluate("getComputedStyle(document.querySelector('#streakChip .rl')).transform") != "none", "reduced motion: count shows the new day without rolling")
+    pg.evaluate("""(() => { showView('library'); const ch = chapters(pathTrack())[0]; QS.sel = ch.mod; ch.ids.forEach((id) => { markSeen(id); QS.ans[id] = 100; }); showView('quests'); })()""")
+    ok(pg.is_visible(".pn.boss.unlock .ul-crown") and not pg.is_visible(".pn.boss.unlock .ul-lock"), "reduced motion: crown shown straight away")
+    ok(pg.evaluate("window.__buzz.length") == 0, "reduced motion: no buzz on unlock")
+    ok(pg.evaluate("getComputedStyle(document.querySelector('.tabind')).transitionDuration") == "0s", "reduced motion: highlight jumps, no slide")
+    c.close()
+
     # Splash: shown on the first open of a session only, never blocks taps, then removes itself.
     c = b.new_context(viewport={"width": 390, "height": 844}); pg = c.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
     pg.goto(B + "/?splash#quests"); pg.wait_for_timeout(450)

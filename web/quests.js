@@ -258,17 +258,23 @@ function lvlCard() {
   const L = levelOf(QS.xp), a = lvlStart(L), b = lvlStart(L + 1);
   return `<div class="lvlcard"><div class="top"><b>Level ${L}</b><span>${titleOf(L)}</span></div><div class="tr"><i style="width:${Math.round((100 * (QS.xp - a)) / (b - a))}%"></i></div><small>${QS.xp.toLocaleString("en-IN")} / ${b.toLocaleString("en-IN")} XP${titleOf(L + 1) !== titleOf(L) ? " to " + titleOf(L + 1) : ""}</small></div>`;
 }
+let shownStreak = null;
 function refreshChrome() {
   const n = QS.streak.last === today() || QS.streak.last === addDays(today(), -1) ? QS.streak.n : 0;
   const sl = n ? n + "-day streak" : "Start a streak", xp = QS.xp.toLocaleString("en-IN");
+  // When the streak grows, the day count rolls over like an odometer; the flame flickers while a streak is alive.
+  const grew = shownStreak !== null && n === shownStreak + 1;
+  const num = grew ? `<span class="roll"><span class="rl"><span>${shownStreak}</span><span>${n}</span></span></span>` : String(n);
+  shownStreak = n;
   // phones show the short form (flame + days, level only) so the logo, chips and settings fit on one line
-  $("#streakChip").innerHTML = `<span class="chip fire" title="Daily streak" aria-label="${sl}">${FLAME}<span class="short" aria-hidden="true">${n}</span><span class="long" aria-hidden="true">${sl}</span></span>`;
+  $("#streakChip").innerHTML = `<span class="chip fire${n ? " live" : ""}${grew ? " grew" : ""}" title="Daily streak" aria-label="${sl}">${FLAME}<span class="short" aria-hidden="true">${num}</span><span class="long" aria-hidden="true">${sl}</span></span>`;
   $("#lvlChip").innerHTML = `<span class="chip lvl" aria-label="Level ${levelOf(QS.xp)}, ${xp} XP">Lv ${levelOf(QS.xp)}<span class="long" aria-hidden="true"> · ${xp} XP</span></span>`;
 }
 
 /* ---------- the Quests home ---------- */
 const FLAG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4h11l-2.5 3.5L16 11H5"/></svg>`;
 const LOCK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>`;
+const LOCKANIM = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path class="shk" d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>`;
 const CROWN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18l2-11 6 5 6-5 2 11z"/></svg>`;
 function greeting() { const h = new Date().getHours(); return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"; }
 function ring(pct) {
@@ -298,7 +304,10 @@ function pathHTML(ch, nq) {
     const inner = st.done ? "✓" : id === nq ? FLAG : String(ids.indexOf(id) + 1);
     return { done: st.done, html: `<button class="pn ${cls}" type="button" ${act({ a: "qstep", id })}><span class="dotn">${inner}</span><b>${esc(CM[id].title)}</b></button>` };
   });
-  nodes.push({ done: ch.cleared, html: `<button class="pn boss${ch.cleared ? " done" : ch.bossOpen ? "" : " lock"}" type="button" ${act({ a: "qboss", mod: ch.mod })}><span class="dotn">${ch.cleared ? "✓" : ch.bossOpen ? CROWN : LOCK}</span><b>Boss round</b></button>` });
+  // The first time a chapter's boss round opens, the lock rattles, the shackle lifts and the crown takes its place.
+  const fresh = ch.bossOpen && !ch.cleared && !bossSeen().includes(ch.mod);
+  const icon = ch.cleared ? "✓" : fresh ? `<span class="ul-lock">${LOCKANIM}</span><span class="ul-crown">${CROWN}</span>` : ch.bossOpen ? CROWN : LOCK;
+  nodes.push({ done: ch.cleared, html: `<button class="pn boss${ch.cleared ? " done" : ch.bossOpen ? "" : " lock"}${fresh ? " unlock" : ""}" type="button" ${act({ a: "qboss", mod: ch.mod })}><span class="dotn">${icon}</span><b>Boss round</b></button>` });
   return nodes.map((n, k) => (k ? `<span class="pl${nodes[k - 1].done ? " done" : ""}"></span>` : "") + n.html).join("");
 }
 function sideQuests(ch) {
@@ -327,6 +336,14 @@ function newShelf() {
   return `<div class="sech"><h3>New in the library</h3><span class="muted">${week ? week + " added this week" : list.length + " added recently"}</span></div>
     <div class="newshelf">${list.slice(0, 6).map((c) => `<button class="nitem" type="button" ${act({ a: "qstep", id: c.id })}><span class="nmeta"><i class="dot" style="background:var(--${c.t})"></i>${esc(TRACKS[c.t].short)} · ${c.cm ? "Community pick" : "New"}${seen.has(c.id) ? " · ✓" : ""}</span><b>${esc(c.title)}</b><small>${esc(clean(c.mod))}</small></button>`).join("")}</div>`;
 }
+const bossSeen = () => store.get("bossseen", []);
+function noteBossUnlock(ch) {
+  // Only counts as seen once the Quests screen is actually on show; renders behind a lesson don't use it up.
+  if (!ch.bossOpen || ch.cleared || bossSeen().includes(ch.mod) || $("#view-quests").hidden) return;
+  store.set("bossseen", [...bossSeen(), ch.mod].slice(-60));
+  if (typeof buzz === "function") buzz([15, 40, 15]);
+  setTimeout(() => toast(`${CROWN.replace("<svg ", '<svg class="tcrown" ')}<span>Boss round unlocked: ${esc(clean(ch.mod))}</span>`), 650);
+}
 function renderQuests() {
   const t = pathTrack(), chs = chapters(t), info = chapterInfo(chs);
   const ch = currentChapter(info), nq = nextQuest(ch);
@@ -339,7 +356,7 @@ function renderQuests() {
     ${due.length ? `<div class="questcta"><span>${due.length} topic${due.length > 1 ? "s" : ""} due for review. A quick answer keeps ${due.length > 1 ? "them" : "it"} fresh · +15 XP</span><button class="btn" type="button" ${act({ a: "qreview", id: due[0] })}>Review now</button></div>` : ""}
     <div id="qMsg"></div>
     <div class="sech"><h3>Chapter ${ch.i + 1} · ${esc(clean(ch.mod))}</h3><span class="muted">${ch.done} of ${ch.ids.length} quests</span></div>
-    <div class="card path">${pathHTML(ch, nq)}</div>
+    <div class="card path${!nq && ch.bossOpen && !ch.cleared && !bossSeen().includes(ch.mod) ? " glow" : ""}">${pathHTML(ch, nq)}</div>
     <div class="sech"><h3>Today's quests</h3><span class="muted">resets at midnight</span></div>
     <div class="daily">${dl.map((k) => { const def = DAILY[k], n = Math.min(d[k] || 0, def.goal), ok = d.claimed.includes(k); return `<div class="dq${ok ? " done" : ""}"><b>${def.label}</b><div class="tr"><i style="width:${(100 * n) / def.goal}%"></i></div><small>${ok ? "Done" : n + " of " + def.goal} · +${def.xp} XP</small></div>`; }).join("")}</div>
     ${newShelf()}
@@ -352,6 +369,7 @@ function renderQuests() {
       <div class="seg">${["What is a watermark?", "Plan my interview prep"].map((q) => `<button class="pill" type="button" ${act({ a: "ask", q })} style="font-size:13px;padding:6px 11px">${esc(q)}</button>`).join("")}</div></div>
     <div class="card badges"><b class="h">Badges</b><div class="bgrid">${earned.map((b) => `<span class="badge ${b.cls}" title="${esc(b.name)}">${b.short}</span>`).join("")}${earned.length ? '<span class="badge next" title="Next badge">?</span>' : ""}</div><small class="muted">${nextB ? "Next: " + esc(nextB.name) : "You've earned every badge!"}</small></div>
   </aside>`;
+  noteBossUnlock(ch);
 }
 document.addEventListener("change", (e) => {
   if (e.target.id === "qPath") {
