@@ -7,13 +7,14 @@ short answers, no jargon).
 ## Layout
 
 - `web/`: the app, served as static files. Menu: top bar with a Practice drop-down on desktop, bottom bar with a raised Ask button on phones (`tests/nav.py`). Scripts load in this order: config.js, library.js, community.js, problems.js,
-  diagrams.js, app.js, pyrunner.js, practice.js, quests.js, exam.js, pwa.js (install, offline, shortcuts). `sw.js` is the
+  diagrams.js, app.js, pyrunner.js, practice.js, quests.js, jobsim.js, exam.js, pwa.js (install, offline, shortcuts). `sw.js` is the
   offline service worker (network first; bump `CACHE` if the saved-file strategy changes) and `manifest.webmanifest` the install details. `admin.html` is the community review page.
 - `web/library.js`: the concepts (`C`) and interview questions (`Q`), 225 and 420 as of 28 Oct 2026 and growing weekly.
   Content is written in `content/batches/batchNN.py`, checked with `node content/validate_batch.js <batch.json>` and merged
   with `content/merge_batch.js` (which stamps new concepts with an `nw` date). The syllabus source is
   `content/syllabus.txt`; wave 2 is written in the order of `content/queue.txt`. The weekly update follows
   `docs/weekly-content.md`.
+- `web/jobsim.js`: the job simulator (Practice → Job sim, `#sim`): one fictional company per path, five tickets (Mon to Fri) each with a colleague's message, an attachment, key points in the interview grader's format and a senior's reply. 60% clears a day (+40 XP once), a full week +100 XP and the "Week one survived" badge. Progress in `dp_sim` (synced). The colleague's AI review is gateway mode `simreview`. `tests/jobsim.mjs` checks every senior reply earns all its points and vague replies don't. Companies are made up; keep them so.
 - `web/certs.js` (generated) and `web/exam.js`: exam prep, its own top-level section (Certifications). Question banks are written in
   `content/certs/*.py` (original questions only, from the public exam guide; never real exam content), checked and built
   with `node content/build_certs.mjs`. Readiness = last 10 answers per exam section, ready at 8+ answered and 75%+.
@@ -43,8 +44,8 @@ short answers, no jargon).
 ## Commands
 
 - Tests: `node --no-warnings tests/gateway.mjs`, `node --no-warnings tests/layer2.mjs`,
-  `node --no-warnings tests/status.mjs`, `node --no-warnings tests/cache.mjs`, then `node tests/l2server.mjs 8788 &` and `python3 tests/l2ui.py`,
-  `tests/themes.py`, `tests/teach.py`, `tests/status_ui.py`, `tests/exam.py`, `tests/pwa.py`, `tests/account_ui.py`, `tests/nav.py`, `tests/motion.py`, `tests/cache_ui.py`; also `node --no-warnings tests/accounts.mjs` and `tests/certq.mjs`.
+  `node --no-warnings tests/status.mjs`, `node --no-warnings tests/cache.mjs`, `node --no-warnings tests/jobsim.mjs`, then `node tests/l2server.mjs 8788 &` and `python3 tests/l2ui.py`,
+  `tests/themes.py`, `tests/teach.py`, `tests/status_ui.py`, `tests/exam.py`, `tests/pwa.py`, `tests/account_ui.py`, `tests/nav.py`, `tests/motion.py`, `tests/cache_ui.py`, `tests/jobsim_ui.py`; also `node --no-warnings tests/accounts.mjs` and `tests/certq.mjs`.
 - After changing the grader in `web/app.js`: `node tools/sync-grader.mjs`.
 - Every interview question needs a model answer `a` that earns all its key points (`tests/teach.py` checks it); add
   answers to existing questions with `node content/add_model_answers.mjs <answers.json>`.

@@ -9,6 +9,9 @@ console.log("cardify:", r.status, r.headers.get("x-provider"), "model:", seen.mo
 r = await post("/api/chat", { mode: "tutor", question: "what is cdc", context: [] });
 const sys = seen.messages[0].content;
 console.log("tutor default provider model:", seen.model, "| career scope:", sys.includes("data careers"), "| mermaid rule:", sys.includes("mermaid"));
+r = await post("/api/chat", { mode: "simreview", provider: "groq", role: "Data Engineer", company: "Chaiwala Pay", from: "Priya Nair", fromRole: "Finance lead", ticket: "Totals doubled", task: "Reply to Priya", points: ["The retry appended twice"], answer: "The retry appended the day twice; I will reload it." });
+const simSys = seen.messages[0].content, simStatus = r.status;
+const simEmpty = (await post("/api/chat", { mode: "simreview", answer: "  " })).status;
 r = await post("/api/embed", { texts: ["a", "b"] });
 console.log("embed:", r.status, JSON.stringify(await r.json()));
 const prov = await (await worker.fetch(new Request("https://gw/api/providers"), env)).json();
@@ -21,5 +24,7 @@ want(sys.includes("data careers") && sys.includes("mermaid"), "tutor prompt keep
 want(prov.providers.map((p) => p.id).join(",") === "groq,llama", "providers listed in fallback order");
 want(prov.providers[0].models[0].id === "openai/gpt-oss-120b", "GPT-OSS 120B is the default Groq model");
 want(!JSON.stringify(prov).includes("llama-3.3-70b-versatile"), "retired Groq models are not offered");
+want(simStatus === 200 && simSys.includes("You are Priya Nair, Finance lead at Chaiwala Pay") && simSys.includes("- The retry appended twice") && simSys.includes("Coach's notes") && seen.messages[1].content.startsWith("NEW HIRE'S REPLY"), "job sim review plays the colleague and uses the key points");
+want(simEmpty === 400, "job sim review needs a reply");
 if (fail.length) { console.error("FAILED:\n- " + fail.join("\n- ")); process.exit(1); }
 console.log("ALL GATEWAY TESTS PASSED");
