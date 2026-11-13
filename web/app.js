@@ -736,6 +736,7 @@ function showView(v) {
   if (!VIEWS.includes(v)) v = "quests";
   const tab = v === "interview" ? "practice" : v;
   document.querySelectorAll(".tabs .tab").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.view === tab)));
+  glideTab();
   VIEWS.forEach((n) => ($("#view-" + n).hidden = n !== v));
   document.querySelectorAll(".subnav button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.sub === v)));
   if (v === "interview" || v === "practice") store.set("psub", v);
@@ -747,6 +748,25 @@ function showView(v) {
   if (v === "quests" && typeof renderQuests === "function") renderQuests();
   try { if (location.hash.slice(1) !== v) history.replaceState(null, "", "#" + v); } catch (e) {}
 }
+// Tab glide: one highlight slides to the selected tab instead of each tab lighting up on its own.
+function glideTab() {
+  const nav = $(".tabs"), sel = nav && nav.querySelector('.tab[aria-selected="true"]');
+  if (!nav) return;
+  let ind = nav.querySelector(".tabind");
+  if (!ind) { ind = document.createElement("span"); ind.className = "tabind"; ind.setAttribute("aria-hidden", "true"); nav.prepend(ind); }
+  // The phone's raised Ask button has its own look, so the highlight steps aside for it.
+  const skip = !sel || (sel.id === "tab-tutor" && !wideNav());
+  if (skip) { ind.style.opacity = "0"; return; }
+  const a = nav.getBoundingClientRect(), b = sel.getBoundingClientRect();
+  if (!b.width) return;
+  const first = !nav.classList.contains("glide");
+  if (first) ind.style.transition = "none";
+  ind.style.width = b.width + "px"; ind.style.height = b.height + "px";
+  ind.style.transform = `translate(${b.left - a.left}px, ${b.top - a.top}px)`; ind.style.opacity = "1";
+  nav.classList.add("glide");
+  if (first) requestAnimationFrame(() => (ind.style.transition = ""));
+}
+addEventListener("resize", () => glideTab());
 document.querySelectorAll(".tabs .tab").forEach((b) => b.addEventListener("click", () => {
   if (b.id === "tab-practice" && wideNav()) { if ($("#pmenu").hidden) openPMenu(); else closePMenu(); return; }
   showView(b.dataset.view === "practice" ? lastPractice() : b.dataset.view); window.scrollTo({ top: 0 });

@@ -96,6 +96,11 @@ p{margin:0}
 .tabs .tab .caret{width:14px;height:14px;margin-right:-2px;transition:transform .15s}
 .tabs .tab[aria-expanded="true"] .caret{transform:rotate(180deg)}
 .tabs .tab[aria-selected="true"]{background:var(--accent-soft);color:var(--accent)}
+.tabs{position:relative}
+.tabs .tabind{position:absolute;left:0;top:0;border-radius:12px;background:var(--accent-soft);pointer-events:none;opacity:0;transition:transform .32s cubic-bezier(.3,1.25,.5,1),width .32s cubic-bezier(.3,1.25,.5,1),height .2s,opacity .15s}
+.tabs.glide .tab[aria-selected="true"]{background:none}
+.tabs .tab{position:relative}
+@media (prefers-reduced-motion:reduce){.tabs .tabind{transition:none}}
 @media (min-width:900px){.tabs .tab>svg:not(.caret){display:none}}
 .pmenu{position:absolute;left:0;top:calc(100% + 8px);width:300px;padding:8px;border-radius:18px;background:var(--surface);border:1.5px solid var(--line);box-shadow:var(--shadow-lift);z-index:9}
 .pmenu button{display:flex;gap:12px;align-items:center;width:100%;border:0;background:none;text-align:left;padding:11px 12px;border-radius:12px;color:var(--ink)}
@@ -133,6 +138,16 @@ main{padding-block:12px 32px;flex:1}
 .chip svg{width:11px;height:15px;flex:none}
 .chip .short{display:none}
 .chip.fire{background:var(--flame-soft);color:var(--flame-ink)}
+.chip.fire .roll{display:inline-block;height:1.2em;line-height:1.2em;overflow:hidden;vertical-align:bottom}
+.chip.fire .rl{display:flex;flex-direction:column;transform:translateY(-1.2em)}
+@media (prefers-reduced-motion:no-preference){
+.chip.fire.live svg{transform-origin:50% 100%;animation:flick 1.6s ease-in-out infinite}
+.chip.fire.grew svg{animation:flick 1.6s ease-in-out infinite,flare .6s ease-out}
+.chip.fire.grew .rl{animation:roll .55s .15s cubic-bezier(.5,1.6,.5,1) both}
+@keyframes flick{0%,100%{transform:none}25%{transform:scale(.94,1.07) rotate(-3deg)}50%{transform:scale(1.04,.96)}75%{transform:scale(.97,1.05) rotate(3deg)}}
+@keyframes flare{0%{transform:scale(1)}40%{transform:scale(1.45)}100%{transform:scale(1)}}
+@keyframes roll{from{transform:none}to{transform:translateY(-1.2em)}}
+}
 .chip.lvl{background:var(--night);color:var(--night-ink)}
 .chip.xp{background:var(--flame-soft);color:var(--flame-ink)}
 .chip.soft{background:var(--surface);border:1px solid var(--line);color:var(--ink)}
@@ -198,6 +213,25 @@ a.lnk:hover{text-decoration:underline;text-underline-offset:3px}
 .pn.lock b{color:var(--muted)}
 .pn.boss .dotn{border-radius:16px;background:var(--night);color:#FFD79A}
 .pn.boss.done .dotn{background:var(--good);color:var(--surface)}
+.pn.boss .dotn{position:relative}
+.pn.boss .ul-lock,.pn.boss .ul-crown{display:grid;place-items:center}
+.pn.boss.unlock .ul-lock{display:none}
+.toast .tcrown{width:24px;height:24px;flex:none;color:var(--flame)}
+@media (prefers-reduced-motion:no-preference){
+.pn.boss.unlock .ul-lock,.pn.boss.unlock .ul-crown{position:absolute;inset:0}
+.pn.boss.unlock .ul-lock{display:grid;animation:ulfade .2s .78s ease-in forwards}
+.pn.boss.unlock .ul-lock svg{transform-origin:50% 90%;animation:rattle .5s .15s ease-in-out}
+.pn.boss.unlock .shk{animation:shk .25s .6s ease-out forwards}
+.pn.boss.unlock .ul-crown{animation:ulpop .4s .85s cubic-bezier(.3,1.6,.5,1) both}
+.pn.boss.unlock .dotn{animation:ulglow 1.6s .7s ease-out}
+.card.path.glow{animation:ulcard 1.6s .7s ease-out}
+@keyframes rattle{0%,100%{transform:none}20%{transform:rotate(-12deg)}40%{transform:rotate(10deg)}60%{transform:rotate(-7deg)}80%{transform:rotate(4deg)}}
+@keyframes shk{to{transform:translateY(-3px)}}
+@keyframes ulfade{to{opacity:0;transform:scale(.6)}}
+@keyframes ulpop{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:none}}
+@keyframes ulglow{0%{box-shadow:0 0 0 0 var(--flame)}40%{box-shadow:0 0 0 7px var(--flame-line)}100%{box-shadow:0 0 0 0 transparent}}
+@keyframes ulcard{0%{box-shadow:0 0 0 0 transparent}35%{box-shadow:0 0 0 3px var(--flame-line)}100%{box-shadow:0 0 0 0 transparent}}
+}
 .pn svg{width:18px;height:18px}
 .pn.now svg{width:15px;height:20px}
 .pl{flex:none;width:34px;height:4px;border-radius:2px;background:var(--line);margin-top:23px}
