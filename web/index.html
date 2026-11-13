@@ -508,6 +508,40 @@ textarea.ans-in{border:1.5px solid var(--line);background:var(--bg);border-radiu
 textarea.ans-in:focus{border-color:var(--accent);outline:none}
 .acts{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .meter{display:flex;align-items:center;gap:12px;font-variant-numeric:tabular-nums}
+/* Job simulator */
+#simBoard{display:flex;flex-direction:column;gap:16px}
+#simBoard .card{padding:20px 22px}
+.simhead{display:flex;flex-direction:column;gap:12px}
+.simhead h2{margin:0}
+.simhead p{margin:0}
+.simhead .seg{display:flex;flex-wrap:wrap;gap:8px}
+.simhead .pill[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.simweek{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.simday{display:flex;flex-direction:column;align-items:center;gap:2px;border:1.5px solid var(--line);background:var(--bg);border-radius:14px;padding:9px 4px;min-height:52px;color:var(--ink)}
+.simday small{font-size:12px;color:var(--muted);white-space:nowrap}
+.simday.ok{border-color:var(--good);background:var(--good-soft)}
+.simday.ok small{color:var(--good)}
+.simday.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.simdone{font-weight:700;color:var(--flame-ink);background:var(--flame-soft);border-radius:12px;padding:10px 12px}
+.simtk{display:flex;flex-direction:column;gap:12px}
+.simtk h3{margin:0;font-size:19px}
+.simtk>p{margin:0;line-height:1.55}
+.simfrom{display:flex;align-items:center;gap:10px}
+.simfrom .av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-weight:800;font-size:14px;flex:none}
+.simfrom small{display:block;color:var(--muted);font-size:13px}
+.simart{border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--surface-2);display:flex;flex-direction:column;gap:8px;min-width:0}
+.simart-t{font-family:var(--f-mono);font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.simart p{margin:0;font-size:14.5px}
+.simart pre{margin:0;white-space:pre-wrap;word-break:break-word;font-family:var(--f-mono);font-size:13px;line-height:1.5}
+.simtbl{overflow-x:auto}
+.simtbl table{border-collapse:collapse;font-size:13.5px;min-width:100%}
+.simtbl th,.simtbl td{text-align:left;padding:6px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.simtbl th{color:var(--muted);font-weight:700}
+.simask{background:var(--accent-soft);border-radius:12px;padding:10px 12px}
+.simres{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:12px}
+.simmodel{margin-top:10px}
+@media (max-width:640px){#simBoard .card{padding:16px}}
+@media (max-width:520px){.simday b{font-size:14px}.simday small{font-size:11px}.simtbl th,.simtbl td{padding:6px 8px}}
 .meter .tr{flex:1;height:10px;background:var(--surface-2);border-radius:999px;overflow:hidden}
 .meter .fl{height:100%;background:linear-gradient(90deg,var(--accent),var(--flame));border-radius:999px;transition:width .5s ease-out}
 .meter b{font-family:var(--f-mono);font-size:13px;font-weight:500}
@@ -846,6 +880,7 @@ textarea.editor:focus{border-color:var(--accent);outline:none}
       <div class="pmenu" id="pmenu" role="menu" aria-label="Practice" hidden>
         <button type="button" role="menuitem" data-sub="interview"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></span><span><b>Interview questions</b><small>Each with a model answer</small></span></button>
         <button type="button" role="menuitem" data-sub="practice"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg></span><span><b>Coding</b><small>SQL and Python, run in the browser</small></span></button>
+        <button type="button" role="menuitem" data-sub="sim"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h16v11H4z"/><path d="M9 8V5h6v3"/><path d="M4 13h16"/></svg></span><span><b>Job sim</b><small>Your first week on the job</small></span></button>
       </div></div>
     <button class="tab" role="tab" id="tab-library" data-view="library" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M8 7h7"/></svg>Library</button>
     <button class="tab" role="tab" id="tab-cert" data-view="cert" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg>Certifications</button>
@@ -889,7 +924,7 @@ textarea.editor:focus{border-color:var(--accent);outline:none}
 </section>
 
 <section class="view" id="view-interview" hidden>
-  <div class="subnav" role="group" aria-label="Practice type"><button type="button" data-sub="interview" aria-pressed="true" id="sub-interview">Interview questions</button><button type="button" data-sub="practice" aria-pressed="false" id="sub-code">Coding</button></div>
+  <div class="subnav" role="group" aria-label="Practice type"><button type="button" data-sub="interview" aria-pressed="true" id="sub-interview">Interview questions</button><button type="button" data-sub="practice" aria-pressed="false" id="sub-code">Coding</button><button type="button" data-sub="sim" aria-pressed="false">Job sim</button></div>
   <div id="mockArea"></div>
   <div class="target">
     <span class="eyebrow">Preparing for</span>
@@ -918,8 +953,13 @@ textarea.editor:focus{border-color:var(--accent);outline:none}
   <div id="certBoard"></div>
 </section>
 
+<section class="view" id="view-sim" hidden>
+  <div class="subnav" role="group" aria-label="Practice type"><button type="button" data-sub="interview" aria-pressed="false">Interview questions</button><button type="button" data-sub="practice" aria-pressed="false">Coding</button><button type="button" data-sub="sim" aria-pressed="true">Job sim</button></div>
+  <div id="simBoard"></div>
+</section>
+
 <section class="view" id="view-practice" hidden>
-  <div class="subnav" role="group" aria-label="Practice type"><button type="button" data-sub="interview" aria-pressed="false">Interview questions</button><button type="button" data-sub="practice" aria-pressed="true">Coding</button></div>
+  <div class="subnav" role="group" aria-label="Practice type"><button type="button" data-sub="interview" aria-pressed="false">Interview questions</button><button type="button" data-sub="practice" aria-pressed="true">Coding</button><button type="button" data-sub="sim" aria-pressed="false">Job sim</button></div>
   <div id="pracBoard" class="view"></div>
 </section>
 
@@ -979,6 +1019,7 @@ textarea.editor:focus{border-color:var(--accent);outline:none}
 <script src="pyrunner.js"></script>
 <script src="practice.js"></script>
 <script src="quests.js"></script>
+<script src="jobsim.js"></script>
 <script src="exam.js"></script>
 <script src="account.js"></script>
 <script src="pwa.js"></script>

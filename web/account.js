@@ -3,7 +3,7 @@
    Only learning progress is synced (never the theme, answer engine or other device settings). */
 (() => {
   if (!GW) return;
-  const KEYS = ["qs", "cert", "mycards", "practice", "seen"];
+  const KEYS = ["qs", "cert", "mycards", "practice", "seen", "sim"];
   const SES = "dp_session";
   const wrap = $("#acctWrap"), outEl = $("#acctOut"), inEl = $("#acctIn"), msg = $("#acctMsg");
   let cfg = null, ses = null, gisLoaded = false, timer = null, running = false, lastRun = 0;

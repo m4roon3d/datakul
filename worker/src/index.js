@@ -184,6 +184,31 @@ function feedbackPrompt(body) {
   ].join("\n");
 }
 
+// Job simulator: the colleague who sent the ticket reads the learner's reply and answers in character, then coaches.
+function simreviewPrompt(body) {
+  const points = (Array.isArray(body.points) ? body.points : []).slice(0, 8).map((p) => `- ${clip(p, 200)}`);
+  return [
+    `You are ${clip(body.from || "a colleague", 60)}, ${clip(body.fromRole || "a colleague", 60)} at ${clip(body.company || "a company", 60)}, a fictional Indian company.`,
+    `A new ${clip(body.role || "data professional", 40)} in their first week has replied to your message below. Judge the reply as a real colleague would, against the key points.`,
+    "Do not invent facts beyond the ticket, the key points and standard knowledge.",
+    ...(body.detail === "brief" ? [
+    "Reply in this shape, under 120 words, no tables or headings:",
+    "1. Two or three sentences in character, reacting to the reply as the colleague would (pleased, worried, needing more).",
+    "2. **Coach's note:** one line on the most important thing missing or to do better.",
+    ] : [
+    "Reply in this shape, about 150–250 words, no tables or headings:",
+    "1. Three or four sentences in character, reacting to the reply as the colleague would: what reassures you, what still worries you, and any follow-up question you'd ask.",
+    "2. **Coach's notes:** up to 3 short bullets, stepping out of character, on what a senior would add or say differently, and why it matters at work.",
+    "3. **Communication:** one line on tone and clarity for this reader.",
+    ]),
+    "",
+    `TICKET: ${clip(body.ticket, 900)}`,
+    `TASK: ${clip(body.task, 300)}`,
+    "KEY POINTS:",
+    ...points,
+  ].join("\n");
+}
+
 function selfcheckPrompt(body) {
   const ref = (Array.isArray(body.context) ? body.context : []).slice(0, 1)
     .map((c) => `### ${clip(c.title, 120)}\n${clip(c.text, LIMITS.contextTotal)}`).join("");
@@ -351,6 +376,12 @@ function buildMessages(body) {
     return [
       { role: "system", content: codereviewPrompt(body) },
       { role: "user", content: `LEARNER'S CODE:\n${clip(body.code, 6000)}` },
+    ];
+  }
+  if (body.mode === "simreview") {
+    return [
+      { role: "system", content: simreviewPrompt(body) },
+      { role: "user", content: `NEW HIRE'S REPLY:\n${clip(body.answer, LIMITS.answer)}` },
     ];
   }
   if (body.mode === "selfcheck") {
@@ -586,7 +617,7 @@ export default {
       } catch {
         return json({ error: "Request body must be JSON." }, 400, cors);
       }
-      if (body.mode === "generate" ? false : body.mode === "codereview" ? !String(body.code || "").trim() : body.mode === "feedback" || body.mode === "selfcheck" || body.mode === "cardify" ? !String(body.answer || "").trim() : !String(body.question || "").trim()) {
+      if (body.mode === "generate" ? false : body.mode === "codereview" ? !String(body.code || "").trim() : body.mode === "feedback" || body.mode === "selfcheck" || body.mode === "simreview" || body.mode === "cardify" ? !String(body.answer || "").trim() : !String(body.question || "").trim()) {
         return json({ error: "Nothing to send." }, 400, cors);
       }
       return chat(body, env, cors, ctx);

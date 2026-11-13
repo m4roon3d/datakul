@@ -727,24 +727,25 @@ function renderLib() {
 $("#libSearch").addEventListener("input", (e) => { libQuery = e.target.value; renderLib(); });
 
 /* ---------- navigation ---------- */
-const VIEWS = ["quests", "tutor", "interview", "practice", "cert", "library"];
+const VIEWS = ["quests", "tutor", "interview", "practice", "sim", "cert", "library"];
 const wideNav = () => window.matchMedia("(min-width:900px)").matches;
 function closePMenu() { const m = $("#pmenu"); if (m && !m.hidden) { m.hidden = true; $("#tab-practice").setAttribute("aria-expanded", "false"); } }
 function openPMenu() { const m = $("#pmenu"); m.hidden = false; $("#tab-practice").setAttribute("aria-expanded", "true"); m.querySelectorAll("[data-sub]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.sub === (store.get("psub", "interview"))))); }
-const lastPractice = () => (store.get("psub", "interview") === "practice" ? "practice" : "interview");
+const lastPractice = () => { const v = store.get("psub", "interview"); return v === "practice" || v === "sim" ? v : "interview"; };
 function showView(v) {
   if (!VIEWS.includes(v)) v = "quests";
-  const tab = v === "interview" ? "practice" : v;
+  const tab = v === "interview" || v === "sim" ? "practice" : v;
   document.querySelectorAll(".tabs .tab").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.view === tab)));
   glideTab();
   VIEWS.forEach((n) => ($("#view-" + n).hidden = n !== v));
   document.querySelectorAll(".subnav button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.sub === v)));
-  if (v === "interview" || v === "practice") store.set("psub", v);
+  if (v === "interview" || v === "practice" || v === "sim") store.set("psub", v);
   closePMenu();
   if (v === "cert" && typeof renderCert === "function") { renderCert(); if (typeof certqRefresh === "function") certqRefresh(); }
   if (v === "library") renderLib();
   if (v === "practice" && typeof renderPractice === "function") renderPractice();
   if (v === "interview") renderInterview();
+  if (v === "sim" && typeof renderSim === "function") renderSim();
   if (v === "quests" && typeof renderQuests === "function") renderQuests();
   try { if (location.hash.slice(1) !== v) history.replaceState(null, "", "#" + v); } catch (e) {}
 }

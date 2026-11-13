@@ -3,7 +3,7 @@
 // Gateway calls (/api) and anything that isn't a GET are never touched.
 const CACHE = "datakul-v1";
 const SHELL = ["./", "index.html", "library.js", "community.js", "problems.js", "certs.js", "diagrams.js", "app.js",
-  "pyrunner.js", "practice.js", "quests.js", "exam.js", "account.js", "pwa.js", "config.js", "manifest.webmanifest", "icons/datakul-icon-192.png"];
+  "pyrunner.js", "practice.js", "quests.js", "jobsim.js", "exam.js", "account.js", "pwa.js", "config.js", "manifest.webmanifest", "icons/datakul-icon-192.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => Promise.all(SHELL.map((u) => c.add(u).catch(() => {})))).then(() => self.skipWaiting()));
