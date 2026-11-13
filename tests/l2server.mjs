@@ -9,7 +9,7 @@ import worker from "../worker/src/index.js";
 
 const PORT = +(process.argv[2] || 8788), WEB = new URL("../web/", import.meta.url).pathname;
 const DB = new D1Mock();
-for (const f of ["0001_init.sql", "0002_usage.sql", "0003_accounts.sql", "0004_cert_questions.sql"]) await DB.exec(readFileSync(new URL("../worker/migrations/" + f, import.meta.url), "utf8"));
+for (const f of ["0001_init.sql", "0002_usage.sql", "0003_accounts.sql", "0004_cert_questions.sql", "0005_answer_cache.sql"]) await DB.exec(readFileSync(new URL("../worker/migrations/" + f, import.meta.url), "utf8"));
 const env = { GROQ_API_KEY: "k", ADMIN_TOKEN: "test-token", GOOGLE_CLIENT_ID: "test-client.apps.googleusercontent.com", MIN_ASKERS: "3", DB, AI: { run: async (m, i) => ({ data: i.text.map(fakeVec) }) } };
 const sse = (t) => t.match(/[\s\S]{1,200}/g).map((p) => `data: ${JSON.stringify({ choices: [{ delta: { content: p } }] })}\n\n`).join("") + "data: [DONE]\n\n";
 // fake Google: a test key pair; GET /__jwt?sub=1&email=a@b.c&name=Ada returns a token the gateway will accept

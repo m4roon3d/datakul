@@ -25,6 +25,7 @@ short answers, no jargon).
   questions, group nightly, draft, check, review, publish). `worker/migrations/`: D1 schema.
 - `worker/src/grader.js` is generated from the grader in `web/app.js` by `node tools/sync-grader.mjs`. Never edit it by hand;
   CI fails if it is out of date.
+- `worker/src/cache.js` (migration 0005): saved answers. A grounded first Ask question (library notes, no history, no PII, sharing on) is saved under a hash of the whole prompt, so prompt or card edits start fresh; served again with `x-provider: cache`, kept 30 days, at most 5,000. The review page's AI status tab shows counts and a Clear button. The question text is never stored.
 - `worker/src/usage.js`: one D1 row per AI call (never the text) for the review page's AI status tab; free allowances
   in `FREE_LIMITS` need updating when providers change them.
 - Accounts (optional, off unless the `GOOGLE_CLIENT_ID` secret is set): `worker/src/accounts.js` (Google token check, sessions,
@@ -42,8 +43,8 @@ short answers, no jargon).
 ## Commands
 
 - Tests: `node --no-warnings tests/gateway.mjs`, `node --no-warnings tests/layer2.mjs`,
-  `node --no-warnings tests/status.mjs`, then `node tests/l2server.mjs 8788 &` and `python3 tests/l2ui.py`,
-  `tests/themes.py`, `tests/teach.py`, `tests/status_ui.py`, `tests/exam.py`, `tests/pwa.py`, `tests/account_ui.py`, `tests/nav.py`, `tests/motion.py`; also `node --no-warnings tests/accounts.mjs` and `tests/certq.mjs`.
+  `node --no-warnings tests/status.mjs`, `node --no-warnings tests/cache.mjs`, then `node tests/l2server.mjs 8788 &` and `python3 tests/l2ui.py`,
+  `tests/themes.py`, `tests/teach.py`, `tests/status_ui.py`, `tests/exam.py`, `tests/pwa.py`, `tests/account_ui.py`, `tests/nav.py`, `tests/motion.py`, `tests/cache_ui.py`; also `node --no-warnings tests/accounts.mjs` and `tests/certq.mjs`.
 - After changing the grader in `web/app.js`: `node tools/sync-grader.mjs`.
 - Every interview question needs a model answer `a` that earns all its key points (`tests/teach.py` checks it); add
   answers to existing questions with `node content/add_model_answers.mjs <answers.json>`.

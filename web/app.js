@@ -377,6 +377,7 @@ async function aiResolve(text) {
     mode: "tutor", provider: engine.provider, model: engine.model, level: level || "work", detail,
     question: text, history: aiHistory.slice(-6), focus: lastConcept ? lastConcept.title : "",
     context: ctx.map((c) => ({ title: c.title, text: refText(c) })),
+    store: shareOn(), // with "Help grow the library" off, saved answers can be read but this answer is not saved
   };
   busy = true;
   try {
@@ -384,8 +385,9 @@ async function aiResolve(text) {
     body.classList.remove("cursor");
     drawMermaid(body);
     const chosen = providers.find((p) => p.id === engine.provider);
-    const switched = out.id && chosen && out.id !== chosen.id ? `${esc(chosen.label)} was busy, so ` : "";
-    foot.innerHTML = `${hits[0] && typeof questCTA === "function" ? questCTA(hits[0].id) : ""}${ctx[0] ? nextLinks(ctx[0]) : ""}<p class="muted" style="font-size:12.5px">${switched}${switched ? "a" : "A"}nswered by ${esc(out.label)} · ${esc(out.model)}. AI can make mistakes; the library entries are the reviewed source.</p>`;
+    const saved = out.id === "cache";
+    const switched = !saved && out.id && chosen && out.id !== chosen.id ? `${esc(chosen.label)} was busy, so ` : "";
+    foot.innerHTML = `${hits[0] && typeof questCTA === "function" ? questCTA(hits[0].id) : ""}${ctx[0] ? nextLinks(ctx[0]) : ""}<p class="muted" style="font-size:12.5px">${saved ? `Saved answer to a common question, first written by ${esc(out.label)} · ${esc(out.model)}.` : `${switched}${switched ? "a" : "A"}nswered by ${esc(out.label)} · ${esc(out.model)}.`} AI can make mistakes; the library entries are the reviewed source.</p>`;
     aiHistory.push({ role: "user", content: text }, { role: "assistant", content: out.text });
     aiHistory = aiHistory.slice(-8);
     hits.forEach((c) => { markSeen(c.id); if (typeof questEvent === "function") questEvent("interest", { id: c.id }); });
