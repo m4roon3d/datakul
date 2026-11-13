@@ -394,6 +394,10 @@ async function loadStatus() {
       </tbody></table></div>
       <p class="muted" style="font-size:13px">Free allowances reset at midnight UTC (5:30 am India time). Cloudflare's Workers AI allows 10,000 "neurons" a day shared by all its models, which isn't counted in tokens here. Token counts are the provider's own where it reports them, otherwise estimated from the text length.</p>
     </div>
+    <div class="st-sec"><h2>Saved answers</h2>
+      ${s.cache ? `<div class="st-sum"><div class="stat"><b>${fmt(s.cache.today)}</b><span>served today without an AI call</span></div><div class="stat"><b>${fmt(s.cache.week)}</b><span>in the last 7 days</span></div><div class="stat"><b>${fmt(s.cache.entries)}</b><span>answers saved</span></div></div>
+      <p class="muted" style="font-size:13px">Grounded first questions are saved for 30 days and served again when someone asks the same thing. A change to the tutor prompt or a library card starts fresh automatically. <button class="chk-btn" type="button" id="cacheClear">Clear saved answers</button> <span id="cacheMsg" class="muted"></span></p>` : `<p class="muted">Not set up yet: the database migration for saved answers hasn't run.</p>`}
+    </div>
     <div class="st-sec"><h2>What the AI was used for today</h2>
       <div class="st-sum">${s.modes.length ? s.modes.map((m) => `<div class="stat"><b>${fmt(m.n)}</b><span>${esc({ tutor: "Ask answers", feedback: "Interview feedback", selfcheck: "Check my thinking", codereview: "Code reviews", generate: "Generated problems", cardify: "Personal study cards", draft: "Community drafts", embed: "Matching by meaning", ping: "Status checks" }[m.mode] || m.mode)}${m.n - m.ok ? ` · ${m.n - m.ok} failed` : ""}</span></div>`).join("") : `<p class="muted">No AI calls yet today.</p>`}</div>
     </div>
@@ -404,6 +408,12 @@ async function loadStatus() {
       <p>${s.lastJob ? `Last ran ${ago(s.lastJob.at)}: grouped ${fmt(s.lastJob.result && s.lastJob.result.assigned)} questions, drafted ${(s.lastJob.result && s.lastJob.result.drafted || []).length}.` : "Hasn't run yet. It runs at 2 am India time."}</p>
     </div>`;
   $("#checkAll").onclick = () => document.querySelectorAll("[data-ping]").forEach((b) => b.click());
+  const cc = $("#cacheClear");
+  if (cc) cc.onclick = async () => {
+    cc.disabled = true; $("#cacheMsg").textContent = "Clearing…";
+    try { const r = await api("cache/clear", {}); $("#cacheMsg").textContent = `Cleared ${fmt(r.cleared)} saved answers.`; } catch (e) { $("#cacheMsg").textContent = e.message; }
+    cc.disabled = false;
+  };
   v.querySelectorAll("[data-ping]").forEach((b) => (b.onclick = async () => {
     const m = s.models[+b.dataset.ping], out = $("#ping-" + b.dataset.ping);
     b.disabled = true; out.textContent = "Checking…";

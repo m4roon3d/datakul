@@ -6,6 +6,7 @@
 import { handleCommunity, runJob } from "./community.js";
 import { runCertJob } from "./certq.js";
 import { handleAccounts, userStats, pruneSessions } from "./accounts.js";
+import { cacheable, cacheKey, getCached, noteHit, replay, capture, pruneCache, cacheStatus, clearCache } from "./cache.js";
 import { logUsage, meteredStream, promptTokens, rateHeaders, usageStatus, setMeta, pruneUsage } from "./usage.js";
 
 const PROVIDERS = {
@@ -437,6 +438,23 @@ async function chat(body, env, cors, ctx) {
   const errors = [];
   const mode = String(body.mode || "tutor").slice(0, 20), tin = promptTokens(messages);
 
+  // A grounded first question someone has asked before: send the saved answer, using no AI allowance.
+  const ck = cacheable(body, messages) ? await cacheKey(messages) : null;
+  if (ck) {
+    const hit = await getCached(env, ck);
+    if (hit) {
+      ctx && ctx.waitUntil(noteHit(env, ck));
+      return new Response(replay(hit.answer), {
+        status: 200,
+        headers: {
+          "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-store",
+          "x-provider": "cache", "x-provider-label": (PROVIDERS[hit.provider] || {}).label || hit.provider, "x-model": hit.model,
+          ...cors,
+        },
+      });
+    }
+  }
+
   for (const [k, id] of order.entries()) {
     const p = PROVIDERS[id];
     const model = id === first && p.models.some((m) => m.id === body.model) ? body.model : p.models[0].id;
@@ -445,7 +463,10 @@ async function chat(body, env, cors, ctx) {
       const r = await callProvider(id, model, messages, env, body.mode === "generate" ? LIMITS.maxTokensGenerate : body.mode === "cardify" ? 700 : LIMITS.maxTokens);
       const rec = { provider: id, model, mode, ms: Date.now() - t0, tin, fallback: k > 0, ...rateHeaders(r) };
       if (r.ok && r.body) {
-        return new Response(meteredStream(r.body, env, ctx, rec), {
+        const metered = meteredStream(r.body, env, ctx, rec);
+        // Save it for the next learner, unless this learner switched off sharing in Settings.
+        const out = ck && env.DB && body.store !== false ? capture(metered, env, ctx, ck, id, model) : metered;
+        return new Response(out, {
           status: 200,
           headers: {
             "content-type": "text/event-stream; charset=utf-8",
@@ -537,8 +558,9 @@ async function ping(env, provider, model) {
 const providerList = (env) => configured(env).map(([id, p]) => ({ id, label: p.label, models: p.models }));
 const deps = (env, ctx) => ({
   json, rateLimited, complete, embed: (t) => embed(t, env, ctx),
-  usageStatus: async () => ({ ...(await usageStatus(env, [...providerList(env), ...(env.AI ? [{ id: "llama", label: "Embeddings (Cloudflare)", models: [{ id: EMBED_MODEL, label: "BGE small (matching by meaning)" }] }] : [])])), users: await userStats(env) }),
-  ping: (provider, model) => ping(env, provider, model), setMeta: (k, v) => setMeta(env, k, v), pruneUsage: async () => { await pruneSessions(env); return pruneUsage(env); },
+  usageStatus: async () => ({ ...(await usageStatus(env, [...providerList(env), ...(env.AI ? [{ id: "llama", label: "Embeddings (Cloudflare)", models: [{ id: EMBED_MODEL, label: "BGE small (matching by meaning)" }] }] : [])])), users: await userStats(env), cache: await cacheStatus(env) }),
+  clearCache: () => clearCache(env),
+  ping: (provider, model) => ping(env, provider, model), setMeta: (k, v) => setMeta(env, k, v), pruneUsage: async () => { await pruneSessions(env); await pruneCache(env); return pruneUsage(env); },
 });
 
 /* ---------------- router ---------------- */

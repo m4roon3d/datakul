@@ -332,6 +332,7 @@ async function admin(request, url, env, deps) {
     return { status: 404, out: { error: "Not found." } };
   }
   if (path === "status" && request.method === "GET" && deps.usageStatus) return { status: 200, out: await deps.usageStatus() };
+  if (path === "cache/clear" && request.method === "POST" && deps.clearCache) return { status: 200, out: { cleared: await deps.clearCache() } };
   if (path === "ping" && request.method === "POST" && deps.ping) {
     let body;
     try { body = await request.json(); } catch { return { status: 400, out: { error: "Request body must be JSON." } }; }
