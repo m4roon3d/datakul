@@ -71,3 +71,16 @@ short answers, no jargon).
 - Branch from the latest `main`, open a PR, wait for CI. **Merge only when Ramanaa says "Merge"** (squash).
 - A merge deploys to production. After a merge, check the Deploy run and report the app address from its summary.
 - Say what was tested in a browser and what was tested live; never claim live behaviour that was only tested locally.
+
+## Ship
+
+Used by the ship-change skill. The working agreement above wins if anything differs.
+
+```
+target: cloudflare (Worker + static site via tools/deploy.mjs) + android-apk (TWA, android.yml publishes a release on main)
+merge: on-"Merge" (squash)
+checks: node tools/check_globals.mjs; the node tests and Playwright tests listed under Commands
+release: none (the merge to main deploys)
+preview: none; test locally with node tests/l2server.mjs 8788
+after merge: check the Deploy run and report the app address from its summary; android.yml publishes the APK release
+```
