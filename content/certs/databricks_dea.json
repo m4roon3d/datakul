@@ -1912,6 +1912,380 @@
     "u": "https://docs.databricks.com/aws/en/views/dynamic",
     "t": "Create a dynamic view"
    }
+  },
+  {
+   "id": "dbx-174",
+   "d": "ingest",
+   "q": "An Auto Loader stream must keep its schema fixed and never fail, but values from any new fields should still be kept somewhere for later. Which schema evolution mode fits?",
+   "opts": [
+    "rescue",
+    "addNewColumns",
+    "failOnNewColumns",
+    "none"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "In rescue mode the schema never evolves and the stream does not fail; new columns are recorded in the rescued data column. addNewColumns stops the stream to add them, failOnNewColumns stops until you fix the schema, and none ignores them.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/schema",
+    "t": "Configure schema inference and evolution in Auto Loader"
+   }
+  },
+  {
+   "id": "dbx-175",
+   "d": "ingest",
+   "q": "Auto Loader infers all JSON columns, but order_date must be a DATE and qty an INT. How do you set just these two types and let the rest be inferred?",
+   "opts": [
+    ".option(\"cloudFiles.schemaHints\", \"order_date DATE, qty INT\")",
+    "Pass a full schema with .schema() listing only those two columns",
+    ".option(\"cloudFiles.inferColumnTypes\", \"false\")",
+    ".option(\"mergeSchema\", \"true\")"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "Schema hints override the inferred type of named columns and leave the others to inference. A full schema with .schema() would turn inference off, so columns not listed would not be added as columns.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/schema",
+    "t": "Configure schema inference and evolution in Auto Loader"
+   }
+  },
+  {
+   "id": "dbx-176",
+   "d": "ingest",
+   "q": "A landing folder already holds two years of files that were loaded another way. A new Auto Loader stream should pick up only files that arrive from now on. Which option does this?",
+   "opts": [
+    "Set cloudFiles.includeExistingFiles to false when the stream first starts",
+    "Set cloudFiles.maxFilesPerTrigger to 0",
+    "Use Trigger.AvailableNow",
+    "Delete the checkpoint after the first batch"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "cloudFiles.includeExistingFiles defaults to true, so existing files are processed on the first run. Setting it to false skips them. It is read only when the stream first starts, so changing it later has no effect.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/options",
+    "t": "Auto Loader options"
+   }
+  },
+  {
+   "id": "dbx-177",
+   "d": "ingest",
+   "q": "The first run of an Auto Loader stream finds 2 million files and its micro-batches are too large for the cluster. Which options limit how much each micro-batch takes? (Choose two.)",
+   "opts": [
+    "cloudFiles.maxFilesPerTrigger",
+    "cloudFiles.maxBytesPerTrigger",
+    "cloudFiles.schemaLocation",
+    "cloudFiles.useIncrementalListing"
+   ],
+   "ans": [
+    0,
+    1
+   ],
+   "why": "maxFilesPerTrigger caps files per micro-batch (default 1,000) and maxBytesPerTrigger sets a soft byte budget; when both are set, whichever limit is reached first applies. schemaLocation stores the inferred schema.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/options",
+    "t": "Auto Loader options"
+   }
+  },
+  {
+   "id": "dbx-178",
+   "d": "ingest",
+   "q": "Files for a pipeline are stored in a Unity Catalog volume named landing in the schema main.raw. Which path reads its orders folder?",
+   "opts": [
+    "/Volumes/main/raw/landing/orders/",
+    "/mnt/main/raw/landing/orders/",
+    "dbfs:/user/hive/warehouse/landing/orders/",
+    "main.raw.landing.orders"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "Volumes are addressed with paths of the form /Volumes/<catalog>/<schema>/<volume>/<path>. Access is governed by Unity Catalog privileges on the volume, unlike older DBFS mounts.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/volumes/",
+    "t": "What are Unity Catalog volumes?"
+   }
+  },
+  {
+   "id": "dbx-179",
+   "d": "ingest",
+   "q": "A stream reads a Kafka topic with spark.readStream.format(\"kafka\"). The value column shows unreadable bytes. What is the usual next step?",
+   "opts": [
+    "Cast value to STRING and parse it with from_json and a schema",
+    "Set the Kafka option startingOffsets to earliest",
+    "Read the topic with Auto Loader instead",
+    "Change the sink to CSV"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "The Kafka source returns key and value as binary, plus columns such as topic, partition, offset and timestamp. Cast value to a string, then parse JSON with from_json, or use a schema registry format such as Avro.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/connect/streaming/kafka/",
+    "t": "Connect to Apache Kafka"
+   }
+  },
+  {
+   "id": "dbx-180",
+   "d": "ingest",
+   "q": "A COPY INTO load into an existing Delta table fails because the source CSV files now have an extra column. Which change lets the new column be added to the table?",
+   "opts": [
+    "Add COPY_OPTIONS ('mergeSchema' = 'true')",
+    "Add FORMAT_OPTIONS ('header' = 'false')",
+    "Add COPY_OPTIONS ('force' = 'true')",
+    "Drop the table and run COPY INTO again"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "mergeSchema in COPY_OPTIONS lets COPY INTO evolve the target table's schema with the new column. force reloads files already loaded, which does not solve a schema mismatch.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/sql/language-manual/delta-copy-into",
+    "t": "COPY INTO"
+   }
+  },
+  {
+   "id": "dbx-181",
+   "d": "transform",
+   "q": "In a pipeline, a customer dimension must keep the full history of address changes from a change feed. Which clause in AUTO CDC INTO does this?",
+   "opts": [
+    "STORED AS SCD TYPE 2",
+    "STORED AS SCD TYPE 1",
+    "APPLY AS DELETE WHEN operation = 'DELETE'",
+    "SEQUENCE BY address"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "SCD type 2 keeps a row per version, with __START_AT and __END_AT columns showing when each was current. The default is SCD type 1, which overwrites. SEQUENCE BY should name the ordering column, such as a sequence number, not the changing attribute.",
+   "code": "CREATE OR REFRESH STREAMING TABLE customers_dim;\n\nCREATE FLOW customers_flow AS AUTO CDC INTO customers_dim\nFROM stream(customers_cdc)\nKEYS (customer_id)\nSEQUENCE BY seq\nSTORED AS SCD TYPE 2;",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/ldp/cdc",
+    "t": "The AUTO CDC APIs"
+   }
+  },
+  {
+   "id": "dbx-182",
+   "d": "transform",
+   "q": "A daily job recomputes one day of sales and must replace only that day's rows in a Delta table, leaving all other days untouched. Which statement fits?",
+   "opts": [
+    "INSERT INTO sales REPLACE WHERE sale_date = '2026-11-15' SELECT * FROM staged",
+    "INSERT OVERWRITE sales SELECT * FROM staged",
+    "CREATE OR REPLACE TABLE sales AS SELECT * FROM staged",
+    "DELETE FROM sales"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "REPLACE WHERE is a selective overwrite: it atomically replaces the rows that match the predicate with the query's rows. INSERT OVERWRITE without a predicate and CREATE OR REPLACE replace the whole table.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/delta/selective-overwrite",
+    "t": "Selectively overwrite data with Delta Lake"
+   }
+  },
+  {
+   "id": "dbx-183",
+   "d": "transform",
+   "q": "A gold table is rebuilt every night. Why use CREATE OR REPLACE TABLE rather than DROP TABLE followed by CREATE TABLE?",
+   "opts": [
+    "CREATE OR REPLACE keeps the table's history, so time travel still works, and readers never see a missing table",
+    "CREATE OR REPLACE is the only way to change the schema",
+    "DROP TABLE is not allowed on Delta tables",
+    "CREATE OR REPLACE runs VACUUM automatically"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "CREATE OR REPLACE writes a new version of the same table in one atomic step, keeping its history and grants. Dropping and recreating removes the history and leaves a moment when queries fail.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/tables/history",
+    "t": "Work with table history"
+   }
+  },
+  {
+   "id": "dbx-184",
+   "d": "transform",
+   "q": "A report needs the top 3 products by revenue in each category, exactly 3 rows per category even when revenues tie. Which window function fits?",
+   "opts": [
+    "ROW_NUMBER() OVER (PARTITION BY category ORDER BY revenue DESC)",
+    "RANK() OVER (PARTITION BY category ORDER BY revenue DESC)",
+    "DENSE_RANK() OVER (ORDER BY revenue DESC)",
+    "SUM(revenue) OVER (PARTITION BY category)"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "ROW_NUMBER gives each row a unique number within its partition, so filtering on 3 or less returns exactly 3 rows. RANK and DENSE_RANK give tied rows the same number, which can return more than 3."
+  },
+  {
+   "id": "dbx-185",
+   "d": "transform",
+   "q": "A notebook creates CREATE TEMP VIEW recent_orders. A teammate's notebook cannot query it. Why?",
+   "opts": [
+    "A temporary view exists only in the session that created it and is not stored in Unity Catalog",
+    "Temporary views need SELECT granted on the catalog",
+    "Temporary views expire after one minute",
+    "Temporary views can only be read from SQL warehouses"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "Temporary views are session scoped: they disappear when the session ends and other sessions cannot see them. For something others can query, create a view in a schema, such as main.sales.recent_orders, and grant access.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-ddl-create-view",
+    "t": "CREATE VIEW"
+   }
+  },
+  {
+   "id": "dbx-186",
+   "d": "jobs",
+   "q": "A job has five classic-compute tasks that each start their own new cluster, adding minutes of start-up to every task. How can they share one cluster within the run?",
+   "opts": [
+    "Define a job cluster once and point each task at the same job_cluster_key",
+    "Use an all-purpose cluster for all tasks",
+    "Run the tasks one after another in a single notebook",
+    "Set maximum concurrent runs to 5"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "A shared job cluster is defined in the job and referenced by job_cluster_key, so tasks reuse it during the run and it ends with the run. Serverless jobs compute is another way to avoid start-up waits."
+  },
+  {
+   "id": "dbx-187",
+   "d": "jobs",
+   "q": "A streaming job should always be running, and if it stops or fails a new run should start automatically. Which trigger fits?",
+   "opts": [
+    "Continuous",
+    "Scheduled every minute",
+    "File arrival",
+    "Table update"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "A continuous trigger keeps exactly one run active and starts a new one when the previous ends or fails, with backoff after repeated failures. A one-minute schedule would start overlapping or skipped runs instead.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/jobs/continuous",
+    "t": "Run jobs continuously"
+   }
+  },
+  {
+   "id": "dbx-188",
+   "d": "jobs",
+   "q": "The team wants a message in its Slack channel whenever a production job fails. What is the standard approach?",
+   "opts": [
+    "Add a failure notification on the job that uses a Slack notification destination set up by an admin",
+    "Write a try/except in every notebook that posts to Slack",
+    "Check the Jobs page every morning",
+    "Set the job's retry count to 0"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "Jobs support notifications on start, success, failure and duration warnings, sent to email or to system notification destinations such as Slack, Microsoft Teams or webhooks, which workspace admins configure.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/jobs/notifications",
+    "t": "Add notifications on a job"
+   }
+  },
+  {
+   "id": "dbx-189",
+   "d": "cicd",
+   "q": "Which file at the root of a project marks it as a bundle and holds its main configuration?",
+   "opts": [
+    "databricks.yml",
+    "bundle.json",
+    "setup.py",
+    "requirements.txt"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "A bundle is defined by a databricks.yml file at its root, which names the bundle, lists targets such as dev and prod, and can include other YAML files that define jobs and pipelines.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/dev-tools/bundles/settings",
+    "t": "Declarative Automation Bundles configuration"
+   }
+  },
+  {
+   "id": "dbx-190",
+   "d": "gov",
+   "q": "Data scientists must read PDF files in the volume main.docs.contracts but not change them. They can already use the catalog and schema. Which grant fits?",
+   "opts": [
+    "GRANT READ VOLUME ON VOLUME main.docs.contracts TO `data_scientists`",
+    "GRANT WRITE VOLUME ON VOLUME main.docs.contracts TO `data_scientists`",
+    "GRANT SELECT ON VOLUME main.docs.contracts TO `data_scientists`",
+    "GRANT READ FILES ON CATALOG main TO `data_scientists`"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "READ VOLUME lets users read files and directories in a volume; WRITE VOLUME also lets them add, change or delete files. SELECT applies to tables and views, not volumes.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/privileges-reference",
+    "t": "Unity Catalog privileges reference"
+   }
+  },
+  {
+   "id": "dbx-191",
+   "d": "gov",
+   "q": "In Unity Catalog, which object combines a cloud storage path with a storage credential so access to that path can be granted?",
+   "opts": [
+    "An external location",
+    "A volume",
+    "A service principal",
+    "A catalog binding"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "A storage credential holds the cloud identity, such as an IAM role. An external location pairs it with a path, and privileges like READ FILES or CREATE EXTERNAL TABLE are granted on the external location.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/connect/unity-catalog/cloud-storage/manage-external-locations",
+    "t": "Manage external locations"
+   }
+  },
+  {
+   "id": "dbx-192",
+   "d": "gov",
+   "q": "Analysts should be able to find tables in a catalog and request access, without reading any data or holding USE CATALOG. Which privilege fits?",
+   "opts": [
+    "BROWSE on the catalog",
+    "SELECT on the catalog",
+    "USE SCHEMA on every schema",
+    "READ METADATA on the metastore"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "BROWSE lets users discover objects, see their metadata and request access without USE CATALOG or USE SCHEMA, and it does not grant access to data.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/privileges-reference",
+    "t": "Unity Catalog privileges reference"
+   }
+  },
+  {
+   "id": "dbx-193",
+   "d": "gov",
+   "q": "The prod catalog must be usable only from the production workspace, even for users who hold grants on it, and the dev workspace may read it but never write. What fits?",
+   "opts": [
+    "Workspace-catalog binding, with the dev workspace bound read-only",
+    "REVOKE all privileges from users of the dev workspace",
+    "A separate metastore for each workspace",
+    "A row filter on every table"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "By default a catalog is open to every workspace on the metastore. Binding limits it to chosen workspaces, denying others even with grants, and a binding can be read-only. Catalog owners, metastore admins and users with MANAGE can set it.",
+   "more": {
+    "u": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/workspace-catalog-binding",
+    "t": "Workspace-catalog binding"
+   }
   }
  ]
 }
