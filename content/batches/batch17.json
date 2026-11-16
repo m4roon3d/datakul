@@ -1,0 +1,1272 @@
+{
+ "batch": 17,
+ "name": "Wave 2 week 4: India's digital health stack, claims and hospital analytics, CDC at scale, MCP, fine-tuning choices, DP-700, Google Cloud, platform design and leading a team",
+ "concepts": [
+  {
+   "id": "abdm",
+   "t": "de",
+   "title": "India's digital health stack (ABDM)",
+   "mod": "Domain pack: healthcare",
+   "lv": "F",
+   "kw": "abdm ayushman bharat digital mission abha health id abha address hfr hpr consent manager hie-cm health information provider hip hiu care context phr app scan and share nhcx milestones m1 m2 m3",
+   "s": "The Ayushman Bharat Digital Mission (ABDM) is India's digital health stack. It gives people a health ID (ABHA), registers facilities and professionals, and lets records move between hospitals only with the patient's consent.",
+   "d": "ABDM was launched in 2021 and is run by the National Health Authority (NHA). Its building blocks are ABHA, a 14-digit health account number with an easy ABHA address; the Health Facility Registry (HFR); the Healthcare Professionals Registry (HPR); and a consent manager with a health information exchange. Records are not held in one central database. They stay with Health Information Providers (HIPs), such as hospitals and labs, which link each visit, a care context, to the patient's ABHA. A Health Information User (HIU), such as another doctor, asks for consent; once the patient approves in a PHR app, the records are sent encrypted as FHIR documents. Hospital software is certified in milestones M1 to M3: ABHA, sharing as a HIP, and requesting as a HIU. NHA reported over 93 crore ABHA accounts and 104 crore linked records in July 2026.",
+   "e": "A hospital's software links 40,000 OPD visits a month to patients' ABHA numbers. When a patient sees a new specialist, she approves a consent request in her PHR app for 6 months of lab reports, which arrive as FHIR bundles in minutes.",
+   "c": "Where are patients' health records stored under ABDM, and how does another hospital get to see them?",
+   "i": "Expect to explain ABHA, HIP and HIU roles, the consent flow and why records stay federated. Data engineers should mention FHIR, linking care contexts and protecting identifiers.",
+   "r": [
+    "health-data-standards",
+    "privacy-regulation",
+    "data-apis"
+   ]
+  },
+  {
+   "id": "cdc-at-scale",
+   "t": "de",
+   "title": "CDC at scale: snapshots, ordering and schema drift",
+   "mod": "Advanced engineering",
+   "lv": "A",
+   "kw": "cdc at scale debezium initial snapshot incremental snapshot signal table chunks log sequence number lsn ordering per key kafka partition tombstones replication slot wal schema drift ddl heartbeat",
+   "s": "Running change data capture on large, busy databases raises three problems: taking the first full copy without stopping the source, keeping changes in order for each row, and coping when tables change shape.",
+   "d": "A first snapshot of a 2 TB table can take hours, and the log keeps moving meanwhile. Incremental snapshots, as in Debezium, copy the table in primary-key chunks while streaming continues, and resolve clashes between chunk rows and live changes. Ordering is guaranteed only per key: partition Kafka topics by primary key, carry the log position (LSN in PostgreSQL, SCN in Oracle), and have the sink apply a change only if it is newer than the stored one. Deletes arrive as delete events plus tombstones for compaction. Schema drift, such as a new or renamed column, should flow through a schema registry with compatibility rules, and breaking DDL should alert someone. Watch the source too: a stalled consumer makes a PostgreSQL replication slot keep WAL until the disk fills, so monitor lag and send heartbeats.",
+   "e": "A 3 TB orders table is snapshotted in 50,000-row chunks over 9 hours while 4,000 changes a second keep streaming. The sink applies an update only when its LSN is higher than the stored one, so late retries never overwrite newer rows.",
+   "c": "Why can't you rely on events for different primary keys arriving in the order they happened at the source?",
+   "i": "Senior interviews ask how you take a first snapshot without downtime, keep per-key order and idempotent applies, handle deletes and DDL, and stop replication slots from filling the source disk.",
+   "r": [
+    "cdc",
+    "schema-registry",
+    "exactly-once-e2e"
+   ]
+  },
+  {
+   "id": "mcp-integrations",
+   "t": "ds",
+   "title": "Connecting LLMs to tools and data with MCP",
+   "mod": "GenAI and AI engineering",
+   "lv": "I",
+   "kw": "model context protocol mcp server client host tools resources prompts stdio streamable http oauth authorization tool poisoning prompt injection least privilege connector agent integration",
+   "s": "The Model Context Protocol (MCP) is an open standard for connecting AI applications to tools and data. You write a server once, and any MCP-aware app or agent can use its tools without custom glue code.",
+   "d": "Anthropic released MCP in 2024 and it is now an open project under the Linux Foundation. An MCP host, such as a chat app or IDE, runs clients that talk to servers. A server offers tools (functions the model can call, each with a JSON schema), resources (data the app can read, such as files or tables) and prompts (reusable templates). Local servers run over stdio; remote ones use Streamable HTTP with OAuth for authorisation. The 2026-07-28 version of the spec made the core stateless, so any server instance behind a load balancer can answer any request, and moved long-running tasks into an extension. For data teams, an MCP server can expose a warehouse, a catalogue or a metrics layer. Treat every tool result as untrusted: it can carry prompt injection. Use read-only, least-privilege credentials and ask the user before actions that change data.",
+   "e": "A team writes one MCP server with three tools: search_tables, describe_table and run_readonly_sql capped at 10,000 rows. Their IDE assistant and chat app both use it, and every query runs as a read-only service account.",
+   "c": "What is the difference between an MCP tool and an MCP resource?",
+   "i": "Interviewers check that you know the host, client and server roles, the three primitives, local versus remote transports and the security risks: prompt injection, over-broad credentials and unapproved writes.",
+   "r": [
+    "function-calling",
+    "llm-agents",
+    "data-apis"
+   ]
+  },
+  {
+   "id": "azure-dp-cert",
+   "t": "de",
+   "title": "Preparing for the Fabric Data Engineer (DP-700) exam",
+   "mod": "Cloud platforms: Azure",
+   "lv": "I",
+   "kw": "dp-700 exam certification skills measured study guide pass mark 700 pipelines eventstreams kql pyspark deployment pipelines monitoring hub practice assessment renewal",
+   "s": "Exam DP-700 earns the Microsoft Certified: Fabric Data Engineer Associate. It tests building, securing and running data solutions in Microsoft Fabric with SQL, PySpark and KQL.",
+   "d": "Microsoft's study guide, updated in October 2026, splits the exam into three equal areas of 30 to 35% each: implement and manage an analytics solution (workspace settings, Git and deployment pipelines, security from workspace to row and column level, orchestration), ingest and transform data (full and incremental loads, shortcuts, mirroring, pipelines, PySpark, SQL and KQL, streaming with eventstreams and windowing), and monitor and optimise (fixing failed pipelines, notebooks and eventstreams, and tuning lakehouse tables, Spark and warehouses). The exam lasts 100 minutes, the pass mark is 700, and the price depends on your country. Renewal is free through an online assessment on Microsoft Learn. Microsoft now recommends its new practice assessment on AI Skills Navigator. Check the exam page before booking.",
+   "e": "A learner on a Fabric trial spends 5 weeks: one on workspaces, Git and security, two building a lakehouse with pipelines, notebooks and an eventstream into an eventhouse, and two on the practice assessment and fixing deliberately broken items.",
+   "c": "Which three skill areas does DP-700 cover, and why is KQL worth practising for it?",
+   "i": "A certificate helps you through CV filters, but interviewers then ask what you built in Fabric. Pair the exam with a small project covering ingestion, a lakehouse, security and monitoring.",
+   "r": [
+    "azure-fabric",
+    "aws-de-cert",
+    "portfolio"
+   ]
+  },
+  {
+   "id": "health-claims",
+   "t": "de",
+   "title": "Health insurance claims analytics",
+   "mod": "Domain pack: healthcare",
+   "lv": "I",
+   "kw": "health insurance claims cashless reimbursement pre-authorisation tpa adjudication icd-10 procedure codes package rates denial rate claim settlement ratio turnaround time pm-jay nhcx fraud upcoding",
+   "s": "Health claims analytics follows each hospital bill from pre-authorisation to payment. It measures how fast and fairly claims are settled, why some are denied and where fraud or overbilling hides.",
+   "d": "In India, a claim is cashless, where the hospital asks the insurer or its TPA for pre-authorisation and is paid directly, or reimbursement, where the patient pays and claims later. Each claim carries diagnosis codes such as ICD-10, procedures, the room category, line items and, for schemes like AB PM-JAY, a package code with a fixed rate. Adjudication checks the policy, waiting periods, sub-limits and medical necessity. Key measures are claim frequency per 1,000 lives, average claim size, denial rate by reason, turnaround time for pre-authorisation and discharge, and the incurred claims ratio. IRDAI rules set time limits for cashless decisions, so turnaround is watched closely. Fraud checks look for upcoding, unbundled procedures, unusually long stays and outlier hospitals. The National Health Claims Exchange (NHCX) moves claims between hospitals and insurers as standard FHIR messages.",
+   "e": "A TPA processes 18,000 cashless claims a month. Median discharge approval takes 2.4 hours, but one hospital group averages 5.1 hours and a 14% denial rate, mostly for missing documents, so the TPA adds a document checklist at admission.",
+   "c": "What is the difference between a cashless claim and a reimbursement claim, and which steps does each go through?",
+   "i": "Expect to define denial rate, turnaround time and claims ratio, follow a claim through its steps, and suggest fraud and overbilling checks. Mention codes, package rates and data quality.",
+   "r": [
+    "insurance-data",
+    "insurance-pricing",
+    "health-data-standards"
+   ]
+  },
+  {
+   "id": "data-platform-design",
+   "t": "de",
+   "title": "Designing an internal data platform",
+   "mod": "Advanced engineering",
+   "lv": "A",
+   "kw": "internal data platform as a product golden paths paved road self-service ingestion templates multi-tenancy workspaces catalog access requests chargeback cost attribution slo adoption developer experience",
+   "s": "An internal data platform gives every team the same paved road for ingesting, storing, transforming and sharing data. Run it as a product, with users, a roadmap and adoption targets, not as a pile of tools.",
+   "d": "Start from the jobs teams repeat: land a source, build a model, schedule it, publish a dataset and grant access. Offer a golden path for each: templates for ingestion and dbt projects, CI checks, one orchestrator, standard environments and a catalogue where datasets have owners. Self-service matters most: a team should launch a new pipeline in a day without a ticket. Design for multi-tenancy with separate workspaces or schemas, quotas and tags so costs can be charged back. Bake in governance: access requests, PII tagging, lineage and audit logs. Set service levels for the platform itself, such as orchestrator uptime and time to onboard. Measure adoption, lead time and cost per team, and talk to users often. Decide build or buy one layer at a time, and keep escape hatches for teams with unusual needs.",
+   "e": "A fintech's platform team of 6 serves 25 data teams. A template creates a repo, CI, a schedule and catalogue entry in 20 minutes, onboarding fell from 3 weeks to 2 days, and tags charge Rs 40 lakh of monthly cloud spend back to each team.",
+   "c": "Why should a platform team measure adoption and time to onboard, not only uptime?",
+   "i": "Senior interviews ask how you would design self-service with guardrails, handle multi-tenancy and costs, and decide what to build or buy. Talk about users, golden paths and measuring success.",
+   "r": [
+    "modern-data-stack",
+    "data-mesh",
+    "finops"
+   ]
+  },
+  {
+   "id": "fine-tuning",
+   "t": "ds",
+   "title": "Fine-tuning vs prompting vs RAG",
+   "mod": "GenAI and AI engineering",
+   "lv": "I",
+   "kw": "fine-tuning vs prompting vs rag supervised fine-tuning instruction tuning training examples knowledge vs behaviour style format distillation smaller model latency cost when to fine-tune",
+   "s": "Prompting, RAG and fine-tuning solve different problems. Prompting and RAG change what the model sees; fine-tuning changes the model itself. Try them in that order, and fine-tune only for behaviour you cannot prompt.",
+   "d": "Start with a clear prompt and a few examples: it is cheap and quick to change. If answers need facts the model does not know, or facts that change, use RAG: retrieve the right passages at question time, which also lets you cite sources and update content without training. Fine-tuning trains on hundreds to thousands of input and output pairs. It suits a fixed format, tone or narrow task, such as classifying tickets into 40 categories, and can let a smaller, cheaper, faster model match a large one, often called distillation. It is a poor way to add knowledge: facts learnt in training go stale and are hard to trace. Fine-tuning also needs clean data, an evaluation set, retraining when the base model changes and care with personal data. Many systems combine them: a fine-tuned small model with RAG.",
+   "e": "A support team's prompt plus RAG reached 91% on its golden set but cost too much at 2 million tickets a month. Fine-tuning a small model on 6,000 labelled tickets kept 90% accuracy at about a fifth of the cost.",
+   "c": "Why is fine-tuning a poor way to teach a model facts that change every month?",
+   "i": "Interviewers want a clear order of choices, what each method changes, the data and evaluation fine-tuning needs, and a cost or latency reason for it. Mention combining a fine-tuned model with RAG.",
+   "r": [
+    "rag",
+    "prompting-data",
+    "eval-datasets"
+   ]
+  },
+  {
+   "id": "gcp-data-services",
+   "t": "de",
+   "title": "Google Cloud data services map",
+   "mod": "Cloud platforms: Google Cloud",
+   "lv": "F",
+   "kw": "google cloud gcp data services map cloud storage bigquery dataflow apache beam dataproc pub/sub datastream cloud composer dataform knowledge catalog dataplex looker spanner bigtable gemini enterprise agent platform",
+   "s": "Google Cloud's data services cover storage, ingestion, processing, warehousing and governance, with BigQuery at the centre. Knowing what each does, and its AWS or Azure match, lets you read any Google Cloud job description.",
+   "d": "Cloud Storage holds files and is the base of the lake. BigQuery is the serverless warehouse and also reads open formats such as Iceberg. Pub/Sub carries event streams, and Datastream captures changes from databases such as MySQL, PostgreSQL and Oracle. Dataflow runs Apache Beam pipelines for batch and streaming, and Dataproc runs managed Spark and Hadoop, with a serverless option for Spark. Cloud Composer is managed Airflow, and Dataform builds SQL pipelines inside BigQuery. Knowledge Catalog, called Dataplex Universal Catalog until April 2026, handles discovery, lineage and data quality; the older Data Catalog was shut down in June 2026. Looker covers BI, and Vertex AI is now Gemini Enterprise Agent Platform. Roughly, Cloud Storage matches S3, Pub/Sub matches Kinesis and Composer matches MWAA.",
+   "e": "A delivery app streams 5,000 rider pings a second through Pub/Sub into Dataflow, replicates orders from Cloud SQL with Datastream, models both in BigQuery with Dataform, schedules jobs in Composer and serves Looker dashboards.",
+   "c": "Which Google Cloud services would you use to stream events in and process them, and what are their AWS equivalents?",
+   "i": "Expect to map a pipeline to Google Cloud services, explain when Dataflow beats Dataproc, and give AWS or Azure equivalents. Recent renames, such as Knowledge Catalog, show you keep up.",
+   "r": [
+    "cloud-platforms",
+    "bigquery",
+    "azure-data-services"
+   ]
+  },
+  {
+   "id": "hospital-ops",
+   "t": "de",
+   "title": "Hospital operations analytics",
+   "mod": "Domain pack: healthcare",
+   "lv": "I",
+   "kw": "hospital operations analytics bed occupancy rate average length of stay alos bed turnover opd waiting time ot utilisation emergency door to doctor readmission rate discharge turnaround arpob census forecasting",
+   "s": "Hospital operations analytics shows how well beds, theatres, doctors and clinics are used, and where patients wait. It turns admission, discharge and appointment events into a few numbers managers act on daily.",
+   "d": "Most measures come from the hospital information system's admission, discharge and transfer events, plus OPD, theatre and billing records. Bed occupancy rate is occupied bed-days divided by available bed-days; above about 85% the hospital struggles with surges. Average length of stay (ALOS) and bed turnover show how quickly beds free up, and discharge turnaround tracks the gap between the doctor's discharge order and the patient leaving, often slowed by billing or insurance approval. Operating theatre utilisation compares used minutes with booked ones. OPD waiting time and emergency door-to-doctor time show patient experience, and 30-day readmission rate flags quality problems. Indian hospital chains also report ARPOB, average revenue per occupied bed. Forecasting admissions by day and hour helps plan staff and beds.",
+   "e": "A 300-bed hospital runs at 92% occupancy. Discharge orders come by 11 am but patients leave at 3.30 pm on average, mostly waiting for insurance approval. Moving approvals earlier frees about 25 bed-days a week.",
+   "c": "How do you calculate bed occupancy rate, and why is a hospital at 95% worse off than one at 80%?",
+   "i": "Interviewers check definitions of occupancy, ALOS and turnaround, how you build them from admission and discharge events, and how you would find a bottleneck and suggest a fix.",
+   "r": [
+    "kpi-metrics",
+    "health-data-standards",
+    "forecasting"
+   ]
+  },
+  {
+   "id": "de-leadership",
+   "t": "de",
+   "title": "Leading a data engineering team",
+   "mod": "Advanced engineering",
+   "lv": "A",
+   "kw": "data engineering manager tech lead leading team hiring onboarding roadmap prioritisation stakeholder management on-call incident review blameless tech debt one-to-ones career ladder delegation",
+   "s": "Leading a data engineering team means getting reliable data delivered through other people: choosing what to work on, growing engineers, keeping pipelines healthy and keeping stakeholders informed.",
+   "d": "Start with a clear picture of what the team owns, who depends on it and how it performs: data SLAs met, incidents and lead time for requests. Build a roadmap that mixes stakeholder work, reliability and paying down tech debt, and say no or later with reasons. Protect focus with one intake process instead of side requests. Make on-call fair, with runbooks and blameless incident reviews that end in fixes, not blame. Hire for fundamentals and ownership, and onboard with a first small change shipped in week one. Hold regular one-to-ones, give specific feedback and use a career ladder so growth is visible. Delegate real ownership of pipelines and designs, and review decisions in short written design notes. Report to stakeholders in their terms: fresh, correct data on time, and what it costs.",
+   "e": "A new lead finds 40 open requests and 6 incidents a month. She sets up one intake board, gives 30% of each sprint to reliability and starts blameless reviews; incidents fall to 2 a month within a quarter.",
+   "c": "Why should a data team lead set aside regular time for reliability and tech debt instead of only stakeholder requests?",
+   "i": "Expect behavioural questions on prioritising, handling a missed deadline or a struggling engineer, running on-call and saying no. Use STAR stories with numbers, such as fewer incidents or faster delivery.",
+   "r": [
+    "behavioural-star",
+    "data-slas",
+    "adrs"
+   ]
+  }
+ ],
+ "questions": [
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "abdm",
+   "tg": [
+    "api",
+    "governance"
+   ],
+   "q": "Explain how a patient's records move from one hospital to another under ABDM.",
+   "p": [
+    {
+     "t": "Patients are identified by an ABHA number or address",
+     "k": [
+      "abha",
+      "health account"
+     ]
+    },
+    {
+     "t": "Records stay with the hospital as health information provider",
+     "k": [
+      "health information provider",
+      "hip",
+      "stay with",
+      "federated"
+     ]
+    },
+    {
+     "t": "The patient approves a consent request",
+     "k": [
+      "consent",
+      "approve"
+     ]
+    },
+    {
+     "t": "Records travel encrypted as FHIR documents",
+     "k": [
+      "fhir",
+      "encrypt"
+     ]
+    }
+   ],
+   "a": "The patient has an ABHA number or address, and the first hospital links each visit, a care context, to it. Records stay with that hospital, which acts as a health information provider, so nothing is held centrally. When a new doctor, the health information user, needs them, the patient approves a consent request in a PHR app, choosing which records and for how long. The provider then sends the records encrypted, as FHIR documents."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "abdm",
+   "tg": [
+    "api",
+    "data modeling"
+   ],
+   "q": "A hospital chain asks you to make its software ABDM compliant. What would the data work involve?",
+   "p": [
+    {
+     "t": "Create and verify ABHA numbers at registration",
+     "k": [
+      "abha",
+      "registration",
+      "m1"
+     ]
+    },
+    {
+     "t": "Link visits as care contexts and share as a provider",
+     "k": [
+      "care context",
+      "link",
+      "m2",
+      "provider"
+     ]
+    },
+    {
+     "t": "Map records to FHIR profiles and codes",
+     "k": [
+      "fhir",
+      "profile",
+      "snomed",
+      "loinc"
+     ]
+    },
+    {
+     "t": "Log consents and protect identifiers",
+     "k": [
+      "consent",
+      "audit",
+      "mask",
+      "pseudonym"
+     ]
+    }
+   ],
+   "a": "First, registration must create or verify ABHA numbers, milestone M1. Second, every visit must be linked as a care context so the chain can share records as a provider, milestone M2, and later request them as M3. Third, I'd map lab reports, prescriptions and discharge summaries to the national FHIR profiles with proper SNOMED and LOINC codes. Finally I'd keep an audit log of every consent and mask identifiers in analytics copies."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "any",
+    "fin"
+   ],
+   "c": "cdc-at-scale",
+   "tg": [
+    "debezium",
+    "kafka"
+   ],
+   "q": "How would you take the first copy of a 3 TB table into a CDC pipeline without stopping the source?",
+   "p": [
+    {
+     "t": "Incremental snapshot in primary-key chunks",
+     "k": [
+      "incremental snapshot",
+      "chunk",
+      "primary key"
+     ]
+    },
+    {
+     "t": "Stream changes while the snapshot runs",
+     "k": [
+      "while streaming",
+      "stream changes",
+      "in parallel",
+      "keeps streaming"
+     ]
+    },
+    {
+     "t": "Resolve clashes so newer changes win",
+     "k": [
+      "newer",
+      "clash",
+      "conflict",
+      "deduplicate"
+     ]
+    },
+    {
+     "t": "Watch source load and replication lag",
+     "k": [
+      "lag",
+      "source load",
+      "replication slot",
+      "throttl"
+     ]
+    }
+   ],
+   "a": "I'd use an incremental snapshot, as Debezium offers, which reads the table in primary-key chunks of, say, 50,000 rows. Changes keep streaming from the log while the snapshot runs, so the source never stops. Where a chunk row and a live change clash, the newer change wins, which the connector handles with watermarks. I'd run it off-peak, throttle chunk size, and watch source load and replication lag throughout."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "any",
+    "saas"
+   ],
+   "c": "cdc-at-scale",
+   "tg": [
+    "debezium",
+    "kafka"
+   ],
+   "q": "Your CDC sink sometimes shows an old value after a newer update. What causes this and how do you fix it?",
+   "p": [
+    {
+     "t": "Order is only guaranteed per key or partition",
+     "k": [
+      "per key",
+      "partition",
+      "same key"
+     ]
+    },
+    {
+     "t": "Partition topics by primary key",
+     "k": [
+      "primary key",
+      "partition by",
+      "message key"
+     ]
+    },
+    {
+     "t": "Apply only if the log position is newer",
+     "k": [
+      "lsn",
+      "scn",
+      "log position",
+      "sequence"
+     ]
+    },
+    {
+     "t": "Retries and replays can redeliver old events",
+     "k": [
+      "retry",
+      "replay",
+      "redeliver",
+      "duplicate"
+     ]
+    }
+   ],
+   "a": "Kafka only keeps order within a partition, so order is guaranteed per key, not across the topic. If topics are not partitioned by primary key, two updates to one row can land in different partitions. Retries and replays can also redeliver an old event. The fix is to key messages by primary key, carry the log position, such as the LSN, and have the sink apply a change only if its sequence is newer than the stored one."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "mcp-integrations",
+   "tg": [
+    "api",
+    "python"
+   ],
+   "q": "What is the Model Context Protocol, and what does an MCP server offer?",
+   "p": [
+    {
+     "t": "An open standard to connect AI apps to tools and data",
+     "k": [
+      "open standard",
+      "open protocol",
+      "connect"
+     ]
+    },
+    {
+     "t": "Hosts run clients that talk to servers",
+     "k": [
+      "host",
+      "client"
+     ]
+    },
+    {
+     "t": "Servers offer tools, resources and prompts",
+     "k": [
+      "tool",
+      "resource",
+      "prompt"
+     ]
+    },
+    {
+     "t": "Local stdio or remote HTTP transports",
+     "k": [
+      "stdio",
+      "http",
+      "transport"
+     ]
+    }
+   ],
+   "a": "MCP is an open standard to connect AI apps to tools and data, so one server works with many apps. A host, such as an IDE or chat app, runs clients that each talk to a server. The server offers tools the model can call, resources the app can read and reusable prompts. Local servers run over stdio, and remote ones over Streamable HTTP with OAuth."
+  },
+  {
+   "r": [
+    "ds",
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "saas",
+    "any"
+   ],
+   "c": "mcp-integrations",
+   "tg": [
+    "api",
+    "governance"
+   ],
+   "q": "You are asked to expose your warehouse to company AI assistants through an MCP server. How do you make it safe?",
+   "p": [
+    {
+     "t": "Read-only, least-privilege credentials",
+     "k": [
+      "read-only",
+      "read only",
+      "least privilege"
+     ]
+    },
+    {
+     "t": "Limit what each tool can do and return",
+     "k": [
+      "row limit",
+      "cap",
+      "allowlist",
+      "narrow"
+     ]
+    },
+    {
+     "t": "Treat tool results as untrusted against prompt injection",
+     "k": [
+      "prompt injection",
+      "untrusted",
+      "injection"
+     ]
+    },
+    {
+     "t": "Authenticate users and log every call",
+     "k": [
+      "oauth",
+      "authenticat",
+      "audit",
+      "log every"
+     ]
+    }
+   ],
+   "a": "The server would connect with read-only, least-privilege credentials limited to approved schemas, never an admin account. Each tool would be narrow, such as describe_table or a SQL tool capped at 10,000 rows with a timeout. Text coming back from tables is untrusted, because a row could hold prompt injection, so the app must not act on it blindly. Users authenticate with OAuth, queries run under their own permissions, and every call is written to an audit log."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "azure-dp-cert",
+   "tg": [
+    "azure",
+    "pyspark"
+   ],
+   "q": "How would you prepare for the DP-700 Fabric Data Engineer exam in six weeks?",
+   "p": [
+    {
+     "t": "Follow the three skill areas in the study guide",
+     "k": [
+      "study guide",
+      "skill area",
+      "skills measured"
+     ]
+    },
+    {
+     "t": "Build hands-on in a Fabric trial or capacity",
+     "k": [
+      "trial",
+      "hands-on",
+      "lakehouse",
+      "build"
+     ]
+    },
+    {
+     "t": "Practise SQL, PySpark and KQL",
+     "k": [
+      "kql",
+      "pyspark"
+     ]
+    },
+    {
+     "t": "Use the official practice assessment",
+     "k": [
+      "practice assessment",
+      "practice test"
+     ]
+    }
+   ],
+   "a": "I'd start from Microsoft's study guide and plan around its three skill areas: implement and manage, ingest and transform, and monitor and optimise. Most of the time would go on hands-on work in a Fabric trial: a lakehouse, pipelines, notebooks, an eventstream and an eventhouse. I'd practise all three languages, SQL, PySpark and KQL, since streaming questions use KQL. In the last two weeks I'd take the official practice assessment and study every wrong answer."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "azure-dp-cert",
+   "tg": [
+    "azure",
+    "governance"
+   ],
+   "q": "A DP-700 style question: analysts must see only their region's rows in a Fabric warehouse table, and a salary column must be hidden from most users. What do you use?",
+   "p": [
+    {
+     "t": "Row-level security for the region rule",
+     "k": [
+      "row-level security",
+      "row level security",
+      "rls"
+     ]
+    },
+    {
+     "t": "Column-level security or dynamic data masking for salary",
+     "k": [
+      "column-level",
+      "column level",
+      "dynamic data masking",
+      "mask"
+     ]
+    },
+    {
+     "t": "Workspace roles alone are too broad",
+     "k": [
+      "workspace role",
+      "too broad",
+      "item permission"
+     ]
+    },
+    {
+     "t": "Test as a user of each role",
+     "k": [
+      "test as",
+      "impersonat",
+      "execute as"
+     ]
+    }
+   ],
+   "a": "I'd use row-level security on the table, with a predicate that matches the user's region. For salary, column-level security can block the column, or dynamic data masking can show a masked value to most users. Workspace roles alone are too broad, since a Contributor sees everything in the workspace, so analysts should get item permissions only. Finally I'd test as a member of each role, for example with EXECUTE AS."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any",
+    "fin"
+   ],
+   "c": "health-claims",
+   "tg": [
+    "sql",
+    "data modeling"
+   ],
+   "q": "Which measures would you put on a dashboard for a health insurer's claims team?",
+   "p": [
+    {
+     "t": "Claim frequency and average claim size",
+     "k": [
+      "frequency",
+      "average claim",
+      "claim size",
+      "per 1,000"
+     ]
+    },
+    {
+     "t": "Turnaround time for pre-authorisation and discharge",
+     "k": [
+      "turnaround",
+      "tat",
+      "pre-authorisation"
+     ]
+    },
+    {
+     "t": "Denial rate by reason",
+     "k": [
+      "denial",
+      "rejection",
+      "by reason"
+     ]
+    },
+    {
+     "t": "Incurred claims ratio against premium",
+     "k": [
+      "incurred claims ratio",
+      "claims ratio",
+      "loss ratio"
+     ]
+    }
+   ],
+   "a": "I'd show claim frequency per 1,000 lives and average claim size, split by product, city and hospital. Turnaround time for pre-authorisation and for discharge approval matters because IRDAI sets time limits for cashless decisions. Denial rate by reason shows where documents or rules cause trouble. Finally the incurred claims ratio, claims against earned premium, shows whether the book is profitable."
+  },
+  {
+   "r": [
+    "de",
+    "ds"
+   ],
+   "l": "s",
+   "d": [
+    "fin",
+    "any"
+   ],
+   "c": "health-claims",
+   "tg": [
+    "sql",
+    "machine learning"
+   ],
+   "q": "How would you look for overbilling or fraud in hospital claims data?",
+   "p": [
+    {
+     "t": "Compare each hospital with peers for the same diagnosis",
+     "k": [
+      "peer",
+      "same diagnosis",
+      "benchmark",
+      "compare"
+     ]
+    },
+    {
+     "t": "Look for upcoding and unbundled procedures",
+     "k": [
+      "upcod",
+      "unbundl"
+     ]
+    },
+    {
+     "t": "Flag unusual lengths of stay or charges",
+     "k": [
+      "length of stay",
+      "outlier",
+      "unusual"
+     ]
+    },
+    {
+     "t": "Send flags to investigators and learn from outcomes",
+     "k": [
+      "investigat",
+      "review",
+      "feedback",
+      "outcome"
+     ]
+    }
+   ],
+   "a": "I'd compare each hospital with peers treating the same diagnosis and procedure, so a hospital charging twice the median stands out. Rules would look for upcoding to costlier codes and unbundled procedures billed separately when a package covers them. I'd flag outliers such as unusual lengths of stay or room charges. Flags go to investigators, and their outcomes feed back to tune rules or train a model."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "any",
+    "saas"
+   ],
+   "c": "data-platform-design",
+   "tg": [
+    "governance",
+    "dbt"
+   ],
+   "q": "You are asked to design an internal data platform for 20 product teams. Where do you start and what do you build first?",
+   "p": [
+    {
+     "t": "Start from the jobs teams repeat and interview users",
+     "k": [
+      "interview",
+      "user",
+      "repeat",
+      "pain"
+     ]
+    },
+    {
+     "t": "Golden paths with templates for common work",
+     "k": [
+      "golden path",
+      "paved road",
+      "template"
+     ]
+    },
+    {
+     "t": "Self-service with guardrails built in",
+     "k": [
+      "self-service",
+      "self service",
+      "guardrail"
+     ]
+    },
+    {
+     "t": "Measure adoption and time to onboard",
+     "k": [
+      "adoption",
+      "onboard",
+      "lead time"
+     ]
+    }
+   ],
+   "a": "I'd start by interviewing users to find the jobs teams repeat and where they wait on tickets. Then I'd build golden paths, starting with the most common: a template that creates an ingestion job or dbt project with CI, a schedule and a catalogue entry. It must be self-service with guardrails built in, such as PII tags, access requests and cost tags. I'd measure adoption and time to onboard, aiming to go from weeks to days."
+  },
+  {
+   "r": [
+    "de",
+    "ar"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "data-platform-design",
+   "tg": [
+    "governance",
+    "data modeling"
+   ],
+   "q": "How would you handle multi-tenancy and costs on a shared data platform?",
+   "p": [
+    {
+     "t": "Separate workspaces, catalogs or schemas per team",
+     "k": [
+      "workspace",
+      "schema",
+      "catalog",
+      "namespace"
+     ]
+    },
+    {
+     "t": "Quotas and limits to stop noisy neighbours",
+     "k": [
+      "quota",
+      "noisy neighbour",
+      "limit"
+     ]
+    },
+    {
+     "t": "Tag resources so costs are charged back",
+     "k": [
+      "tag",
+      "chargeback",
+      "charge back",
+      "showback"
+     ]
+    },
+    {
+     "t": "Share common data through governed access",
+     "k": [
+      "access request",
+      "grant",
+      "share"
+     ]
+    }
+   ],
+   "a": "Each team gets its own workspace or schema, so names and permissions don't collide. Quotas and compute limits stop one noisy neighbour from slowing everyone. Every job and warehouse carries a tag for team and project, with showback first and chargeback later. Shared datasets stay in one place and teams get them through access requests and grants rather than copies."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "m",
+   "d": [
+    "any",
+    "saas"
+   ],
+   "c": "fine-tuning",
+   "tg": [
+    "machine learning",
+    "mlops"
+   ],
+   "q": "When would you choose prompting, RAG or fine-tuning for an LLM feature?",
+   "p": [
+    {
+     "t": "Start with prompting because it is cheap and quick",
+     "k": [
+      "prompt",
+      "cheap",
+      "quick",
+      "few examples"
+     ]
+    },
+    {
+     "t": "Use RAG for knowledge that changes or needs sources",
+     "k": [
+      "rag",
+      "retriev",
+      "citation",
+      "changing"
+     ]
+    },
+    {
+     "t": "Fine-tune for fixed behaviour, format or style",
+     "k": [
+      "fine-tun",
+      "format",
+      "style",
+      "behaviour"
+     ]
+    },
+    {
+     "t": "Fine-tuning can let a smaller model cut cost and latency",
+     "k": [
+      "smaller model",
+      "latency",
+      "distill",
+      "cost"
+     ]
+    }
+   ],
+   "a": "I'd start with prompting and a few examples, because it is cheap, quick to change and often enough. If answers need company knowledge that changes, or must cite sources, I'd add RAG to retrieve passages at question time. I'd fine-tune when I need fixed behaviour, such as an exact format or a narrow classification. Fine-tuning can also let a smaller model match a large one, which cuts cost and latency."
+  },
+  {
+   "r": [
+    "ds"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "fine-tuning",
+   "tg": [
+    "machine learning",
+    "mlops"
+   ],
+   "q": "Your team wants to fine-tune a model. What do you need in place before you start?",
+   "p": [
+    {
+     "t": "Hundreds to thousands of clean labelled examples",
+     "k": [
+      "example",
+      "labelled",
+      "training data",
+      "pairs"
+     ]
+    },
+    {
+     "t": "An evaluation set and a baseline to beat",
+     "k": [
+      "evaluation set",
+      "golden set",
+      "baseline",
+      "held-out"
+     ]
+    },
+    {
+     "t": "Personal data removed or approved",
+     "k": [
+      "personal data",
+      "pii",
+      "consent",
+      "privacy"
+     ]
+    },
+    {
+     "t": "A plan to retrain when the base model changes",
+     "k": [
+      "retrain",
+      "base model",
+      "version",
+      "deprecat"
+     ]
+    }
+   ],
+   "a": "First, hundreds to thousands of clean, labelled input and output pairs that reflect real traffic. Second, an evaluation set kept separate from training, and a baseline from the best prompt or RAG setup, so we know fine-tuning actually helps. Third, personal data removed or its use approved. Finally a plan to retrain and re-test when the base model is updated or deprecated, with each model version tracked."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "gcp-data-services",
+   "tg": [
+    "gcp",
+    "bigquery"
+   ],
+   "q": "Design a simple streaming and batch pipeline on Google Cloud and name the service for each step.",
+   "p": [
+    {
+     "t": "Pub/Sub ingests events",
+     "k": [
+      "pub/sub",
+      "pubsub"
+     ]
+    },
+    {
+     "t": "Dataflow processes streams with Apache Beam",
+     "k": [
+      "dataflow",
+      "beam"
+     ]
+    },
+    {
+     "t": "BigQuery stores and serves the data",
+     "k": [
+      "bigquery",
+      "warehouse"
+     ]
+    },
+    {
+     "t": "Composer or Dataform orchestrates batch jobs",
+     "k": [
+      "composer",
+      "dataform",
+      "airflow"
+     ]
+    }
+   ],
+   "a": "Events from apps go into Pub/Sub. Dataflow, running an Apache Beam pipeline, reads them, cleans and windows them, and writes to BigQuery, with raw copies in Cloud Storage. Database changes come in through Datastream. BigQuery stores and serves the data to Looker. Batch SQL models run in Dataform, and Cloud Composer, which is managed Airflow, schedules everything else."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "gcp-data-services",
+   "tg": [
+    "gcp",
+    "spark"
+   ],
+   "q": "When would you pick Dataflow over Dataproc on Google Cloud?",
+   "p": [
+    {
+     "t": "Dataflow is serverless Apache Beam",
+     "k": [
+      "dataflow",
+      "beam",
+      "serverless"
+     ]
+    },
+    {
+     "t": "Dataflow suits new streaming and batch pipelines",
+     "k": [
+      "streaming",
+      "autoscal",
+      "new pipeline"
+     ]
+    },
+    {
+     "t": "Dataproc runs existing Spark or Hadoop jobs",
+     "k": [
+      "dataproc",
+      "spark",
+      "hadoop",
+      "existing"
+     ]
+    },
+    {
+     "t": "Team skills and portability decide too",
+     "k": [
+      "skill",
+      "portab",
+      "lift and shift",
+      "migrat"
+     ]
+    }
+   ],
+   "a": "Dataflow is a serverless runner for Apache Beam: no clusters, with autoscaling, and one model for streaming and batch, so it suits new pipelines, especially streaming. Dataproc runs managed Spark and Hadoop, so it fits existing Spark jobs or a lift and shift from an on-premises cluster. Team skills matter as well: a Spark team will be productive on Dataproc, and Spark code is portable to other clouds."
+  },
+  {
+   "r": [
+    "de",
+    "da"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "hospital-ops",
+   "tg": [
+    "sql",
+    "data modeling"
+   ],
+   "q": "How would you build bed occupancy and average length of stay from a hospital's admission and discharge data?",
+   "p": [
+    {
+     "t": "Use admission, discharge and transfer events",
+     "k": [
+      "admission",
+      "discharge",
+      "transfer",
+      "adt"
+     ]
+    },
+    {
+     "t": "Count occupied bed-days per ward per day",
+     "k": [
+      "bed-day",
+      "bed day",
+      "midnight census",
+      "per day"
+     ]
+    },
+    {
+     "t": "Divide by available beds for occupancy",
+     "k": [
+      "available bed",
+      "occupancy"
+     ]
+    },
+    {
+     "t": "Length of stay from admit to discharge time",
+     "k": [
+      "length of stay",
+      "alos"
+     ]
+    }
+   ],
+   "a": "I'd start from the admission, discharge and transfer events, building one row per patient stay per ward with start and end times. From that I'd count occupied bed-days per ward per day, often with a midnight census. Occupancy is occupied bed-days divided by available bed-days, using the beds actually open, not the licensed count. Average length of stay is total days from admission to discharge divided by discharges, split by speciality."
+  },
+  {
+   "r": [
+    "da"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "hospital-ops",
+   "tg": [
+    "sql",
+    "forecasting"
+   ],
+   "q": "Patients wait hours to leave after their discharge order. How would you find the cause?",
+   "p": [
+    {
+     "t": "Measure time from discharge order to leaving",
+     "k": [
+      "discharge order",
+      "turnaround",
+      "tat"
+     ]
+    },
+    {
+     "t": "Break the gap into steps such as billing and insurance",
+     "k": [
+      "billing",
+      "insurance",
+      "pharmacy",
+      "step"
+     ]
+    },
+    {
+     "t": "Compare by ward, payer and time of day",
+     "k": [
+      "by ward",
+      "payer",
+      "time of day",
+      "segment"
+     ]
+    },
+    {
+     "t": "Estimate bed-days freed by the fix",
+     "k": [
+      "bed-day",
+      "bed day",
+      "freed",
+      "capacity"
+     ]
+    }
+   ],
+   "a": "I'd measure discharge turnaround: the time from the doctor's discharge order to the patient leaving the bed. Then I'd break the gap into steps using timestamps for pharmacy, final billing and insurance approval to see where time goes. Comparing by ward, payer and time of day usually shows a pattern, such as insured patients waiting longest. I'd then estimate the bed-days freed by fixing the slowest step to make the case."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "s",
+   "d": [
+    "any"
+   ],
+   "c": "de-leadership",
+   "tg": [
+    "governance",
+    "airflow"
+   ],
+   "q": "You take over a data team that is always firefighting. What do you do in your first three months?",
+   "p": [
+    {
+     "t": "Measure incidents, SLAs and the request backlog",
+     "k": [
+      "incident",
+      "sla",
+      "backlog",
+      "measure"
+     ]
+    },
+    {
+     "t": "One intake process for requests",
+     "k": [
+      "intake",
+      "one queue",
+      "prioriti"
+     ]
+    },
+    {
+     "t": "Reserve time for reliability and tech debt",
+     "k": [
+      "reliability",
+      "tech debt",
+      "30%",
+      "capacity"
+     ]
+    },
+    {
+     "t": "Blameless incident reviews with follow-up fixes",
+     "k": [
+      "blameless",
+      "incident review",
+      "postmortem",
+      "post-mortem"
+     ]
+    }
+   ],
+   "a": "First I'd measure: incidents a month, data SLAs missed and the size of the request backlog, so we can show progress. I'd set up one intake process and prioritise openly with stakeholders instead of side requests. I'd reserve about 30% of each sprint for reliability and tech debt, starting with the pipelines that fail most. Every serious incident gets a blameless review that ends with a fix and an owner."
+  },
+  {
+   "r": [
+    "de"
+   ],
+   "l": "m",
+   "d": [
+    "any"
+   ],
+   "c": "de-leadership",
+   "tg": [
+    "governance",
+    "dbt"
+   ],
+   "q": "A senior stakeholder wants a new dashboard by Friday, but your team is fixing a broken pipeline that feeds finance. How do you handle it?",
+   "p": [
+    {
+     "t": "Find the real need and deadline",
+     "k": [
+      "real need",
+      "underlying",
+      "deadline",
+      "why"
+     ]
+    },
+    {
+     "t": "Explain the trade-off in their terms",
+     "k": [
+      "trade-off",
+      "tradeoff",
+      "impact",
+      "risk"
+     ]
+    },
+    {
+     "t": "Offer an option such as a smaller first version",
+     "k": [
+      "smaller",
+      "first version",
+      "option",
+      "interim"
+     ]
+    },
+    {
+     "t": "Agree priorities openly and confirm in writing",
+     "k": [
+      "agree",
+      "in writing",
+      "confirm",
+      "escalat"
+     ]
+    }
+   ],
+   "a": "I'd first ask what decision the dashboard supports, to find the real need and whether Friday is firm. Then I'd explain the trade-off in their terms: moving people now risks wrong finance numbers at month end. I'd offer an option, such as a smaller first version with the three key numbers by Friday and the rest next week. We'd agree the priority openly, with their manager if needed, and I'd confirm it in writing."
+  }
+ ],
+ "searchChecks": [
+  [
+   "what is abha and how does abdm consent work",
+   "abdm"
+  ],
+  [
+   "debezium incremental snapshot of a big table",
+   "cdc-at-scale"
+  ],
+  [
+   "what is an mcp server",
+   "mcp-integrations"
+  ],
+  [
+   "dp-700 exam preparation",
+   "azure-dp-cert"
+  ],
+  [
+   "cashless claim turnaround and denial rate",
+   "health-claims"
+  ],
+  [
+   "how to build a self-service data platform",
+   "data-platform-design"
+  ],
+  [
+   "should i fine-tune or use rag",
+   "fine-tuning"
+  ],
+  [
+   "map of google cloud data services",
+   "gcp-data-services"
+  ],
+  [
+   "bed occupancy rate and alos",
+   "hospital-ops"
+  ],
+  [
+   "how to manage a data engineering team",
+   "de-leadership"
+  ]
+ ],
+ "added": "2026-11-16"
+}
