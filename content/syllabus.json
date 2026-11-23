@@ -2901,7 +2901,7 @@
    "fine-tuning"
   ],
   "pack": "genai",
-  "status": "new",
+  "status": "existing",
   "order": 226
  },
  {
@@ -2914,7 +2914,7 @@
    "llm-fundamentals"
   ],
   "pack": "genai",
-  "status": "new",
+  "status": "existing",
   "order": 227
  },
  {
@@ -2927,7 +2927,7 @@
    "llm-fundamentals"
   ],
   "pack": "genai",
-  "status": "new",
+  "status": "existing",
   "order": 228
  },
  {
@@ -3290,7 +3290,7 @@
    "stream-processing"
   ],
   "pack": "cloud",
-  "status": "new",
+  "status": "existing",
   "order": 256
  },
  {
@@ -3303,7 +3303,7 @@
    "gcp-data-services"
   ],
   "pack": "cloud",
-  "status": "new",
+  "status": "existing",
   "order": 257
  },
  {
@@ -3689,7 +3689,7 @@
    "privacy-regulation"
   ],
   "pack": "industry",
-  "status": "new",
+  "status": "existing",
   "order": 287
  },
  {
@@ -3702,7 +3702,7 @@
    "model-fairness"
   ],
   "pack": "industry",
-  "status": "new",
+  "status": "existing",
   "order": 288
  },
  {
@@ -4025,7 +4025,7 @@
    "dbt-basics"
   ],
   "pack": "advanced",
-  "status": "new",
+  "status": "existing",
   "order": 313
  },
  {
@@ -4038,7 +4038,7 @@
    "funnels"
   ],
   "pack": "advanced",
-  "status": "new",
+  "status": "existing",
   "order": 314
  },
  {
