@@ -2286,6 +2286,306 @@
     "u": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/workspace-catalog-binding",
     "t": "Workspace-catalog binding"
    }
+  },
+  {
+   "id": "dbx-194",
+   "d": "platform",
+   "q": "An engineer wants to see which operations changed a Delta table over the last week, who ran them and the version each created. Which command shows this?",
+   "opts": [
+    "DESCRIBE HISTORY main.sales.orders",
+    "DESCRIBE DETAIL main.sales.orders",
+    "SHOW TBLPROPERTIES main.sales.orders",
+    "SHOW PARTITIONS main.sales.orders"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "DESCRIBE HISTORY lists each table version with its timestamp, operation (such as WRITE or MERGE), the user and operation metrics. DESCRIBE DETAIL shows the table's current location, size and file count, not its history."
+  },
+  {
+   "id": "dbx-195",
+   "d": "ingest",
+   "q": "An Auto Loader stream is started with spark.readStream.format(\"cloudFiles\").load(path) and fails at once. Which option must be set to tell Auto Loader what kind of files to read?",
+   "opts": [
+    "cloudFiles.format",
+    "cloudFiles.schemaLocation",
+    "cloudFiles.maxFilesPerTrigger",
+    "cloudFiles.useNotifications"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "cloudFiles.format, such as json, csv or parquet, is required. A schema location is needed when the schema is inferred, but it does not say what file type to parse."
+  },
+  {
+   "id": "dbx-196",
+   "d": "ingest",
+   "q": "COPY INTO loads CSV files whose first line holds column names, but the table ends up with the header text as a data row. What fixes it?",
+   "opts": [
+    "Add FORMAT_OPTIONS ('header' = 'true')",
+    "Add COPY_OPTIONS ('mergeSchema' = 'true')",
+    "Change FILEFORMAT to TEXT",
+    "Add COPY_OPTIONS ('force' = 'true')"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "Reader options such as header and delimiter go in FORMAT_OPTIONS. mergeSchema and force are COPY_OPTIONS that control schema changes and reloading files, not how each file is parsed."
+  },
+  {
+   "id": "dbx-197",
+   "d": "ingest",
+   "q": "A new streaming query reads a Kafka topic and must start from the oldest data still kept in the topic, not only new messages. Which option does this?",
+   "opts": [
+    "startingOffsets set to earliest",
+    "startingOffsets set to latest",
+    "failOnDataLoss set to false",
+    "maxOffsetsPerTrigger set to 0"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "For a new streaming query, startingOffsets defaults to latest, so only new messages are read. Setting it to earliest reads from the oldest retained offsets. It applies only when the query starts without a checkpoint; after that the checkpoint decides where to resume."
+  },
+  {
+   "id": "dbx-198",
+   "d": "ingest",
+   "q": "An Auto Loader stream is stopped and restarted with the same checkpoint location. Why does it not load the files it already ingested again?",
+   "opts": [
+    "The checkpoint records which files have been processed",
+    "Auto Loader deletes files after loading them",
+    "The target Delta table rejects duplicate rows",
+    "Files older than one day are skipped by default"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "Auto Loader tracks discovered and processed files in the stream's checkpoint, which gives exactly-once ingestion of each file. Pointing the stream at a new, empty checkpoint location makes it treat every file as new."
+  },
+  {
+   "id": "dbx-199",
+   "d": "transform",
+   "q": "A MERGE INTO a customers table fails with an error that several source rows matched the same target row. What is the right fix?",
+   "opts": [
+    "Deduplicate the source so there is one row per key, for example keeping the latest by updated_at",
+    "Add WHEN NOT MATCHED BY SOURCE THEN DELETE",
+    "Run OPTIMIZE on the target table first",
+    "Switch the MERGE to INSERT INTO"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "MERGE needs at most one source row per target row it updates, because otherwise the result would be ambiguous. Keep one row per key in the source, for example with a window function, before merging. INSERT INTO would only add duplicates."
+  },
+  {
+   "id": "dbx-200",
+   "d": "transform",
+   "q": "A DataFrame has region, month and amount. A report needs one row per region with a column of total amount for each month. Which call fits?",
+   "opts": [
+    "df.groupBy(\"region\").pivot(\"month\").sum(\"amount\")",
+    "df.groupBy(\"region\", \"month\").sum(\"amount\")",
+    "df.select(explode(\"month\"))",
+    "df.rollup(\"region\").count()"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "pivot turns the distinct values of month into columns, one per month, with the aggregation in each cell. Grouping by region and month gives the same numbers but as one row per region and month."
+  },
+  {
+   "id": "dbx-201",
+   "d": "transform",
+   "q": "For each customer, each order row needs the date of that customer's previous order. Which expression gives it?",
+   "opts": [
+    "lag(\"order_date\").over(Window.partitionBy(\"customer_id\").orderBy(\"order_date\"))",
+    "lead(\"order_date\").over(Window.orderBy(\"order_date\"))",
+    "max(\"order_date\").over(Window.partitionBy(\"customer_id\"))",
+    "first(\"order_date\").over(Window.partitionBy(\"order_date\"))"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "lag returns the value from the previous row in the window's order, here within each customer. lead would give the next order, and leaving out partitionBy would mix customers together."
+  },
+  {
+   "id": "dbx-202",
+   "d": "transform",
+   "q": "A bronze column payload holds JSON as a string. Silver needs it as a struct with typed fields that can be selected like payload.customer.id. Which function does this in PySpark?",
+   "opts": [
+    "from_json(col(\"payload\"), schema)",
+    "to_json(col(\"payload\"))",
+    "explode(col(\"payload\"))",
+    "split(col(\"payload\"), \",\")"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "from_json parses a JSON string into a struct using the schema you give it, so nested fields can then be selected with dot notation. to_json does the reverse, and explode works on arrays and maps, not strings."
+  },
+  {
+   "id": "dbx-203",
+   "d": "jobs",
+   "q": "A job defines a job parameter named run_date. How does a notebook task in the job read its value?",
+   "opts": [
+    "dbutils.widgets.get(\"run_date\")",
+    "spark.conf.get(\"run_date\")",
+    "os.environ[\"run_date\"]",
+    "dbutils.jobs.taskValues.get(\"run_date\")"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "Job parameters are passed to notebook tasks as widget values, so the notebook reads them with dbutils.widgets.get. Task values are for passing results between tasks, not for job parameters."
+  },
+  {
+   "id": "dbx-204",
+   "d": "jobs",
+   "q": "A scheduled job normally uses run_date set to today. An engineer needs a single run for 1 November without changing the job's saved settings. What should they do?",
+   "opts": [
+    "Use Run now with different parameters and set run_date for that run",
+    "Edit the job's default parameter, run it, then change it back",
+    "Clone the job and delete it after the run",
+    "Repair the last successful run"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "Run now with different parameters starts one run with overridden parameter values and leaves the job definition unchanged. Editing the defaults risks the next scheduled run using the wrong date."
+  },
+  {
+   "id": "dbx-205",
+   "d": "jobs",
+   "q": "A job must run at 02:30 on weekdays in India time. How is this expressed in a job's schedule?",
+   "opts": [
+    "A Quartz cron expression with the time zone set to Asia/Kolkata",
+    "A standard five-field Unix cron string, always in UTC",
+    "An interval trigger of 24 hours started at 02:30",
+    "A file arrival trigger on a timer folder"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "Advanced job schedules use Quartz cron syntax, which has a seconds field, and each schedule has its own time zone, so the run follows local time instead of UTC."
+  },
+  {
+   "id": "dbx-206",
+   "d": "cicd",
+   "q": "A feature's test deployment of a bundle is no longer needed. Which command removes the jobs, pipelines and files that the bundle deployed to that target?",
+   "opts": [
+    "databricks bundle destroy -t test",
+    "databricks bundle validate -t test",
+    "databricks bundle deploy --force -t test",
+    "databricks workspace delete /test"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "bundle destroy deletes the resources and files a bundle previously deployed to the chosen target, after asking for confirmation. validate only checks configuration, and deploy creates or updates resources."
+  },
+  {
+   "id": "dbx-207",
+   "d": "cicd",
+   "q": "A CI pipeline must deploy bundles to production without using any person's credentials. What is the recommended way to authenticate?",
+   "opts": [
+    "A service principal using OAuth machine-to-machine credentials kept in the CI system's secret store",
+    "A personal access token of the team lead saved in databricks.yml",
+    "The username and password of an admin account in an environment variable",
+    "No authentication, because bundles deploy through Git"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "Automation should authenticate as a service principal, with its OAuth client ID and secret kept in the CI secret store. Credentials must never be committed to databricks.yml or tied to one person's account."
+  },
+  {
+   "id": "dbx-208",
+   "d": "tune",
+   "q": "A Delta table has 60,000 files of a few kilobytes each and queries are slow because of the time spent opening files. Which command compacts them?",
+   "opts": [
+    "OPTIMIZE main.sales.events",
+    "VACUUM main.sales.events",
+    "ANALYZE TABLE main.sales.events COMPUTE STATISTICS",
+    "REFRESH TABLE main.sales.events"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "OPTIMIZE rewrites many small files into fewer larger ones, which speeds up reads. VACUUM only deletes old files that the table no longer references. For managed tables, predictive optimization can run OPTIMIZE automatically."
+  },
+  {
+   "id": "dbx-209",
+   "d": "tune",
+   "q": "After months of daily MERGE jobs, a table's storage keeps growing although its row count is stable. What removes data files the current table no longer uses?",
+   "opts": [
+    "VACUUM, which deletes unreferenced files older than the retention period (7 days by default)",
+    "OPTIMIZE, which deletes old versions",
+    "DROP TABLE followed by CREATE TABLE",
+    "RESTORE TABLE to the latest version"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "MERGE and UPDATE write new files and leave old ones for time travel. VACUUM deletes unreferenced files older than the retention threshold, so time travel beyond that point stops working. Predictive optimization can also run it for managed tables."
+  },
+  {
+   "id": "dbx-210",
+   "d": "tune",
+   "q": "A query's shuffle produces 200 partitions, most holding only a few kilobytes. Which Spark feature, on by default in Databricks, merges small shuffle partitions at run time?",
+   "opts": [
+    "Adaptive query execution",
+    "Delta caching",
+    "Dynamic file pruning",
+    "Photon"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "Adaptive query execution re-plans a query using statistics gathered at run time. It coalesces small shuffle partitions, switches join strategies and splits skewed partitions."
+  },
+  {
+   "id": "dbx-211",
+   "d": "gov",
+   "q": "The engineer who owns main.sales.orders is leaving. Ownership should move to the data_eng group. Which statement does this?",
+   "opts": [
+    "ALTER TABLE main.sales.orders SET OWNER TO `data_eng`",
+    "GRANT OWNERSHIP ON TABLE main.sales.orders TO `data_eng`",
+    "GRANT ALL PRIVILEGES ON TABLE main.sales.orders TO `data_eng`",
+    "REVOKE OWNER ON TABLE main.sales.orders FROM `engineer`"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "Ownership is changed with ALTER ... SET OWNER TO. Making a group the owner avoids this problem in future. ALL PRIVILEGES grants access but does not transfer ownership."
+  },
+  {
+   "id": "dbx-212",
+   "d": "gov",
+   "q": "An engineer needs to list which users and groups hold which privileges on main.sales.orders. Which statement shows this?",
+   "opts": [
+    "SHOW GRANTS ON TABLE main.sales.orders",
+    "DESCRIBE HISTORY main.sales.orders",
+    "SHOW TABLES IN main.sales",
+    "DESCRIBE DETAIL main.sales.orders"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "SHOW GRANTS lists the privileges granted on a securable object. DESCRIBE HISTORY shows changes to the table's data, not who can access it."
+  },
+  {
+   "id": "dbx-213",
+   "d": "gov",
+   "q": "The analytics_eng group already has USE CATALOG on main and USE SCHEMA on main.sales. What else does it need to create new tables in main.sales?",
+   "opts": [
+    "CREATE TABLE on the schema main.sales",
+    "MODIFY on the schema main.sales",
+    "SELECT on the catalog main",
+    "BROWSE on the catalog main"
+   ],
+   "ans": [
+    0
+   ],
+   "why": "Creating a table needs CREATE TABLE on the schema, plus USE CATALOG and USE SCHEMA on its parents. MODIFY allows changing data in existing tables, and SELECT and BROWSE are for reading and discovery."
   }
  ]
 }
