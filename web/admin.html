@@ -118,6 +118,10 @@ label.f small{font-weight:400;color:var(--muted)}
 .acts{display:flex;gap:8px;flex-wrap:wrap;position:sticky;bottom:0;background:var(--surface);padding:12px 0 2px;border-top:1px solid var(--line)}
 .sim{display:flex;gap:6px;flex-wrap:wrap}
 .sim button{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 10px;font-size:13px}
+.vadd{display:grid;grid-template-columns:3fr 2fr auto;gap:12px;align-items:end}
+.vadd .btn{height:40px}
+@media (max-width:720px){.vadd{grid-template-columns:1fr}}
+.vlink{color:var(--accent)}
 .msg{border-radius:12px;padding:10px 12px;font-size:14px;background:var(--surface-2)}
 .msg.bad{background:var(--bad-soft);color:var(--bad)}
 .msg.good{background:var(--good-soft);color:var(--good)}
@@ -153,6 +157,7 @@ label.f small{font-weight:400;color:var(--muted)}
       <button type="button" data-tab="live" aria-pressed="false">Live<em id="n-live"></em></button>
       <button type="button" data-tab="rejected" aria-pressed="false">Rejected<em id="n-rejected"></em></button>
       <button type="button" data-tab="certq" aria-pressed="false">Certification questions</button>
+      <button type="button" data-tab="videos" aria-pressed="false">Video quests</button>
       <button type="button" data-tab="status" aria-pressed="false">AI status</button>
     </div>
     <div class="grid" id="queueGrid">
@@ -161,6 +166,7 @@ label.f small{font-weight:400;color:var(--muted)}
     </div>
     <div id="statusView" hidden></div>
     <div id="certqView" hidden></div>
+    <div id="videosView" hidden></div>
   </main>
 </div>
 
@@ -350,9 +356,10 @@ async function act(what) {
 }
 function setTab(t) {
   tab = t; document.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.tab === t));
-  $("#queueGrid").hidden = t === "status" || t === "certq"; $("#statusView").hidden = t !== "status"; $("#certqView").hidden = t !== "certq";
+  $("#queueGrid").hidden = t === "status" || t === "certq" || t === "videos"; $("#statusView").hidden = t !== "status"; $("#certqView").hidden = t !== "certq"; $("#videosView").hidden = t !== "videos";
   if (t === "status") loadStatus();
   if (t === "certq") loadCertq();
+  if (t === "videos") loadVideos();
 }
 
 /* ---- AI status: health and usage of every model today (counts only; no learner text is logged) ---- */
@@ -465,8 +472,60 @@ async function loadCertq() {
   }));
 }
 
+/* ---- video quests: paste a public YouTube link, Gemini splits it into parts with a quick check, you publish it ---- */
+const VSTATE = { draft: "Draft: check it, then publish", live: "Live in the app", hidden: "Hidden from learners", failed: "Analysis failed" };
+const clockOf = (s) => { const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = String(s % 60).padStart(2, "0"); return h ? `${h}:${String(m).padStart(2, "0")}:${x}` : `${m}:${x}`; };
+async function loadVideos(note) {
+  const v = $("#videosView");
+  if (!v.innerHTML) v.innerHTML = `<p class="muted">Loading…</p>`;
+  let o;
+  try { o = await api("videos"); } catch (e) { if (e.message !== "unauthorised") v.innerHTML = `<p class="msg bad">${esc(e.message)}</p>`; return; }
+  v.innerHTML = `
+    <div class="st-sec"><h2>Add a video</h2>
+      <p>Paste a public YouTube link. Gemini watches it once and splits it into parts, each with key points and two quiz questions. It's saved as a draft; publish it when it looks right. Learners reuse this one analysis, so it costs nothing per learner. Only public videos work, and the free allowance is about 8 hours of video a day.</p>
+      ${o.gemini ? "" : `<p class="msg bad">The GEMINI_API_KEY secret isn't set on the gateway, so videos can't be analysed yet.</p>`}
+      <form id="vAdd" class="vadd">
+        <label class="f">YouTube link<input id="vUrl" type="url" required placeholder="https://www.youtube.com/watch?v=…"></label>
+        <label class="f">Note for Gemini (optional)<input id="vNote" type="text" maxlength="300" placeholder="e.g. Focus on the Databricks parts"></label>
+        <button class="btn" type="submit" id="vGo" ${o.gemini ? "" : "disabled"}>Analyse</button>
+      </form>
+      <p class="muted" id="vMsg" role="status" style="font-size:13px">${esc(note || "")}</p>
+    </div>
+    <div class="st-sec"><h2>Videos</h2>
+      ${o.videos.length ? o.videos.map((r) => { const x = r.video; return `<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap"><b style="flex:1;min-width:200px">${esc(x ? x.title : r.url)}</b><span class="muted" style="font-size:13px">${esc(VSTATE[r.status] || r.status)} · ${ago(r.updated)}</span></div>
+        ${x ? `<small class="muted">${esc([x.channel, x.minutes ? x.minutes + " min" : "", x.topic, x.chapters.length + " parts"].filter(Boolean).join(" · "))} · <a class="vlink" href="${esc(r.url)}" target="_blank" rel="noopener">Open on YouTube</a></small>
+        <details><summary>Preview the parts and questions</summary>${x.summary ? `<p>${esc(x.summary)}</p>` : ""}${x.chapters.map((c, i) => `<div style="border-top:1px solid var(--line);padding-top:8px;margin-top:8px"><b>${i + 1}. ${esc(c.title)}</b> <span class="muted">${clockOf(c.start)}</span><p>${esc(c.summary)}</p><ul>${c.points.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>${c.quiz.map((q) => `<p style="margin-bottom:2px"><b>Q.</b> ${esc(q.q)}</p><ol type="A">${q.opts.map((o2, k) => `<li${k === q.ans ? " style='font-weight:700'" : ""}>${esc(o2)}</li>`).join("")}</ol><p class="muted" style="font-size:13px">${esc(q.why)}</p>`).join("")}</div>`).join("")}</details>` : ""}
+        ${r.err ? `<p class="msg bad" style="margin:0">${r.status === "failed" ? "" : "Last re-analysis failed, so the earlier version is kept: "}${esc(r.err)}</p>` : ""}
+        <div class="acts" style="display:flex;gap:8px;flex-wrap:wrap">
+          ${x && r.status !== "live" ? `<button class="chk-btn" type="button" data-vs="live" data-vid="${esc(r.id)}">Publish</button>` : ""}
+          ${r.status === "live" ? `<button class="chk-btn" type="button" data-vs="hidden" data-vid="${esc(r.id)}">Hide</button>` : ""}
+          <button class="chk-btn" type="button" data-vredo="${esc(r.url)}" ${o.gemini ? "" : "disabled"}>${r.status === "failed" ? "Try again" : "Re-analyse"}</button>
+          <button class="chk-btn" type="button" data-vdel="${esc(r.id)}">Delete</button>
+        </div></div>`; }).join("") : `<p class="muted">No videos yet. Add the first one above.</p>`}
+    </div>`;
+  const run = async (url, noteText, btn) => {
+    const m = $("#vMsg"); btn.disabled = true; const was = btn.textContent; btn.textContent = "Watching… (up to a few minutes)";
+    m.textContent = "Gemini is watching the video. Keep this tab open.";
+    try { const r = await api("videos", { url, note: noteText }); await loadVideos(`Done: ${r.chapters} parts${r.dropped ? `, ${r.dropped} broken questions or parts dropped` : ""}. ${r.state === "live" ? "It was already live, so learners see the new version now." : "Saved as a draft. Preview it below, then publish."}`); }
+    catch (e) { btn.disabled = false; btn.textContent = was; await loadVideos("Couldn't analyse it: " + e.message); }
+  };
+  $("#vAdd").onsubmit = (e) => { e.preventDefault(); run($("#vUrl").value.trim(), $("#vNote").value.trim(), $("#vGo")); };
+  v.querySelectorAll("[data-vredo]").forEach((b) => (b.onclick = () => run(b.dataset.vredo, "", b)));
+  v.querySelectorAll("[data-vs]").forEach((b) => (b.onclick = async () => {
+    if (b.dataset.vs === "hidden" && !confirm("Hide this video from every learner's app?")) return;
+    b.disabled = true;
+    try { await api("videos/status", { id: b.dataset.vid, status: b.dataset.vs }); await loadVideos(b.dataset.vs === "live" ? "Published. Learners see it the next time they open Videos." : "Hidden."); } catch (e) { b.disabled = false; $("#vMsg").textContent = e.message; }
+  }));
+  v.querySelectorAll("[data-vdel]").forEach((b) => (b.onclick = async () => {
+    if (!confirm("Delete this video and its analysis? Learners' progress on it stays on their devices.")) return;
+    b.disabled = true;
+    try { await api("videos/delete", { id: b.dataset.vdel }); await loadVideos("Deleted."); } catch (e) { b.disabled = false; }
+  }));
+}
+
 document.addEventListener("click", (e) => {
-  const t = e.target.closest("[data-tab]"); if (t) { setTab(t.dataset.tab); openId = null; if (tab !== "status" && tab !== "certq") renderList(); return; }
+  const t = e.target.closest("[data-tab]"); if (t) { setTab(t.dataset.tab); openId = null; if (tab !== "status" && tab !== "certq" && tab !== "videos") renderList(); return; }
   const it = e.target.closest(".item[data-id]"); if (it) { openId = +it.dataset.id; renderList(); return; }
   const d = e.target.closest("[data-do]"); if (d) { act(d.dataset.do); return; }
   const ap = e.target.closest("[data-addpt]"); if (ap) { const box = $(`#q${ap.dataset.addpt}-pts`); box.insertAdjacentHTML("beforeend", ptRow(+ap.dataset.addpt, box.children.length, { t: "", k: [] })); return; }

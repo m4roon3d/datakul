@@ -279,7 +279,7 @@ export async function runJob(env, deps) {
 }
 
 /* ---------------- 4. review ---------------- */
-async function authed(request, env) {
+export async function authed(request, env) {
   if (!env.ADMIN_TOKEN) return false;
   const h = request.headers.get("authorization") || "";
   const tok = h.startsWith("Bearer ") ? h.slice(7) : "";

@@ -5,6 +5,7 @@
 
 import { handleCommunity, runJob } from "./community.js";
 import { runCertJob } from "./certq.js";
+import { handleVideos } from "./video.js";
 import { handleAccounts, userStats, pruneSessions } from "./accounts.js";
 import { cacheable, cacheKey, getCached, noteHit, replay, capture, pruneCache, cacheStatus, clearCache } from "./cache.js";
 import { logUsage, meteredStream, promptTokens, rateHeaders, usageStatus, setMeta, pruneUsage } from "./usage.js";
@@ -638,6 +639,8 @@ export default {
         return json({ error: "Embedding failed: " + e.message }, 502, cors);
       }
     }
+    const vid = await handleVideos(request, url, env, cors, deps(env, ctx));
+    if (vid) return vid;
     const acct = await handleAccounts(request, url, env, cors);
     if (acct) return acct;
     const l2 = await handleCommunity(request, url, env, cors, deps(env, ctx));
