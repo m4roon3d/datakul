@@ -542,6 +542,30 @@ textarea.ans-in:focus{border-color:var(--accent);outline:none}
 .simmodel{margin-top:10px}
 @media (max-width:640px){#simBoard .card{padding:16px}}
 @media (max-width:520px){.simday b{font-size:14px}.simday small{font-size:11px}.simtbl th,.simtbl td{padding:6px 8px}}
+/* Video quests */
+#videoBoard{display:flex;flex-direction:column;gap:16px}
+#videoBoard .card{padding:20px 22px}
+.vqhead,.vqtop,.vqch,.vqask,.vqtake{display:flex;flex-direction:column;gap:12px}
+.vqhead h2,.vqtop h2,.vqch h3{margin:0}.vqhead p,.vqtop p,.vqch>p{margin:0;line-height:1.55}
+.vqch h3{font-size:19px}
+.vqnote{margin:0}
+.vqgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.vqitem{display:flex;flex-direction:column;gap:6px;text-align:left;color:var(--ink);transition:border-color .15s,transform .15s}
+.vqitem:hover{border-color:var(--accent);transform:translateY(-1px)}
+.vqitem b{font-family:var(--f-display);font-size:17px;line-height:1.3}
+.vqitem small{color:var(--muted);font-size:13px}
+.vqitem.ok{border-color:var(--good)}
+.vqitem .meter{margin-top:auto;padding-top:6px}
+.vqitem .meter .tr,.vqitem .meter .fl{display:block}
+.vqback{align-self:flex-start}
+.vqparts{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px}
+.vqwatch{align-self:flex-start;text-decoration:none}
+.vqpts{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;line-height:1.5}
+.vqquiz{display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--line);padding-top:12px}
+.vqq{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.vqq legend{font-weight:700;margin-bottom:8px;line-height:1.45}
+#vqMsg{margin:0;font-size:14px}#vqMsg:empty{display:none}
+@media (max-width:640px){#videoBoard .card{padding:16px}.vqgrid{grid-template-columns:1fr}}
 .meter .tr{flex:1;height:10px;background:var(--surface-2);border-radius:999px;overflow:hidden}
 .meter .fl{height:100%;background:linear-gradient(90deg,var(--accent),var(--flame));border-radius:999px;transition:width .5s ease-out}
 .meter b{font-family:var(--f-mono);font-size:13px;font-weight:500}
@@ -645,7 +669,8 @@ textarea.ans-in:focus{border-color:var(--accent);outline:none}
 .cplanrow .lab{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:var(--muted)}
 .cplanrow input[type=date]{font:inherit;font-size:15px;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r-ctl);padding:9px 12px;max-width:220px;color-scheme:inherit}
 @media (max-width:640px){.certwrap .card{padding:16px}}
-@media (max-width:480px){.subnav button{padding:7px 11px;font-size:13px;white-space:nowrap}}
+@media (max-width:480px){.subnav{max-width:100%;overflow-x:auto;scrollbar-width:none}.subnav::-webkit-scrollbar{display:none}.subnav button{padding:7px 9px;font-size:12.5px;white-space:nowrap}}
+@media (max-width:380px){.subnav{padding:3px;gap:2px}.subnav button{padding:7px 7px;font-size:12px}}
 .certhead h1{font-size:clamp(24px,4vw,32px);margin:6px 0 10px}
 .cfacts{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14.5px;color:var(--muted)}
 .cfacts b{color:var(--ink);font-family:var(--f-display)}
@@ -881,6 +906,7 @@ textarea.editor:focus{border-color:var(--accent);outline:none}
         <button type="button" role="menuitem" data-sub="interview"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></span><span><b>Interview questions</b><small>Each with a model answer</small></span></button>
         <button type="button" role="menuitem" data-sub="practice"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg></span><span><b>Coding</b><small>SQL and Python, run in the browser</small></span></button>
         <button type="button" role="menuitem" data-sub="sim"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h16v11H4z"/><path d="M9 8V5h6v3"/><path d="M4 13h16"/></svg></span><span><b>Job sim</b><small>Your first week on the job</small></span></button>
+        <button type="button" role="menuitem" data-sub="video"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4.5-2.5z"/></svg></span><span><b>Videos</b><small>Learn from a hand-picked video</small></span></button>
       </div></div>
     <button class="tab" role="tab" id="tab-library" data-view="library" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M8 7h7"/></svg>Library</button>
     <button class="tab" role="tab" id="tab-cert" data-view="cert" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg>Certifications</button>
@@ -924,7 +950,7 @@ textarea.editor:focus{border-color:var(--accent);outline:none}
 </section>
 
 <section class="view" id="view-interview" hidden>
-  <div class="subnav" role="group" aria-label="Practice type"><button type="button" data-sub="interview" aria-pressed="true" id="sub-interview">Interview questions</button><button type="button" data-sub="practice" aria-pressed="false" id="sub-code">Coding</button><button type="button" data-sub="sim" aria-pressed="false">Job sim</button></div>
+  <div class="subnav" role="group" aria-label="Practice type"><button type="button" data-sub="interview" aria-pressed="true" id="sub-interview">Interview questions</button><button type="button" data-sub="practice" aria-pressed="false" id="sub-code">Coding</button><button type="button" data-sub="sim" aria-pressed="false">Job sim</button><button type="button" data-sub="video" aria-pressed="false">Videos</button></div>
   <div id="mockArea"></div>
   <div class="target">
     <span class="eyebrow">Preparing for</span>
@@ -954,12 +980,17 @@ textarea.editor:focus{border-color:var(--accent);outline:none}
 </section>
 
 <section class="view" id="view-sim" hidden>
-  <div class="subnav" role="group" aria-label="Practice type"><button type="button" data-sub="interview" aria-pressed="false">Interview questions</button><button type="button" data-sub="practice" aria-pressed="false">Coding</button><button type="button" data-sub="sim" aria-pressed="true">Job sim</button></div>
+  <div class="subnav" role="group" aria-label="Practice type"><button type="button" data-sub="interview" aria-pressed="false">Interview questions</button><button type="button" data-sub="practice" aria-pressed="false">Coding</button><button type="button" data-sub="sim" aria-pressed="true">Job sim</button><button type="button" data-sub="video" aria-pressed="false">Videos</button></div>
   <div id="simBoard"></div>
 </section>
 
+<section class="view" id="view-video" hidden>
+  <div class="subnav" role="group" aria-label="Practice type"><button type="button" data-sub="interview" aria-pressed="false">Interview questions</button><button type="button" data-sub="practice" aria-pressed="false">Coding</button><button type="button" data-sub="sim" aria-pressed="false">Job sim</button><button type="button" data-sub="video" aria-pressed="true">Videos</button></div>
+  <div id="videoBoard"></div>
+</section>
+
 <section class="view" id="view-practice" hidden>
-  <div class="subnav" role="group" aria-label="Practice type"><button type="button" data-sub="interview" aria-pressed="false">Interview questions</button><button type="button" data-sub="practice" aria-pressed="true">Coding</button><button type="button" data-sub="sim" aria-pressed="false">Job sim</button></div>
+  <div class="subnav" role="group" aria-label="Practice type"><button type="button" data-sub="interview" aria-pressed="false">Interview questions</button><button type="button" data-sub="practice" aria-pressed="true">Coding</button><button type="button" data-sub="sim" aria-pressed="false">Job sim</button><button type="button" data-sub="video" aria-pressed="false">Videos</button></div>
   <div id="pracBoard" class="view"></div>
 </section>
 
@@ -1020,6 +1051,7 @@ textarea.editor:focus{border-color:var(--accent);outline:none}
 <script src="practice.js"></script>
 <script src="quests.js"></script>
 <script src="jobsim.js"></script>
+<script src="videos.js"></script>
 <script src="exam.js"></script>
 <script src="account.js"></script>
 <script src="pwa.js"></script>

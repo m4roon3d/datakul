@@ -135,6 +135,7 @@ const BADGES = [
   { id: "curious", name: "Curious mind", short: "ASK", cls: "b3", test: () => QS.asks >= 25 },
   { id: "recall", name: "Never forget", short: "REV", cls: "", test: () => QS.reviews >= 10 },
   { id: "week1", name: "Week one survived", short: "JOB", cls: "b2", test: () => Object.values(store.get("sim", {}).week || {}).some(Boolean) },
+  { id: "video1", name: "Video learner", short: "VID", cls: "b3", test: () => Object.values(store.get("vq", {}).full || {}).some(Boolean) },
 ];
 function checkBadges() {
   BADGES.forEach((b) => {

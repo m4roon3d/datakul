@@ -133,6 +133,14 @@ The bank above is the starting set. Each night (2 am India time, with the commun
 
 Owner controls: review page (`/admin.html`) → **Certification questions**: pause or resume, questions per section (1 to 10), "Write some now", and Withdraw or Restore on any question. Settings live in the D1 `meta` table, so changes apply immediately. Migration `0004_cert_questions.sql` creates the table; the deploy applies it. `worker/src/certs-meta.js` is generated from the banks by `node content/build_certs.mjs` (CI checks it).
 
+## Video quests (Practice → Videos)
+
+Hand-picked public YouTube videos turned into short quests. On the review page (`/admin.html`) → **Video quests**, paste a link (and an optional note). The gateway passes the video to Gemini by its YouTube address, so captions don't need to exist and nothing is downloaded; Gemini returns 3 to 10 parts, each with key points and two quiz questions (`worker/src/video.js`). Broken questions are dropped automatically, and the result is saved as a **draft**: preview it, then **Publish**. **Hide**, **Re-analyse** (a live video stays live; if it fails, the earlier version is kept) and **Delete** are on the same tab.
+
+Learners get published videos from `GET /api/videos` (kept on the device for offline use). Each part links to YouTube at its start time; two right answers clear it (+15 XP), the whole video gives +50 XP and the "Video learner" badge, and "Ask about this video" sends the question to the tutor with the video's notes as context. Progress is `dp_vq` (synced with an account). Every learner reuses the one analysis, so no AI allowance is spent per learner.
+
+Needs the `GEMINI_API_KEY` secret. Only public videos work; Gemini's free tier allows about 8 hours of video a day. The model is `gemini-flash-latest` unless the `VIDEO_MODEL` worker variable says otherwise; calls show on the AI status tab as mode `video`. Migration `0006_videos.sql` creates the table; the deploy applies it. This could later become a premium feature (learners adding their own links with a monthly quota); for now only the owner adds videos.
+
 ## AI status page (for the people who run Datakul)
 
 The review page (`admin.html`, locked by `ADMIN_TOKEN`) has an **AI status** tab:
